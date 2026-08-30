@@ -1,1 +1,0 @@
-# hepatiq-ai
