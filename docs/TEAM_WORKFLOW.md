@@ -14,7 +14,7 @@ Use a simple name that tells what you are working on.
 Good examples:
 
 ```bash
-meet-backend
+pranjal-backend
 nirali-ml
 rudra-validation
 deekshitha-frontend
