@@ -20,7 +20,7 @@ Describe the change and why it was needed.
 
 ## Reviewers
 - [ ] @nirali
-- [ ] @meet
+- [ ] @pranjal
 - [ ] @deekshitha
 - [ ] @rudra
 
