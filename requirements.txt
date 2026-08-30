@@ -1,0 +1,20 @@
+# Data & ML (Nirali)
+pandas
+numpy
+scikit-learn
+shap
+
+# Backend API (Meet)
+fastapi
+uvicorn[standard]
+joblib
+pydantic
+
+# Frontend (Deekshitha)
+streamlit
+requests
+plotly
+
+# Validation (Rudra)
+scipy
+statsmodels
