@@ -48,7 +48,7 @@ git checkout -b yourname/what-youre-building
 | Member | Branch |
 |---|---|
 | Nirali | `nirali/model-training` |
-| Meet | `meet/backend-api` |
+| Pranjal | `pranjal/backend-api` |
 | Deekshitha | `deekshitha/streamlit-ui` |
 | Rudra | `rudra/validation` |
 
@@ -59,11 +59,11 @@ Work inside your assigned folder:
 | Folder | Owner | What goes here |
 |---|---|---|
 | `ml/` | Nirali | Data cleaning, imputation, model training, SHAP generation |
-| `backend/` | Meet | FastAPI app, endpoints, model loading |
+| `backend/` | Pranjal | FastAPI app, endpoints, model loading |
 | `frontend/` | Deekshitha | Streamlit UI, input forms, chart rendering |
 | `validation/` | Rudra | Statistical tests, MELD benchmarking, confidence intervals |
 | `data/` | Nirali | Raw and cleaned dataset |
-| `models/` | Nirali / Meet | Trained `.pkl` model files |
+| `models/` | Nirali / Pranjal | Trained `.pkl` model files |
 | `docs/` | Everyone | Documentation — each person's section in their own file |
 
 ## 7. Running the project locally
