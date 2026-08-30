@@ -8,20 +8,20 @@ Before you begin, make sure you have installed:
 - **Python 3.10+** — [python.org](https://python.org)
 - **Git** — [git-scm.com](https://git-scm.com)
 - **VS Code** — [code.visualstudio.com](https://code.visualstudio.com)
-- A **GitHub account**, added to the `HepatiQ-AI` repository
+- A **GitHub account**, added to the `hepatiq-ai` repository
 
 ## 2. Clone the repository
 
-1. Go to `github.com/<your-org-or-username>/HepatiQ-AI`
+1. Go to `github.com/<your-org-or-username>/hepatiq-ai`
 2. Click the green **Code** button → copy the HTTPS link
 3. Open a terminal on your computer and run:
    ```bash
-   git clone https://github.com/<your-org-or-username>/HepatiQ-AI.git
+   git clone https://github.com/<your-org-or-username>/hepatiq-ai.git
    ```
 
 ## 3. Open the project in VS Code
 
-- **File → Open Folder** → select the `HepatiQ-AI` folder that was just created
+- **File → Open Folder** → select the `hepatiq-ai` folder that was just created
 
 ## 4. Set up your Python environment
 
@@ -78,7 +78,7 @@ Start the frontend, in a separate terminal:
 streamlit run frontend/app.py
 ```
 
-By default the backend runs at `http://localhost:8000` and the frontend at `http://localhost:8501`. No API keys or `.env` file are required — the whole stack runs locally on open-source libraries.
+By default the backend runs at `http://localhost:8000` and the frontend at `http://localhost:8501`. No API keys or `.env` file are required — the whole stack runs locally on open-source librarie[...]
 
 ## 8. Save your work
 
@@ -98,7 +98,7 @@ Just copy-paste that exact line if it appears.
 
 ## 9. Open a Pull Request
 
-1. Go to the `HepatiQ-AI` repository on GitHub
+1. Go to the `hepatiq-ai` repository on GitHub
 2. You'll see a banner for your recently pushed branch → click **Compare & pull request**
 3. Give it a clear title, then **Create pull request**
 4. Once reviewed (or if it's routine setup work), merge it into `main`
