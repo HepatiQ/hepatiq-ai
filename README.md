@@ -1,10 +1,10 @@
 # HepatiQ
 
-HepatiQ is a clinical decision-support web application that estimates mortality risk for patients with Primary Biliary Cholangitis (PBC), a chronic liver disease, using routine lab values and an explainable AI model trained on Mayo Clinic data.
+HepatiQ is a clinical decision-support web application that estimates mortality risk for patients with Primary Biliary Cholangitis (PBC), a chronic liver disease, using routine lab values and an ex[...]
 
 ## Overview
 
-Clinicians often have to weigh several lab markers at once to judge how serious a patient's liver disease is. HepatiQ takes that judgment call and grounds it in a model trained on real outcomes data — then, instead of returning a single opaque number, it shows exactly which lab values pushed the risk score up or down using SHAP (SHapley Additive exPlanations).
+Clinicians often have to weigh several lab markers at once to judge how serious a patient's liver disease is. HepatiQ takes that judgment call and grounds it in a model trained on real outcomes dat[...]
 
 ### Core Features
 - Mortality risk scoring from five routine lab inputs: Bilirubin, Albumin, Age, Prothrombin Time, and Platelets
@@ -14,11 +14,11 @@ Clinicians often have to weigh several lab markers at once to judge how serious 
 
 ## Problem We Solve
 
-Most clinical AI tools are black boxes — they output a score with no visibility into why. That's a hard sell in medicine, where a doctor needs to trust and verify a recommendation before acting on it. HepatiQ addresses this by pairing a validated ML model with SHAP explainability, so every prediction comes with a transparent breakdown of the reasoning behind it.
+Most clinical AI tools are black boxes — they output a score with no visibility into why. That's a hard sell in medicine, where a doctor needs to trust and verify a recommendation before acting [...]
 
 ## Scope & Limitations
 
-HepatiQ is trained on the Mayo Clinic Primary Biliary Cholangitis (PBC) dataset — a specific autoimmune liver condition, not liver cirrhosis in general. Predictions should be understood as specific to PBC-driven disease rather than cirrhosis from all causes (e.g. alcoholic or viral-hepatitis-driven). This is called out explicitly here, in the app, and in the final report, since generalizing beyond the training population is one of the most common failure modes in clinical ML tools.
+HepatiQ is trained on the Mayo Clinic Primary Biliary Cholangitis (PBC) dataset — a specific autoimmune liver condition, not liver cirrhosis in general. Predictions should be understood as speci[...]
 
 ## Tech Stack
 
@@ -31,7 +31,7 @@ HepatiQ is trained on the Mayo Clinic Primary Biliary Cholangitis (PBC) dataset 
 - FastAPI — REST API, with Pydantic models for request/response validation
 - Uvicorn — ASGI server
 - Joblib — loading trained models into memory
-- GitHub — repository and version control (`HepatiQ-AI`)
+- GitHub — repository and version control (`hepatiq-ai`)
 
 ### Frontend UI (Deekshitha)
 - Streamlit — interactive web interface
@@ -44,7 +44,7 @@ HepatiQ is trained on the Mayo Clinic Primary Biliary Cholangitis (PBC) dataset 
 - Markdown — clinical limitations documentation
 
 ### DevOps and Collaboration
-- GitHub (`HepatiQ-AI`)
+- GitHub (`hepatiq-ai`)
 - Team-based, phased development (see [docs/ROADMAP.md](docs/ROADMAP.md))
 
 ## System Flow
@@ -80,7 +80,7 @@ Examples:
 - `deekshitha-frontend`
 - `rudra-validation`
 
-The full workflow guidance is in [docs/TEAM_WORKFLOW.md](docs/TEAM_WORKFLOW.md), and the repo includes a simple PR template in [.github/pull_request_template.md](.github/pull_request_template.md). The phased build plan is in [docs/ROADMAP.md](docs/ROADMAP.md).
+The full workflow guidance is in [docs/TEAM_WORKFLOW.md](docs/TEAM_WORKFLOW.md), and the repo includes a simple PR template in [.github/pull_request_template.md](.github/pull_request_template.md).[...]
 
 ## Goals
 - Build a functional, interpretable clinical risk tool
@@ -105,7 +105,7 @@ See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for full setup instructio
 
 ## Dataset & Attribution
 
-HepatiQ trains on the Mayo Clinic PBC trial dataset (1974–1984, 418 patients). Commonly redistributed mirrors of this dataset (e.g. via UCI) are shared under CC BY 4.0, which permits reuse with attribution — confirm the license of your specific source file before committing it, and credit Mayo Clinic in any published report.
+HepatiQ trains on the Mayo Clinic PBC trial dataset (1974–1984, 418 patients). Commonly redistributed mirrors of this dataset (e.g. via UCI) are shared under CC BY 4.0, which permits reuse with[...]
 
 ## License
 
