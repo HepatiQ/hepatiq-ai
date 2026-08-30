@@ -27,7 +27,7 @@ HepatiQ is trained on the Mayo Clinic Primary Biliary Cholangitis (PBC) dataset 
 - Scikit-learn — `IterativeImputer` for missing values, `StandardScaler`, Penalized Logistic Regression, Random Forest
 - SHAP — model explainability
 
-### Backend API (Meet)
+### Backend API (Pranjal)
 - FastAPI — REST API, with Pydantic models for request/response validation
 - Uvicorn — ASGI server
 - Joblib — loading trained models into memory
@@ -59,7 +59,7 @@ HepatiQ is trained on the Mayo Clinic Primary Biliary Cholangitis (PBC) dataset 
 | Name | Role | Focus Area |
 | --- | --- | --- |
 | Nirali | Data & ML Lead | Data cleaning, model training, SHAP integration |
-| Meet | Backend & MLOps / Repo Management | FastAPI, model serving, GitHub organization |
+| Pranjal | Backend & MLOps / Repo Management | FastAPI, model serving, GitHub organization |
 | Deekshitha | Frontend UI | Streamlit interface, UX |
 | Rudra | Clinical Validation | Statistical testing, MELD benchmarking, documentation |
 
@@ -75,7 +75,7 @@ This repository follows a simple branch-based workflow so the team can stay orga
 
 Examples:
 
-- `meet-backend`
+- `pranjal-backend`
 - `nirali-ml`
 - `deekshitha-frontend`
 - `rudra-validation`
