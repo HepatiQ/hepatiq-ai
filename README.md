@@ -1,67 +1,78 @@
 # HepatiQ
 
-HepatiQ is a clinical decision-support web application that estimates mortality risk for patients with Primary Biliary Cholangitis (PBC), a chronic liver disease, using routine lab values and an ex[...]
+**HepatiQ** is an explainable clinical decision-support web application that estimates 5-year severe event risk (death or liver transplant) for patients with Primary Biliary Cholangitis (PBC) using routine liver function tests and machine learning with SHAP-based interpretability.
 
 ## Overview
 
-Clinicians often have to weigh several lab markers at once to judge how serious a patient's liver disease is. HepatiQ takes that judgment call and grounds it in a model trained on real outcomes dat[...]
+Clinicians use Liver Function Tests (LFTs) and blood biochemistry to assess hepatic risk, but manual interpretation of multidimensional physiological data is time-consuming, subject to practitioner variability, and inconsistent across facilities. While machine learning can reliably process these inputs, most deployed clinical AI tools are "black boxes" — they output a probability with no explanation of why, creating a significant barrier to clinical trust and adoption.
+
+**HepatiQ** addresses this by combining regularized machine learning classifiers with SHAP-based Explainable AI (XAI) to predict a patient's probability of a severe event within a 5-year window and show clinicians exactly which biomarkers drove that specific prediction.
 
 ### Core Features
-- Mortality risk scoring from five routine lab inputs: Bilirubin, Albumin, Age, Prothrombin Time, and Platelets
-- SHAP-based explainability charts showing each feature's contribution to the prediction
-- Statistically validated performance (bootstrap confidence intervals, MELD score benchmarking)
-- Clean separation between model, API, and UI layers for maintainability
+- **5-year severe event risk scoring** from five routine biomarkers: Serum Bilirubin, Albumin, Age, Prothrombin Time (PT), and Platelets
+- **Interpretable predictions** via SHAP, showing per-patient feature contributions
+- **Regularized dual-model ensemble**: Logistic Regression (L1/L2 penalty) and shallow, regularized XGBoost, compared via 5-fold cross-validation
+- **Statistical rigor**: confidence intervals (not point estimates), class-balanced training, IterativeImputer for missing data
+- **Local diagnostic history**: SQLite logging of patient evaluations and risk scorecards
+- **Clean separation** between data pipeline, model serving (FastAPI), and UI (Streamlit)
 
-## Problem We Solve
+## Problem Statement
 
-Most clinical AI tools are black boxes — they output a score with no visibility into why. That's a hard sell in medicine, where a doctor needs to trust and verify a recommendation before acting [...]
+* **Manual data evaluation:** interpreting complex LFT panels is labor-intensive and subject to practitioner interpretation bias
+* **The "black box" problem:** existing AI diagnostic tools output a probability score without explaining why, limiting clinical adoption
+* **Inconsistent risk staging:** clinics without specialized hepatology expertise struggle to produce uniform, interpretable risk assessments
 
 ## Scope & Limitations
 
-HepatiQ is trained on the Mayo Clinic Primary Biliary Cholangitis (PBC) dataset — a specific autoimmune liver condition, not liver cirrhosis in general. Predictions should be understood as speci[...]
+- **Trained on:** Mayo Clinic Primary Biliary Cholangitis (PBC) dataset — 419 initial patient records; 329 after applying 5-year censoring filter
+- **Disease specificity:** PBC is a specific autoimmune liver condition, *not* liver cirrhosis or other hepatic disorders
+- **Clinical role:** decision-support aid, not an autonomous diagnostic device or replacement for histological biopsy
+- **Target users:** general practitioners, clinical diagnostic labs, medical researchers
+- **Target outcome:** 5-year severe event (death or liver transplant), not short-term prognosis
 
 ## Tech Stack
 
-### Data & ML (Nirali)
-- Pandas & NumPy — data loading and cleaning
-- Scikit-learn — `IterativeImputer` for missing values, `StandardScaler`, Penalized Logistic Regression, Random Forest
-- SHAP — model explainability
+| Category | Technology |
+|----------|-----------|
+| **Programming** | Python 3.10+ |
+| **Database** | SQLite & SQLAlchemy |
+| **Frontend** | Streamlit (custom-themed UI) |
+| **Backend** | FastAPI & Uvicorn (modular inference API) |
+| **ML & Data** | Scikit-learn (IterativeImputer, StandardScaler), Pandas, NumPy, XGBoost |
+| **Explainability** | SHAP |
+| **Version Control** | Git & GitHub |
 
-### Backend API (Pranjal)
-- FastAPI — REST API, with Pydantic models for request/response validation
-- Uvicorn — ASGI server
-- Joblib — loading trained models into memory
-- GitHub — repository and version control (`hepatiq-ai`)
+### Role Breakdown
 
-### Frontend UI (Deekshitha)
-- Streamlit — interactive web interface
-- Requests — communication with the FastAPI backend
-
-### Validation & Clinical Benchmarking (Rudra)
-- SciPy / Statsmodels — bootstrap confidence intervals
-- Scikit-learn — Brier score, stratified cross-validation
-- MELD score — clinical baseline for comparison
-- Markdown — clinical limitations documentation
-
-### DevOps and Collaboration
-- GitHub (`hepatiq-ai`)
-- Team-based, phased development (see [docs/ROADMAP.md](docs/ROADMAP.md))
+| Member | Role | Tools |
+|--------|------|-------|
+| **Nirali Verma** | Data & ML Lead | Pandas, NumPy, Scikit-learn, XGBoost, SHAP |
+| **Pranjal Dubey** | Backend & MLOps | FastAPI, Uvicorn, Joblib, GitHub |
+| **Subbannagari Deekshitha** | Frontend UI | Streamlit, Requests, Plotly |
+| **Rudra Singh Tomar** | Clinical Validation | SciPy, Statsmodels, Scikit-learn |
 
 ## System Flow
-1. A clinician enters a patient's lab values (Bilirubin, Albumin, Age, Prothrombin Time, Platelets) in the Streamlit interface.
-2. Streamlit sends the input to the FastAPI backend via a REST request.
-3. The backend loads the trained model and computes a mortality risk score.
-4. SHAP values are computed for the prediction and returned alongside the score.
-5. Streamlit renders the risk score and an explainability chart showing each feature's contribution.
 
-## Team
+```
+User Input                 Backend Processing            Output
+(Streamlit UI)             (FastAPI + Model)             (Dashboard)
+       ↓                           ↓                            ↓
+Clinician enters        1. Load regularized model    Risk scorecard with:
+lab values              2. Preprocess (StandardScaler) • 5-year risk probability
+  (5 biomarkers)        3. Generate SHAP values        • Per-feature SHAP chart
+       │                4. Log to SQLite               • Clinical interpretation
+       │                                               • Diagnostic history
+       └──────────────────────────┬────────────────────────────┘
+                          REST API (/predict)
+```
 
-| Name | Role | Focus Area |
-| --- | --- | --- |
-| Nirali | Data & ML Lead | Data cleaning, model training, SHAP integration |
-| Pranjal | Backend & MLOps / Repo Management | FastAPI, model serving, GitHub organization |
-| Deekshitha | Frontend UI | Streamlit interface, UX |
-| Rudra | Clinical Validation | Statistical testing, MELD benchmarking, documentation |
+1. Clinician enters patient demographics and LFT biomarkers in Streamlit
+2. Streamlit sends POST request to FastAPI backend
+3. Backend applies preprocessing (imputation, standardization) and loads regularized model
+4. Model predicts 5-year severe event probability
+5. SHAP computes per-feature attributions for that patient
+6. Streamlit renders risk scorecard + explainability visualization
+7. Prediction logged to local SQLite for diagnostic history
 
 ## Repository Workflow
 
@@ -82,11 +93,13 @@ Examples:
 
 The full workflow guidance is in [docs/TEAM_WORKFLOW.md](docs/TEAM_WORKFLOW.md), and the repo includes a simple PR template in [.github/pull_request_template.md](.github/pull_request_template.md).[...]
 
-## Goals
-- Build a functional, interpretable clinical risk tool
-- Validate model performance against the MELD score baseline
-- Deliver interactive SHAP visualizations
-- Complete within a 50-day roadmap
+## Project Goals
+
+1. **Build an automated 5-year severe event predictor** for PBC patients, delivered as a web-accessible tool
+2. **Ensure explainability** via SHAP, showing clinicians which biomarker deviations drove each risk score
+3. **Achieve stable, defensible performance** by training two regularized models (Logistic Regression + shallow XGBoost) and reporting confidence intervals, prioritizing stability over marginal accuracy on a limited-size cohort
+4. **Provide intuitive clinical dashboard** for data entry, risk scoring, and visual feature-importance charts
+5. **Maintain diagnostic history** via local SQLite logging for audit trails and clinical documentation
 
 ## Getting Started
 
@@ -105,8 +118,20 @@ See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for full setup instructio
 
 ## Dataset & Attribution
 
-HepatiQ trains on the Mayo Clinic PBC trial dataset (1974–1984, 418 patients). Commonly redistributed mirrors of this dataset (e.g. via UCI) are shared under CC BY 4.0, which permits reuse with[...]
+**Source:** Mayo Clinic Primary Biliary Cholangitis (PBC) trial dataset (1974–1984)  
+**Initial records:** 419 patients  
+**After 5-year censoring filter:** 329 patients (90 excluded: censored with outcome unknown)  
+**Class balance:** 40.1% severe event, 59.9% event-free (near-balanced, uses `class_weight='balanced'` during training)  
+**License:** Commonly redistributed mirrors (e.g., UCI) are shared under CC BY 4.0, permitting reuse with attribution
+
+## Contributing
+
+This is a **student team project** at Sharda University's Anand School of Engineering & Technology. See [docs/TEAM_WORKFLOW.md](docs/TEAM_WORKFLOW.md) for contribution guidelines.
 
 ## License
 
-This project is currently under active team development and is intended for collaborative, academic use within the HepatiQ project.
+This project is under active team development and is intended for collaborative, academic use within the HepatiQ project framework.
+
+---
+
+**Quick links:** [Getting Started](docs/GETTING_STARTED.md) | [Roadmap](docs/ROADMAP.md) | [Workflow](docs/TEAM_WORKFLOW.md)
