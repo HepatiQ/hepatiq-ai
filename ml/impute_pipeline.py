@@ -55,7 +55,7 @@ def build_feature_frame(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series, pd.S
     features = df.drop(columns=[ID_COL, TARGET_COL, *LEAKY_COLS])
 
     # sex is text ('f'/'m'); encode to 0/1 so the imputer/scaler can use it
-    features["sex"] = features["sex"].map({"f": 0, "m": 1})
+    features["sex"] = features["sex"].astype(str).str.lower().map({"f": 0, "m": 1})
 
     return features, ids, target
 
