@@ -52,6 +52,14 @@ Per-patient SHAP attributions via `shap.LinearExplainer` (`ml/explain.py`), appr
 - Predictions should be reviewed by a qualified clinician before informing patient care; this project is for academic/research and decision-support purposes, not standalone clinical deployment.
 - `sex` is used as a model feature (encoded 0=female, 1=male). Subgroup performance by sex has not been separately evaluated given the small sample size, and should be checked before any broader use.
 
+## Future Work
+
+- External validation using independent PBC cohorts.
+- Benchmarking against Mayo Risk Score, GLOBE Score, and UK-PBC Risk Score.
+- Calibration plots and reliability diagrams.
+- Survival analysis extensions (Cox Proportional Hazards, Random Survival Forests).
+- Evaluation on larger international PBC registries.
+
 ## Reproducing These Results
 ```
 python ml/build_5yr_target.py   # data/pbc.csv -> data/pbc_5yr_target.csv
