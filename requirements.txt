@@ -2,6 +2,7 @@
 pandas
 numpy
 scikit-learn
+xgboost
 shap
 
 # Backend API (Meet)
