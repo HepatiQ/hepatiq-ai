@@ -1,6 +1,29 @@
 {
   "cohort_size": 329,
+  "class_balance": {
+    "severe_event=0": 197,
+    "severe_event=1": 132
+  },
   "cv_folds": 5,
+  "feature_columns": [
+    "trt",
+    "age",
+    "sex",
+    "ascites",
+    "hepato",
+    "spiders",
+    "edema",
+    "bili",
+    "chol",
+    "albumin",
+    "copper",
+    "alk.phos",
+    "ast",
+    "trig",
+    "platelet",
+    "protime",
+    "stage"
+  ],
   "results": {
     "logistic_regression": {
       "roc_auc": {
@@ -204,5 +227,6 @@
       }
     }
   },
-  "winner": "logistic_regression"
+  "winner": "logistic_regression",
+  "winner_selection_criterion": "ROC-AUC CIs overlap (not statistically separable); tie-broken on calibration (Brier)"
 }
