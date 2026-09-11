@@ -24,10 +24,11 @@ each reported as fold scores + mean + 95% CI across the 5 stratified folds.
 The CI uses a t-distribution (df=4) since n=5 is too small for a normal
 approximation to be trustworthy.
 
-Model selection: the pipeline with the highest mean ROC-AUC is refit on the
-full cohort and saved as models/model.pkl (what backend/main.py loads).
-All three fitted pipelines and the full metrics table are also saved so the
-choice is auditable rather than a black box.
+Model selection: models are first compared by mean ROC-AUC.
+If ROC-AUC confidence intervals overlap, calibration (Brier score),
+recall, precision, and recall stability are used as documented
+tie-breakers. The selected model is then refit on the full cohort and
+saved as models/model.pkl.
 
 Run:
     python ml/train.py
@@ -197,17 +198,19 @@ def select_winner(all_results: dict) -> tuple:
     reading noise as a decision. In that case, fall through to tie-breakers
     in this order (each one clinically/statistically motivated for a
     severe-event risk model):
-        1. Recall      -- missing a real severe-event patient (false
-                           negative) is the costlier clinical error, so a
-                           model that catches more true positives is
-                           preferred among near-equal ROC-AUC performers.
-        2. Brier score -- calibration: a well-calibrated probability is
-                           more clinically actionable than a merely
-                           well-ranked one, and this is a risk *score* tool.
+        1. Brier score -- calibration: a well-calibrated probability is
+                more clinically actionable than a merely
+                well-ranked one, and this is a risk score tool.
+
+        2. Recall      -- missing a real severe-event patient (false
+                negative) is the costlier clinical error, so a
+                model that catches more true positives is
+                preferred among near-equal ROC-AUC performers.
+
         3. Precision   -- among models tied so far, prefer fewer false alarms.
+
         4. Recall std  -- prefer the model whose recall is more stable
-                           across folds (less sensitive to which patients
-                           happened to land in which fold).
+                across folds.
 
     Returns (winner_name, reason_string).
     """
@@ -227,11 +230,11 @@ def select_winner(all_results: dict) -> tuple:
     # statistically ruled out by ROC-AUC alone).
     contenders = names
     for metric_path, better, label in [
-        (("recall", "mean"), "max", "recall"),
-        (("brier_score", "mean"), "min", "calibration (Brier)"),
-        (("precision", "mean"), "max", "precision"),
-        (("recall", "std"), "min", "recall stability (std)"),
-    ]:
+    (("brier_score", "mean"), "min", "calibration (Brier)"),
+    (("recall", "mean"), "max", "recall"),
+    (("precision", "mean"), "max", "precision"),
+    (("recall", "std"), "min", "recall stability (std)"),
+]:
         vals = {n: _dig(all_results[n], metric_path) for n in contenders}
         best = max(vals.values()) if better == "max" else min(vals.values())
         tied = [n for n in contenders if round(vals[n], 4) == round(best, 4)]
