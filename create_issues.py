@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 """
-Script to create all HepatiQ project issues using GitHub API
+Script to create HepatiQ project issues using the GitHub API.
 Run: python create_issues.py
+
+Before running:
+1. Replace GITHUB_TOKEN below with a real GitHub Personal Access Token
+   (Settings -> Developer settings -> Personal access tokens -> generate one
+   with "repo" scope, or fine-grained access to Issues on HepatiQ/hepatiq-ai).
+2. Never commit your real token -- keep it out of the file you push. Consider
+   reading it from an environment variable instead:
+       GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
 """
 
 import requests
-import json
 from typing import Optional
 
 GITHUB_TOKEN = "YOUR_GITHUB_TOKEN"  # Replace with your token
@@ -13,626 +20,460 @@ REPO = "HepatiQ/hepatiq-ai"
 API_URL = "https://api.github.com"
 
 issues_data = [
+    # ---------------- Milestone 1 — Connect Trained Model to App ----------------
     {
-        "title": "Load and preprocess Mayo Clinic PBC dataset",
+        "title": "Replace placeholder 5-feature input with full 17-feature clinical form",
         "body": """## Objective
-Load the Mayo Clinic PBC dataset and implement comprehensive data preprocessing pipeline.
+The deployed frontend (`frontend/app.py`) still collects only the old 5-biomarker
+placeholder set (Bilirubin, Albumin, Age, Prothrombin Time, Platelets). The real
+trained model (`models/model.pkl`) requires all 17 Mayo PBC features. Update the
+Streamlit form to collect all 17.
 
 ## Key Tasks
-- [ ] Load dataset from data/ folder
-- [ ] Handle missing values using IterativeImputer
-- [ ] Implement data validation checks
-- [ ] Document data schema and field descriptions
-- [ ] Create metadata.json with dataset information
-- [ ] Verify data quality and completeness
+- [ ] Add form inputs for all 17 features (see `models/training_metrics.json`
+      -> `feature_columns` for the exact list and order)
+- [ ] Numeric validation on all numeric fields
+- [ ] Sensible default values / handling for fields a user leaves blank
+- [ ] Field names/order match `impute_pipeline.py::build_feature_frame` exactly
 
 ## Acceptance Criteria
-- Dataset successfully loaded with no errors
-- Missing values handled properly
-- Data validation tests pass
-- metadata.json created with accurate information
-- Code is documented and follows PEP 8
+- All 17 variables present in the form
+- Validation on numeric fields
+- Missing values handled without crashing
+- Input names match the training pipeline exactly (case-sensitive: `alk.phos`, etc.)
 
 ## Related Components
-- Data module: `data/`
-- ML training: `ml/train.py`
-- Validation: `validation/validate.py`
+- `frontend/app.py`
+- `ml/impute_pipeline.py` (feature list source of truth)
 
-## Resources
-- README.md (System Overview)
-- data/README.md (Data handling guidelines)
-- Pandas documentation: https://pandas.pydata.org/
-- Scikit-learn IterativeImputer: https://scikit-learn.org/""",
+## Priority
+High""",
         "assignees": [""],
-        "labels": ["@Nirali-ML", "feature", "data-preparation"]
+        "labels": ["@Deekshitha-Frontend", "@Pranjal-Backend", "feature", "high-priority"],
     },
     {
-        "title": "Implement feature engineering pipeline",
+        "title": "Update FastAPI prediction schema to 17 features",
         "body": """## Objective
-Implement feature engineering for the 5 key lab values: Bilirubin, Albumin, Age, Prothrombin Time, and Platelets.
-
-## Feature Details
-The model uses these 5 features:
-1. **Bilirubin** (mg/dL) - Liver function marker
-2. **Albumin** (g/dL) - Protein level indicator
-3. **Age** (years) - Patient age
-4. **Prothrombin Time** (PT) - Blood clotting measure
-5. **Platelets** (10^9/L) - Blood cell count
+`backend/main.py`'s `PredictRequest` Pydantic model still hardcodes the old
+5-feature schema and will throw a shape-mismatch error against the real
+17-feature `models/model.pkl`. Align the backend with the actual trained model.
 
 ## Key Tasks
-- [ ] Standardize features using StandardScaler
-- [ ] Create feature interaction terms if needed
-- [ ] Implement feature validation checks
-- [ ] Document feature engineering approach
-- [ ] Create feature documentation file
-- [ ] Test feature pipeline with sample data
+- [ ] Update `PredictRequest` to accept all 17 features, matching
+      `ml/impute_pipeline.py::build_feature_frame` field names and order
+- [ ] Update the `/predict` handler to build the feature array/DataFrame in
+      the correct column order before calling `model.predict_proba(...)`
+- [ ] Update or remove the SHAP explainer call in `backend/main.py` to use
+      `shap.LinearExplainer`, matching the final model (Logistic Regression,
+      see Issue #11)
+- [ ] Update API docs / OpenAPI schema (FastAPI auto-generates this from the
+      Pydantic model, but double check descriptions are accurate)
 
 ## Acceptance Criteria
-- All 5 features properly scaled and validated
-- Feature ranges documented
-- Unit conversions handled correctly
-- Code passes tests with sample data
-- Documentation is comprehensive
+- Pydantic schema updated to 17 fields
+- `/predict` accepts all 17 features and returns a valid probability
+- Successful inference using the real `models/model.pkl`, not the old
+  placeholder
+- No shape-mismatch errors
 
-## Depends On
-- #1 (Load and preprocess dataset)
+## Related Components
+- `backend/main.py`
+- `models/model.pkl`
 
-## Resources
-- scikit-learn StandardScaler: https://scikit-learn.org/
-- ml/README.md""",
+## Priority
+High""",
         "assignees": [""],
-        "labels": ["@Nirali-ML", "feature", "ml-pipeline"]
+        "labels": ["@Pranjal-Backend", "feature", "high-priority"],
     },
     {
-        "title": "Train ML models (Logistic Regression & Random Forest)",
+        "title": "End-to-end prediction testing (Streamlit -> FastAPI -> Model -> SHAP)",
         "body": """## Objective
-Train and optimize Penalized Logistic Regression and Random Forest models on the preprocessed Mayo Clinic PBC dataset.
-
-## Model Details
-- **Penalized Logistic Regression**: L1/L2 regularization
-- **Random Forest**: Multiple trees for ensemble learning
-- **Cross-validation**: Stratified K-Fold (k=5)
-- **Output**: Mortality risk probability
+Verify the full request path works after Issues #1 and #2 land: a user fills
+out the Streamlit form, the request reaches FastAPI, the model scores it, and
+a SHAP explanation is returned and displayed.
 
 ## Key Tasks
-- [ ] Implement Penalized Logistic Regression model
-- [ ] Implement Random Forest model
-- [ ] Perform cross-validation (stratified k-fold)
-- [ ] Tune hyperparameters
-- [ ] Calculate performance metrics (accuracy, precision, recall, F1)
-- [ ] Save trained models to models/ folder
-- [ ] Document model performance and configurations
+- [ ] Manually test with at least one known patient record (compare against
+      `ml/explain.py`'s output for the same patient as a ground truth check)
+- [ ] Test edge cases: missing optional fields, boundary values (age=0,
+      very high bilirubin, etc.)
+- [ ] Confirm SHAP explanation values match what `ml/explain.py` produces
+      for the same input, so backend and offline explainability don't drift
 
 ## Acceptance Criteria
-- Both models trained successfully
-- Cross-validation completed with metrics reported
-- Models saved as .pkl files with version numbers
-- Performance metrics documented in models/README.md
-- Hyperparameters documented
-- Code follows best practices
+- A test patient is successfully scored end-to-end
+- Risk probability displayed correctly in the UI
+- SHAP explanation displayed and matches `ml/explain.py`'s output for the
+  same patient
+- No backend errors across the tested cases
 
-## Depends On
-- #2 (Feature engineering pipeline)
+## Related Components
+- `frontend/app.py`, `backend/main.py`, `ml/explain.py`
 
-## Resources
-- scikit-learn Logistic Regression: https://scikit-learn.org/
-- scikit-learn Random Forest: https://scikit-learn.org/
-- ml/README.md""",
+## Priority
+High""",
         "assignees": [""],
-        "labels": ["@Nirali-ML", "feature", "ml-model"]
+        "labels": ["@Pranjal-Backend", "testing", "high-priority"],
     },
+    # ---------------- Milestone 2 — Explainability ----------------
     {
-        "title": "Generate SHAP values for model explainability",
+        "title": "Integrate SHAP visualization into the Streamlit dashboard",
         "body": """## Objective
-Implement SHAP (SHapley Additive exPlanations) value generation to provide explainability for model predictions.
-
-## SHAP Features to Implement
-- [ ] Force plots (individual prediction explanations)
-- [ ] Summary plots (global model interpretation)
-- [ ] Dependence plots (feature relationships)
-- [ ] Feature importance rankings
+Display the per-patient SHAP explanation directly in the Streamlit UI,
+building on the working console version in `ml/explain.py`.
 
 ## Key Tasks
-- [ ] Install and configure SHAP library
-- [ ] Create SHAP explainer for trained models
-- [ ] Generate SHAP values for test dataset
-- [ ] Implement SHAP visualization generation
-- [ ] Create feature importance plots
-- [ ] Document SHAP integration approach
-- [ ] Test SHAP output with sample predictions
+- [ ] Reuse `ml/explain.py`'s logic (or the backend's SHAP call from
+      Issue #2) to get per-feature impact values for the submitted patient
+- [ ] Render a waterfall or bar chart (Plotly, per the team's existing
+      preference over matplotlib) showing each feature's contribution
+- [ ] Show a feature-contribution table alongside the chart
+- [ ] Clearly mark positive (risk-increasing) vs negative (risk-decreasing)
+      contributors
 
 ## Acceptance Criteria
-- SHAP values generated successfully for predictions
-- Visualizations created and tested
-- Integration with backend API ready
-- Documentation complete with examples
-- Performance tested (generation time acceptable)
+- Waterfall or bar chart visible in the dashboard
+- Feature contribution table visible
+- Positive/negative contributors visually distinguished
 
-## Depends On
-- #3 (Model training)
+## Related Components
+- `frontend/app.py`
+- `ml/explain.py`
 
-## Resources
-- SHAP Documentation: https://shap.readthedocs.io/
-- ml/README.md
-- frontend/README.md (for visualization requirements)""",
+## Priority
+High""",
         "assignees": [""],
-        "labels": ["@Nirali-ML", "feature", "explainability"]
+        "labels": ["@Deekshitha-Frontend", "feature", "high-priority"],
     },
     {
-        "title": "Set up FastAPI backend server and API structure",
+        "title": "Add a plain-language clinical interpretation panel",
         "body": """## Objective
-Establish FastAPI backend server with proper routing, validation, and error handling.
+Auto-generate a short, human-readable sentence summarizing the SHAP result,
+so a clinician doesn't have to read a raw feature-impact table to get the
+gist.
 
-## API Structure
-- Base URL: `http://localhost:5000`
-- Health check: `GET /health`
-- Documentation: `GET /docs` (Swagger UI)
-- Alternative docs: `GET /redoc` (ReDoc)
+Example: "Elevated bilirubin and low albumin increased risk. Higher platelet
+count reduced risk."
 
 ## Key Tasks
-- [ ] Initialize FastAPI application
-- [ ] Set up Uvicorn ASGI server
-- [ ] Implement request/response data models using Pydantic
-- [ ] Create API documentation (Swagger UI)
-- [ ] Implement error handling middleware
-- [ ] Set up logging and monitoring
-- [ ] Create health check endpoint
-- [ ] Configure CORS for frontend access
+- [ ] Take the top N SHAP contributors (positive and negative) for a patient
+- [ ] Map feature names to clinician-friendly phrasing (e.g. `bili` ->
+      "bilirubin", `alk.phos` -> "alkaline phosphatase")
+- [ ] Generate a 1-2 sentence auto-summary from the top contributors
 
 ## Acceptance Criteria
-- FastAPI server starts and runs without errors
-- Swagger documentation accessible at /docs
-- All endpoints return proper HTTP status codes
-- Request validation working correctly
-- Error messages informative and consistent
-- Code follows FastAPI best practices
+- Auto-generated interpretation sentence displayed
+- Based on the actual top SHAP features for that patient, not hardcoded text
 
-## Notes
-This is foundational work for the backend. Other backend tasks depend on this.
+## Related Components
+- `frontend/app.py`
 
-## Resources
-- FastAPI Documentation: https://fastapi.tiangolo.com/
-- Pydantic Validation: https://docs.pydantic.dev/
-- backend/README.md""",
+## Priority
+Medium""",
         "assignees": [""],
-        "labels": ["@Pranjal-Backend", "feature", "backend-setup"]
+        "labels": ["@Pranjal-Backend", "feature", "medium-priority"],
     },
+    # ---------------- Milestone 3 — Validation & Research ----------------
     {
-        "title": "Create /predict endpoint for mortality risk scoring",
+        "title": "Generate a reliability (calibration) diagram for the final model",
         "body": """## Objective
-Implement the main prediction endpoint that takes patient lab values and returns mortality risk score with SHAP explanations.
-
-## Endpoint Specification
-**POST /predict**
-
-### Request Body
-```json
-{
-  "bilirubin": 1.5,
-  "albumin": 3.8,
-  "age": 65,
-  "prothrombin_time": 12.5,
-  "platelets": 150000
-}
-```
-
-### Response
-```json
-{
-  "risk_score": 0.35,
-  "confidence_interval": [0.28, 0.42],
-  "risk_level": "high",
-  "shap_values": {...},
-  "shap_base_value": 0.25,
-  "feature_contributions": {...}
-}
-```
+The model card currently reports Brier score but not a full calibration
+curve. Add one to visually confirm how well-calibrated the deployed model's
+probabilities actually are.
 
 ## Key Tasks
-- [ ] Load trained model from models/ folder
-- [ ] Validate input data (ranges, types)
-- [ ] Preprocess input using feature pipeline
-- [ ] Generate prediction with probability
-- [ ] Calculate confidence intervals (bootstrap)
-- [ ] Generate SHAP values for explanation
-- [ ] Format response with all required data
-- [ ] Implement error handling for invalid inputs
-- [ ] Add logging for all predictions
-- [ ] Test with various input scenarios
+- [ ] Use `sklearn.calibration.calibration_curve` (or similar) on
+      cross-validated out-of-fold predictions
+- [ ] Plot predicted probability vs. observed frequency
+- [ ] Save the figure under `validation/`
+- [ ] Reference it from `docs/model_card.md`
 
 ## Acceptance Criteria
-- Endpoint returns accurate predictions
-- Response time < 500ms
-- Input validation catches invalid data
-- Error messages are clear
-- SHAP values generated correctly
-- Confidence intervals calculated properly
-- Integration with frontend tested
+- Reliability plot created and saved under `validation/`
+- Plot referenced in the model card / report
 
-## Depends On
-- #5 (FastAPI setup)
-- #3 (Model training) - ML side
-- #4 (SHAP integration) - ML side
+## Related Components
+- `validation/validate.py`
+- `docs/model_card.md`
 
-## Resources
-- FastAPI Documentation: https://fastapi.tiangolo.com/
-- backend/README.md""",
+## Priority
+High""",
         "assignees": [""],
-        "labels": ["@Pranjal-Backend", "feature", "api-endpoint"]
+        "labels": ["@Rudra-Validation", "research", "high-priority"],
     },
     {
-        "title": "Implement model loading and serving with Joblib",
+        "title": "Add bootstrap confidence intervals alongside CV metrics",
         "body": """## Objective
-Set up efficient model loading, caching, and serving from the backend for fast predictions.
-
-## Model Loading Strategy
-- Load all models at startup for performance
-- Cache models in memory
-- Support model versioning
-- Graceful error handling for missing models
+Cross-validation CIs (t-distribution, n=5 folds) are already in
+`models/training_metrics.json`, but a bootstrap-based estimate would give a
+second, less-assumption-heavy uncertainty estimate on the final model's
+predictions -- useful for the report given how much weight the CI-overlap
+question has carried in model selection.
 
 ## Key Tasks
-- [ ] Implement model loader using Joblib
-- [ ] Load models on server startup (not per request)
-- [ ] Create model versioning system
-- [ ] Implement model cache/singleton pattern
-- [ ] Handle model not found errors gracefully
-- [ ] Document model paths and versions
-- [ ] Create model health check function
-- [ ] Test model loading and inference speed
-- [ ] Implement model hot-reload capability (optional)
+- [ ] Use `validation/validate.py::bootstrap_ci` (already implemented) on
+      the final model's out-of-sample predictions
+- [ ] Run at least 1000 bootstrap resamples
+- [ ] Report bootstrap CIs for ROC-AUC and Brier score
+- [ ] Compare against the existing CV-fold-based CIs -- note whether they
+      broadly agree or disagree
 
 ## Acceptance Criteria
-- Models load on server startup
-- First prediction < 200ms (after warmup)
-- Model version clearly identified
-- Error handling for missing/corrupt models
-- Model loading tested with all versions
-- Documentation clear and complete
+- 1000+ bootstrap iterations run
+- ROC-AUC bootstrap CI reported
+- Brier score bootstrap CI reported
 
-## Depends On
-- #3 (Model training) - ML side
-- #5 (FastAPI setup)
+## Related Components
+- `validation/validate.py`
 
-## Resources
-- Joblib Documentation: https://joblib.readthedocs.io/
-- models/README.md
-- backend/README.md""",
+## Priority
+Medium""",
         "assignees": [""],
-        "labels": ["@Pranjal-Backend", "feature", "model-serving"]
+        "labels": ["@Rudra-Validation", "research", "medium-priority"],
     },
     {
-        "title": "Build Streamlit UI layout and patient input form",
+        "title": "Benchmark HepatiQ against the Mayo Risk Score",
         "body": """## Objective
-Create an intuitive and professional Streamlit interface for patient data input and risk score display.
-
-## UI Components to Build
-- [ ] Page configuration and title
-- [ ] Patient input form with 5 lab value fields
-  - Bilirubin (mg/dL): 0.0 - 10.0
-  - Albumin (g/dL): 1.0 - 5.0
-  - Age (years): 18 - 120
-  - Prothrombin Time: 10.0 - 40.0
-  - Platelets (10^9/L): 10000 - 500000
-- [ ] Input validation and error messages
-- [ ] Submit button with loading state
-- [ ] Results display section
-- [ ] Responsive layout (columns for organization)
-- [ ] Professional styling and colors
-- [ ] Info/help text for users
-
-## Key Features
-- [ ] Form with proper input ranges and validation
-- [ ] Loading spinner during prediction
-- [ ] Clear display of results
-- [ ] User-friendly error messages
-- [ ] Mobile-responsive design
-- [ ] Accessibility features
-
-## Acceptance Criteria
-- All 5 input fields working correctly
-- Input validation catches out-of-range values
-- Form submits data properly
-- Layout is clean and professional
-- Error messages are helpful
-- Page responsive on different screen sizes
-- Code well-documented
-
-## Resources
-- Streamlit Documentation: https://docs.streamlit.io/
-- frontend/README.md
-- onboarding/DEEKSHITHA_FRONTEND_DEVELOPER.md""",
-        "assignees": [""],
-        "labels": ["@Deekshitha-Frontend", "feature", "ui-frontend"]
-    },
-    {
-        "title": "Integrate frontend with backend API /predict endpoint",
-        "body": """## Objective
-Connect the Streamlit frontend to the backend /predict endpoint for live predictions.
-
-## Integration Points
-- API Base URL: `http://localhost:5000`
-- Endpoint: `POST /predict`
-- Request timeout: 10 seconds
-- Retry attempts: 3
+`validation/validate.py::compare_to_meld` is currently a stub. Implement a
+real comparison against a classical PBC prognostic tool so the report can
+say something evidence-based about how HepatiQ compares to existing clinical
+scores, not just to itself.
 
 ## Key Tasks
-- [ ] Import requests library
-- [ ] Create API communication functions
-- [ ] Handle form submission to backend
-- [ ] Parse API response
-- [ ] Display risk score with appropriate styling
-- [ ] Show confidence intervals
-- [ ] Handle API errors gracefully
-- [ ] Add retry logic for failed requests
-- [ ] Create loading states during API calls
-- [ ] Test with backend running
-
-## Error Handling
-- [ ] Connection refused errors
-- [ ] Invalid response format
-- [ ] Server timeout
-- [ ] Invalid input data
-- [ ] User-friendly error messages
+- [ ] Implement the Mayo Risk Score formula for PBC (not MELD -- MELD is a
+      general end-stage liver disease score; Mayo's own PBC-specific score
+      is the more appropriate comparator here and what the dataset was
+      originally used to validate)
+- [ ] Compute Mayo Risk Score for the same 329-patient cohort
+- [ ] Compare discrimination (ROC-AUC) and calibration side by side
+- [ ] Document the comparison, including where HepatiQ over- or
+      under-performs the classical score, and why that might be
 
 ## Acceptance Criteria
-- Frontend successfully calls backend API
-- Predictions displayed correctly
-- Error handling works for all scenarios
-- Loading states show proper feedback
-- Response time acceptable (< 1 second)
-- Integration tested end-to-end
+- Mayo Risk Score implemented and computed on the cohort
+- Performance comparison table (HepatiQ vs. Mayo Risk Score)
+- Discussion of results added to documentation
 
-## Depends On
-- #8 (UI layout)
-- #6 (/predict endpoint) - Backend side
+## Related Components
+- `validation/validate.py`
+- `docs/model_card.md`
 
-## Resources
-- Requests Library: https://requests.readthedocs.io/
-- Streamlit Documentation: https://docs.streamlit.io/
-- frontend/README.md""",
+## Priority
+High""",
         "assignees": [""],
-        "labels": ["@Deekshitha-Frontend", "feature", "integration"]
+        "labels": ["@Nirali-ML", "@Rudra-Validation", "research", "high-priority"],
+    },
+    # ---------------- Milestone 4 — Product Quality ----------------
+    {
+        "title": "Prediction history dashboard (SQLite)",
+        "body": """## Objective
+Log each prediction to SQLite (per the project's established no-JWT,
+SQLite-only session logging scope) and surface a simple history view.
+
+## Key Tasks
+- [ ] Log patient input, risk score, and timestamp to SQLite on each
+      `/predict` call
+- [ ] Build a Streamlit table view of past predictions
+- [ ] Add basic search
+- [ ] Add sort-by-date
+
+## Acceptance Criteria
+- Table view of prediction history
+- Search functionality
+- Sortable by date
+
+## Related Components
+- `backend/main.py`
+- `frontend/app.py`
+
+## Priority
+Medium""",
+        "assignees": [""],
+        "labels": ["@Deekshitha-Frontend", "feature", "medium-priority"],
     },
     {
-        "title": "Display risk scores and SHAP explainability charts",
+        "title": "Export risk report as PDF",
         "body": """## Objective
-Create beautiful and informative visualizations to display mortality risk scores and SHAP explanations.
+Let a clinician download a patient's risk assessment (score + SHAP
+explanation) as a PDF for their records.
 
-## Results Display Components
-- [ ] Large risk score display with color coding
-  - Green: Low risk (< 30%)
-  - Yellow: Medium risk (30-60%)
-  - Red: High risk (> 60%)
-- [ ] Confidence interval display
-- [ ] Risk level badge/label
-- [ ] SHAP force plot (individual explanation)
-- [ ] Feature importance chart (bar plot)
-- [ ] Summary statistics
-
-## SHAP Visualizations
-- [ ] Force plot showing feature contributions
-- [ ] Feature impact on prediction
-- [ ] Color-coded contributions (positive/negative)
-- [ ] Interactive tooltips with explanations
-
-## Key Features
-- [ ] Color-coded risk levels
-- [ ] Clear numerical displays
-- [ ] Professional charts using Plotly
-- [ ] Responsive chart sizing
-- [ ] Print-friendly layout
-- [ ] Export results capability (optional)
+## Key Tasks
+- [ ] Generate a PDF containing: risk score, SHAP explanation, timestamp
+- [ ] Add a download button in the Streamlit UI
 
 ## Acceptance Criteria
-- Risk score displayed prominently
-- Color coding matches risk levels
-- SHAP charts render correctly
-- Charts are interactive and clear
-- Layout is professional and organized
-- Mobile-responsive design
-- All text readable and accessible
+- PDF includes risk score, SHAP explanation, and timestamp
+- Downloadable from the UI
 
-## Depends On
-- #9 (API integration)
-- #4 (SHAP integration) - ML side
+## Related Components
+- `frontend/app.py`
 
-## Resources
-- Streamlit Metrics: https://docs.streamlit.io/
-- Plotly Charting: https://plotly.com/python/
-- frontend/README.md""",
+## Priority
+Medium""",
         "assignees": [""],
-        "labels": ["@Deekshitha-Frontend", "feature", "visualization"]
+        "labels": ["@Pranjal-Backend", "feature", "medium-priority"],
+    },
+    # ---------------- Milestone 5 — Documentation ----------------
+    {
+        "title": "Document the model-selection decision: Logistic Regression over Random Forest",
+        "body": """## Objective
+Cross-validation shows Logistic Regression and Random Forest are NOT
+statistically distinguishable on this cohort -- their 95% CIs overlap on
+every metric (ROC-AUC, precision, recall, F1, Brier). Random Forest has a
+marginally higher point-estimate ROC-AUC, but Logistic Regression has been
+selected as the final model, on the following principle: since HepatiQ
+outputs a continuous risk *probability* rather than a fixed-threshold
+decision, calibration (Brier score) is prioritized over recall as the
+tie-breaker in `ml/train.py::select_winner`. Logistic Regression has the
+best calibration of the three candidates (Brier 0.1363 vs. Random Forest's
+0.1419), which is why it wins under that rule.
+
+## Key Tasks
+- [ ] Update `docs/model_card.md` and `README.md` to state the CI-overlap
+      finding explicitly (LR and RF are not statistically distinguishable),
+      not just report LR as if it were a decisive, uncontested winner
+- [ ] Document the calibration-first tie-break principle and why it applies
+      to a risk-score tool specifically
+- [ ] Leave `ml/train.py::select_winner`'s tie-break order (Brier before
+      Recall) as-is going forward -- do not reorder it again based on which
+      model it happens to produce
+
+## Acceptance Criteria
+- Tie-break principle (calibration over recall) documented with reasoning,
+  not just an outcome
+- CI-overlap between LR and RF explicitly discussed in the model card, not
+  glossed over
+- `docs/model_card.md` updated and linked from `README.md`
+
+## Related Components
+- `ml/train.py`, `docs/model_card.md`, `README.md`
+
+## Priority
+High""",
+        "assignees": [""],
+        "labels": ["@Pranjal-Backend", "documentation", "high-priority"],
     },
     {
-        "title": "Implement model validation and performance testing",
+        "title": "Create a system architecture diagram",
         "body": """## Objective
-Create comprehensive validation tests to ensure model accuracy, reliability, and clinical appropriateness.
+A single professional architecture figure for the README and viva
+presentation, showing how the pieces fit together.
 
-## Test Categories
-### Model Accuracy Tests
-- [ ] Accuracy on test dataset
-- [ ] Performance on stratified folds
-- [ ] Metrics on different patient subgroups
-- [ ] Edge case handling (very high/low values)
-
-### Data Validation Tests
-- [ ] Input data type validation
-- [ ] Value range validation
-- [ ] Missing data handling
-- [ ] Outlier detection
-
-### System Tests
-- [ ] End-to-end prediction pipeline
-- [ ] API response validation
-- [ ] SHAP value generation
-
-## Validation Tasks
-- [ ] Implement accuracy metrics calculation (accuracy, precision, recall, F1)
-- [ ] Calculate Brier score for probability predictions
-- [ ] Implement confusion matrix analysis
-- [ ] Test model on edge cases
-- [ ] Verify output ranges (0-1 for probability)
-- [ ] Test with missing/invalid data handling
-- [ ] Benchmark against baseline model
-- [ ] Performance metric logging
-- [ ] Create validation report template
+## Key Tasks
+- [ ] Diagram covering: Streamlit frontend -> FastAPI backend -> trained
+      model (Logistic Regression) -> SHAP explainer -> SQLite logging
+- [ ] Add to `README.md`
+- [ ] Add to presentation materials
 
 ## Acceptance Criteria
-- All validation tests pass
-- Metrics calculated and logged correctly
-- Edge cases handled properly
-- Report generated with findings
-- Performance meets requirements
-- Documentation complete
+- Diagram includes Streamlit, FastAPI, the final model, SHAP, and SQLite
+- Added to README and presentation deck
 
-## Resources
-- Scikit-learn Metrics: https://scikit-learn.org/
-- validation/README.md
-- onboarding/RUDRA_VALIDATION_ENGINEER.md""",
+## Related Components
+- `README.md`
+
+## Priority
+Medium""",
         "assignees": [""],
-        "labels": ["@Rudra-Validation", "feature", "testing"]
+        "labels": ["@Pranjal-Backend", "@Nirali-ML", "@Deekshitha-Frontend", "@Rudra-Validation", "documentation", "medium-priority"],
+    },
+    # ---------------- Stretch Goals ----------------
+    {
+        "title": "[Stretch] Docker deployment",
+        "body": "Containerize the FastAPI backend and Streamlit frontend for reproducible local/cloud deployment. Not required for the academic submission; consider only after Milestones 1-5 are complete.",
+        "assignees": [""],
+        "labels": ["@Pranjal-Backend", "stretch-goal"],
     },
     {
-        "title": "Calculate bootstrap confidence intervals for predictions",
-        "body": """## Objective
-Implement bootstrap resampling to generate confidence intervals for model predictions, providing uncertainty quantification.
-
-## Confidence Interval Calculation
-- [ ] 2.5th percentile (lower bound)
-- [ ] 97.5th percentile (upper bound)
-- [ ] Standard error calculation
-- [ ] Bias correction (optional)
-
-## Bootstrap Tasks
-- [ ] Implement bootstrap resampling function
-- [ ] Resample training data N times (N=1000)
-- [ ] Train models on each bootstrap sample
-- [ ] Generate predictions from each model
-- [ ] Calculate confidence intervals (95%)
-- [ ] Integrate with /predict endpoint
-- [ ] Test confidence interval coverage
-- [ ] Document bootstrap methodology
-- [ ] Visualize uncertainty distributions
-
-## Integration Points
-- Add CI to /predict response
-- Display CI in frontend results
-- Include CI in SHAP explanations
-- Log CI for all predictions
-
-## Acceptance Criteria
-- Bootstrap implemented correctly
-- Confidence intervals calculated accurately
-- Coverage probability verified (should be ~95%)
-- Integration with prediction endpoint working
-- Response time acceptable
-- Documentation complete with examples
-
-## Resources
-- SciPy Bootstrap: https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.bootstrap.html
-- Statsmodels Bootstrap: https://www.statsmodels.org/
-- validation/README.md""",
+        "title": "[Stretch] CI/CD with GitHub Actions",
+        "body": "Add a GitHub Actions workflow to run `ml/train.py` reproducibility checks and/or basic backend tests on each PR.",
         "assignees": [""],
-        "labels": ["@Rudra-Validation", "feature", "uncertainty-quantification"]
+        "labels": ["@Pranjal-Backend", "stretch-goal"],
     },
     {
-        "title": "Benchmark model against MELD score (clinical baseline)",
-        "body": """## Objective
-Compare HepatiQ model performance against the clinical MELD (Model for End-Stage Liver Disease) score baseline.
-
-## MELD Score Background
-MELD is a standard clinical scoring system used for liver disease prognosis:
-- Formula uses INR, bilirubin, and creatinine
-- Score range: 6-40+
-- Higher scores = worse prognosis
-- Clinical standard for prioritization
-
-## Comparison Metrics
-- [ ] ROC-AUC comparison
-- [ ] Calibration analysis
-- [ ] Decision curve analysis
-- [ ] Net benefit calculation
-- [ ] Sensitivity/specificity at key thresholds
-
-## Benchmarking Tasks
-- [ ] Implement MELD score calculator
-- [ ] Calculate MELD scores for test dataset
-- [ ] Compare predictions with MELD scores
-- [ ] Calculate correlation coefficient
-- [ ] Compute performance metrics comparison
-- [ ] Statistical significance testing
-- [ ] Generate comparison visualizations
-- [ ] Document advantages/limitations of each approach
-- [ ] Create clinical comparison report
-
-## Deliverables
-- [ ] MELD calculator function
-- [ ] Comparison report with statistics
-- [ ] Visualization comparing both approaches
-- [ ] Clinical interpretation document
-- [ ] Recommendation on when to use each method
-
-## Acceptance Criteria
-- MELD calculator implemented correctly
-- Comparison metrics calculated accurately
-- Statistical tests performed appropriately
-- Report is comprehensive and clinical
-- Visualizations are clear and professional
-- Documentation explains findings clearly
-
-## Resources
-- MELD Score Info: https://en.wikipedia.org/wiki/Model_for_End-Stage_Liver_Disease
-- SciPy Stats: https://docs.scipy.org/doc/scipy/reference/stats.html
-- validation/README.md""",
+        "title": "[Stretch] User authentication",
+        "body": "Out of current scope per project decisions (no JWT auth planned). Revisit only if the project scope expands beyond the academic submission.",
         "assignees": [""],
-        "labels": ["@Rudra-Validation", "feature", "clinical-validation"]
-    }
+        "labels": ["stretch-goal"],
+    },
+    {
+        "title": "[Stretch] External validation dataset",
+        "body": "Validate the model against a PBC cohort outside the Mayo trial data, if one becomes available, to test generalization beyond this specific historical cohort.",
+        "assignees": [""],
+        "labels": ["@Nirali-ML", "@Rudra-Validation", "stretch-goal"],
+    },
+    {
+        "title": "[Stretch] Risk stratification categories (Low / Moderate / High)",
+        "body": "Bucket the continuous risk score into Low/Moderate/High risk categories with clinically justified thresholds, for easier at-a-glance interpretation.",
+        "assignees": [""],
+        "labels": ["@Nirali-ML", "stretch-goal"],
+    },
+    {
+        "title": "[Stretch] Compare against GLOBE score",
+        "body": "Add the GLOBE score as a second classical-score comparator alongside the Mayo Risk Score (Issue #8).",
+        "assignees": [""],
+        "labels": ["@Nirali-ML", "@Rudra-Validation", "stretch-goal"],
+    },
+    {
+        "title": "[Stretch] Compare against UK-PBC score",
+        "body": "Add the UK-PBC score as a third classical-score comparator alongside Mayo Risk Score and GLOBE score.",
+        "assignees": [""],
+        "labels": ["@Nirali-ML", "@Rudra-Validation", "stretch-goal"],
+    },
+    {
+        "title": "[Stretch] Deploy a public demo",
+        "body": "Deploy the app publicly (e.g. Streamlit Community Cloud or similar) for portfolio/demo purposes, after Docker/CI work is done.",
+        "assignees": [""],
+        "labels": ["@Pranjal-Backend", "stretch-goal"],
+    },
 ]
+
 
 def create_issue(title: str, body: str, labels: list, assignees: Optional[list] = None) -> dict:
     """Create a single issue in the repository"""
     headers = {
         "Authorization": f"token {GITHUB_TOKEN}",
-        "Accept": "application/vnd.github.v3+json"
+        "Accept": "application/vnd.github.v3+json",
     }
-    
+
     payload = {
         "title": title,
         "body": body,
-        "labels": labels
+        "labels": labels,
     }
-    
+
     if assignees and assignees[0]:
         payload["assignees"] = assignees
-    
+
     url = f"{API_URL}/repos/{REPO}/issues"
     response = requests.post(url, json=payload, headers=headers)
-    
+
     if response.status_code == 201:
         return {"success": True, "issue": response.json()}
     else:
         return {"success": False, "error": response.json()}
 
+
 def main():
     print(f"Creating {len(issues_data)} issues in {REPO}...\n")
-    
+
     for i, issue in enumerate(issues_data, 1):
         result = create_issue(
             title=issue["title"],
             body=issue["body"],
             labels=issue["labels"],
-            assignees=issue["assignees"]
+            assignees=issue["assignees"],
         )
-        
+
         if result["success"]:
             issue_num = result["issue"]["number"]
-            print(f"✅ #{issue_num}: {issue['title']}")
+            print(f"\u2705 #{issue_num}: {issue['title']}")
         else:
-            print(f"❌ Failed: {issue['title']}")
+            print(f"\u274c Failed: {issue['title']}")
             print(f"   Error: {result['error']}")
-    
+
     print(f"\nDone! Visit: https://github.com/{REPO}/issues")
+
 
 if __name__ == "__main__":
     main()
