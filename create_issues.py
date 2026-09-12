@@ -15,7 +15,7 @@ Before running:
 import requests
 from typing import Optional
 
-GITHUB_TOKEN = "YOUR_GITHUB_TOKEN"  # Replace with your token
+GITHUB_TOKEN = "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"  # Replace with your token
 REPO = "HepatiQ/hepatiq-ai"
 API_URL = "https://api.github.com"
 
