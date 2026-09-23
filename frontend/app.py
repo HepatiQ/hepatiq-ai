@@ -2,8 +2,8 @@ import streamlit as st
 import requests
 import plotly.graph_objects as go
 
-st.set_page_config(page_title="HepatiQ demo", layout="centered")
-st.title("HepatiQ — PBC mortality risk (demo)")
+st.set_page_config(page_title="HepatiQ", layout="wide")
+st.title("Palm Bot HepatiQ Mortality Risk Calculator")
 st.write("Enter the five routine inputs and press 'Compute risk' to call the backend API.")
 
 with st.form("input_form"):
