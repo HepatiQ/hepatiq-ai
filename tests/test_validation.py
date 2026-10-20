@@ -8,14 +8,16 @@ from validation.validate import bootstrap_ci, compare_to_meld
 def test_bootstrap_ci_brackets_the_statistic():
     preds = np.arange(1, 41, dtype=float)
     labels = np.zeros(40)
-    lower, upper = bootstrap_ci(preds, labels, lambda l, p: float(np.mean(p)), n_boot=500, seed=0)
+    lower, upper = bootstrap_ci(preds, labels, lambda y, p: float(np.mean(p)), n_boot=500, seed=0)
     assert lower < preds.mean() < upper
 
 
 def test_bootstrap_ci_is_deterministic_for_a_fixed_seed():
     preds = np.random.RandomState(1).rand(50)
     labels = np.random.RandomState(2).randint(0, 2, 50)
-    stat = lambda l, p: float(np.mean(l))
+    def stat(y, p):
+        return float(np.mean(y))
+
     a = bootstrap_ci(preds, labels, stat, n_boot=200, seed=7)
     b = bootstrap_ci(preds, labels, stat, n_boot=200, seed=7)
     assert a == b

@@ -15,10 +15,10 @@ Contract:
       flagged with whether each value was imputed server-side.
 """
 
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import List, Literal, Optional
-import os
 
 import joblib
 import numpy as np
@@ -221,7 +221,7 @@ def predict(req: PredictRequest) -> PredictResponse:
     if explainer is not None:
         x_transformed = model[:-1].transform(df)
         shap_row = np.asarray(explainer.shap_values(x_transformed)).reshape(-1)
-        impact_by_feature = dict(zip(FEATURE_COLUMNS, (float(v) for v in shap_row)))
+        impact_by_feature = dict(zip(FEATURE_COLUMNS, (float(v) for v in shap_row), strict=False))
 
     contributions = [
         Contribution(
@@ -262,5 +262,5 @@ def history(limit: int = Query(20, ge=1, le=100)) -> HistoryResponse:
     try:
         items = fetch_recent(_state["db_path"], limit)
     except Exception as exc:
-        raise HTTPException(status_code=503, detail=f"Prediction history unavailable: {exc}")
+        raise HTTPException(status_code=503, detail=f"Prediction history unavailable: {exc}") from exc
     return HistoryResponse(items=[HistoryItem(**item) for item in items])

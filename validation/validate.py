@@ -3,13 +3,19 @@
 This module contains small utilities for the clinical-validation workflow.
 """
 
-import numpy as np
 from typing import Callable, Tuple
 
+import numpy as np
 from sklearn.metrics import brier_score_loss, roc_auc_score
 
 
-def bootstrap_ci(preds: np.ndarray, labels: np.ndarray, stat_func: Callable[[np.ndarray, np.ndarray], float], n_boot: int = 1000, seed: int = 0) -> Tuple[float, float]:
+def bootstrap_ci(
+    preds: np.ndarray,
+    labels: np.ndarray,
+    stat_func: Callable[[np.ndarray, np.ndarray], float],
+    n_boot: int = 1000,
+    seed: int = 0,
+) -> Tuple[float, float]:
     """Compute a bootstrap confidence interval for a statistic.
 
     preds and labels should be 1-D arrays of the same length. stat_func(labels, preds) -> float.

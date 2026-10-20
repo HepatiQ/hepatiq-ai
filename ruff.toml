@@ -1,0 +1,19 @@
+line-length = 120
+target-version = "py310"
+
+# One-off ops script, already executed; ships issue data as long literals.
+extend-exclude = ["create_issues.py"]
+
+[lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # import sorting
+    "B",   # bugbear (common footguns)
+]
+
+[lint.per-file-ignores]
+# Scripts read top-to-bottom with stdlib-first import blocks; sorting them
+# reorders sys.path setup ahead of its consumers.
+"ml/*.py" = ["I001"]
+"validation/run_validation.py" = ["I001"]
