@@ -1,84 +1,34 @@
 # Validation
 
-This directory contains model validation, testing, and quality assurance scripts.
+Statistical validation for the HepatiQ model (owner: Rudra).
 
-## Overview
+## What's here
 
-The validation module ensures:
-- Model accuracy and reliability
-- Data quality and integrity
-- System performance and stability
-- Compliance with quality standards
-- Production readiness of models
+- **`validate.py`** — reusable statistics: `bootstrap_ci` (deterministic percentile bootstrap, seedable) and `compare_to_meld` (model-vs-clinical-score Brier/AUC comparison, used by tests).
+- **`run_validation.py`** — the validation runner: generates 5-fold out-of-fold (OOF) predictions with a fresh pipeline per fold (no leakage), scores ROC-AUC, Brier, precision, recall and F1 with 95% bootstrap CIs, and compares against a class-prior baseline.
+- **`report.md`** — the committed report produced by the runner. Regenerate it with the command below; it is deterministic (folds and bootstrap both seed 42).
 
-## Files
+## Running
 
-- **validate.py** - Validation and testing utilities
+```bash
+pip install -r requirements.txt   # once, from the repo root
+python validation/run_validation.py
+```
 
-## Getting Started
+Latest results (n=329, 132 events): **ROC-AUC 0.8828 [0.8409, 0.9185]** vs. class-prior baseline 0.4924; Brier 0.1364 vs. 0.2403 — the model separates clearly from the baseline on both.
 
-1. Install dependencies from the root `requirements.txt`
-2. Run validation tests:
-   ```bash
-   python validation/validate.py
-   ```
+## Why there is no MELD benchmark
 
-## Key Responsibilities
+A clinical-score benchmark (MELD) needs bilirubin, INR and creatinine. The Mayo PBC dataset has bilirubin and protime, but **no INR and no creatinine**, so MELD cannot be computed from this data — a "MELD" built from protime and a fixed creatinine would be a non-clinical construct wearing a clinical name. The class-prior baseline answers the question that matters for judging the model: does it beat "always guess the cohort prevalence"? Decision recorded in `docs/ROADMAP.md`.
 
-- Implement comprehensive test suites
-- Validate model predictions against ground truth
-- Check data quality and consistency
-- Perform end-to-end system testing
-- Generate validation reports and metrics
-- Monitor model performance in production
+## Notes for contributors
 
-## Development Guidelines
+- Tests for the validation helpers live in `tests/test_validation.py` (run the whole suite with `python -m pytest`).
+- Keep the runner deterministic: seed every split and bootstrap, don't read anything time-dependent.
+- Update `report.md` whenever the model or cohort changes, and mention it in the PR.
 
-- Create tests for all critical functions
-- Use clear, descriptive test names
-- Maintain high test coverage (aim for >80%)
-- Document expected vs. actual results
-- Keep tests independent and reproducible
+## Related components
 
-## Testing Categories
-
-### Model Validation
-- Accuracy on test datasets
-- Performance on edge cases
-- Robustness to data variations
-- Inference speed benchmarks
-
-### Data Validation
-- Data completeness checks
-- Data type verification
-- Range and constraint validation
-- Outlier detection
-
-### System Testing
-- API endpoint testing
-- Integration testing
-- Load and performance testing
-- Error handling verification
-
-## Related Components
-
-- **ML** (`../ml/`) - Models being validated
-- **Backend** (`../backend/`) - API endpoints to test
-- **Frontend** (`../frontend/`) - UI/UX testing
-- **Data** (`../data/`) - Test and validation datasets
-
-## Continuous Validation
-
-- Run validation tests on every commit
-- Monitor production model performance
-- Set up automated alerts for quality degradation
-- Maintain validation metrics history
-
-## Contributing
-
-When adding new validations:
-1. Document test objectives clearly
-2. Ensure tests are deterministic
-3. Include both positive and negative test cases
-4. Update this README with new test categories
-5. Share validation results with the team
+- **ML** (`../ml/`) — model and preprocessing being validated
+- **Backend** (`../backend/`) — API endpoints the report backs up
+- **Data** (`../data/`) — the cohort
