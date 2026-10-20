@@ -58,16 +58,17 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+if LOGO_PATH.exists():
+    _logo_col = st.columns([4, 1, 4])[1]
+    _logo_col.image(str(LOGO_PATH), width="stretch")
+
 st.markdown(
-    "<h1 style='text-align:center; padding-top:0.2em; margin-bottom:0.1em;'>HepatiQ</h1>"
+    "<h1 style='text-align:center; padding-top:0.1em; margin-bottom:0.1em; "
+    "font-size:3.4rem; font-weight:800;'>HepatiQ</h1>"
     "<p style='text-align:center; color:#7a8a9a; font-size:1.05em; margin-top:0;'>"
     "5-Year Severe Event Risk Calculator · Primary Biliary Cholangitis</p>",
     unsafe_allow_html=True,
 )
-
-if LOGO_PATH.exists():
-    _logo_col = st.columns([1, 1, 1])[1]
-    _logo_col.image(str(LOGO_PATH), width="stretch")
 
 DISPLAY_NAMES = {
     "trt": "Treatment", "age": "Age", "sex": "Sex", "ascites": "Ascites",
