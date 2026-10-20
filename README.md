@@ -36,6 +36,7 @@ It is not an FDA-approved, CDSCO-approved, or clinically validated medical devic
 - **Clinical role:** decision-support aid, not an autonomous diagnostic device or replacement for histological biopsy
 - **Target users:** general practitioners, clinical diagnostic labs, medical researchers
 - **Target outcome:** 5-year severe event (death or liver transplant), not short-term prognosis
+- **Known limits:** see [docs/LIMITATIONS.md](docs/LIMITATIONS.md) for what the evidence does and does not support
 
 ## Current Model Performance
 
