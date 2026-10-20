@@ -70,15 +70,52 @@ def test_form_submit_renders_scorecard():
 
     assert len(at.get("plotly_chart")) == 1  # SHAP contributions chart
 
+    band_msgs = [m.value for m in at.markdown if "Risk band:" in m.value]
+    assert len(band_msgs) == 1
+    assert band_msgs[0] in (
+        "**Risk band:** :green[Low]",
+        "**Risk band:** :orange[Intermediate]",
+        "**Risk band:** :red[High]",
+    )
+    assert any("Scored in" in c.value for c in at.caption)
+
     assert [e.label for e in at.expander] == ["Recent predictions (local history)"]
     assert len(at.dataframe) == 1  # the prediction we just made is in the history table
+
+
+def test_clear_history_wipes_table():
+    """Clear history button DELETEs server-side rows and refreshes the panel."""
+    if not _backend_reachable():
+        if os.environ.get("CI"):
+            pytest.fail("backend on localhost:8000 unreachable in CI — uvicorn start step broken")
+        pytest.skip("backend on localhost:8000 not running")
+
+    at = AppTest.from_file(str(FRONTEND), default_timeout=60)
+    at.run()
+    assert not at.exception, at.exception
+
+    at.button[0].click().run()  # "Compute risk" -> a row lands in history
+    assert not at.exception, at.exception
+    assert len(at.dataframe) == 1
+
+    at.button[1].click().run()  # "Clear history"
+    assert not at.exception, at.exception
+    assert len(at.dataframe) == 0
+    assert any("No predictions logged yet." in c.value for c in at.caption)
 
 
 class _StubPredictResponse:
     status_code = 200
 
     def __init__(self):
-        self._body = {"probability": 0.5, "contributions": [], "model_loaded": True}
+        self._body = {
+            "probability": 0.5,
+            "risk_band": "high",
+            "contributions": [],
+            "model_loaded": True,
+            "model_version": "deadbeef",
+            "warnings": ["age=120 is outside the training range [29, 77] — the model is extrapolating"],
+        }
 
     def json(self):
         return self._body
@@ -160,3 +197,31 @@ def test_number_input_steps_match_display_precision():
     at.run()
     assert not at.exception, at.exception
     assert at.number_input[0].value == 56.0
+
+
+def test_band_warning_and_latency_render(monkeypatch):
+    """Scorecard shows risk band, extrapolation warning, latency + version."""
+    _stub_predict_post(monkeypatch)
+    at = AppTest.from_file(str(FRONTEND), default_timeout=60)
+    at.run()
+    at.button[0].click().run()
+    assert not at.exception, at.exception
+
+    band_msgs = [m.value for m in at.markdown if "Risk band:" in m.value]
+    assert band_msgs == ["**Risk band:** :red[High]"]
+
+    assert len(at.warning) == 1
+    assert "outside the training range" in at.warning[0].value
+
+    captions = [c.value for c in at.caption]
+    assert any("Scored in" in msg and "model deadbeef" in msg for msg in captions)
+    assert any("not a medical device" in msg for msg in captions)
+
+
+def test_history_limit_selectbox_defaults_to_10():
+    at = AppTest.from_file(str(FRONTEND), default_timeout=60)
+    at.run()
+    assert not at.exception, at.exception
+    limit_selects = [s for s in at.selectbox if s.label == "Show"]
+    assert len(limit_selects) == 1
+    assert limit_selects[0].value == 10
