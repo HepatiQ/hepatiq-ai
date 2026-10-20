@@ -19,6 +19,7 @@ Run:
     python ml/explain.py
 """
 
+import os
 import sys
 
 import joblib
@@ -28,8 +29,9 @@ from sklearn.linear_model import LogisticRegression
 
 from impute_pipeline import build_feature_frame
 
-MODEL_PATH = "models/model.pkl"
-DATA_PATH = "data/pbc_5yr_target.csv"
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MODEL_PATH = os.path.join(REPO_ROOT, "models", "model.pkl")
+DATA_PATH = os.path.join(REPO_ROOT, "data", "pbc_5yr_target.csv")
 BACKGROUND_SAMPLE_SIZE = 100
 RANDOM_STATE = 42
 

@@ -1,7 +1,7 @@
 # Data & ML (Nirali)
 pandas
 numpy
-scikit-learn
+scikit-learn==1.9.0
 xgboost
 shap
 
@@ -10,6 +10,7 @@ fastapi
 uvicorn[standard]
 joblib
 pydantic
+httpx
 
 # Frontend (Deekshitha)
 streamlit
@@ -19,3 +20,8 @@ plotly
 # Validation (Rudra)
 scipy
 statsmodels
+
+# Testing / CI
+pytest
+pytest-cov
+ruff
