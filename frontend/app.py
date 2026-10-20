@@ -12,12 +12,50 @@ BACKEND_URL = os.environ.get("HEPATIQ_BACKEND_URL", "http://localhost:8000").rst
 # double-click: the stored result is reused instead of POSTing (and logging) again.
 SUBMIT_DEDUPE_WINDOW_S = 5.0
 
-st.set_page_config(page_title="HepatiQ", layout="wide")
-st.title("HepatiQ — 5-Year Severe Event Risk Calculator")
-st.write(
-    "Enter patient data and press 'Compute risk' to call the backend API. "
-    "Age, sex, edema, bilirubin, and albumin are required; optional fields left "
-    "blank are imputed server-side by the model's IterativeImputer."
+st.set_page_config(page_title="HepatiQ", layout="wide", page_icon="🫁")
+
+st.markdown(
+    """
+    <style>
+    .stApp { background: linear-gradient(180deg, #0e1117 0%, #141924 100%); }
+    section[data-testid="stSidebar"] { background: #131722; }
+    h1, h2, h3 { color: #e8ecf1 !important; letter-spacing: -0.01em; }
+    h1 { font-weight: 700 !important; }
+    .stMetric {
+        background: linear-gradient(135deg, #1a2332 0%, #1e2a3a 100%);
+        border: 1px solid #2a3a4e;
+        border-radius: 12px;
+        padding: 18px 22px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+    .stMetric label { color: #8899aa !important; font-size: 0.95rem !important; }
+    .stMetric [data-testid="stMetricValue"] {
+        font-size: 2.8rem !important; font-weight: 700 !important;
+        color: #00d4aa !important;
+    }
+    div[data-testid="stExpander"] {
+        background: #161c28; border: 1px solid #253040; border-radius: 10px;
+    }
+    div[data-testid="stExpander"] summary { color: #c0c8d4 !important; }
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(90deg, #00b496, #00d4aa);
+        color: #0e1117; font-weight: 700; border: none;
+        border-radius: 8px; padding: 0.5em 1.6em; transition: all 0.2s;
+    }
+    .stButton > button[kind="primary"]:hover {
+        box-shadow: 0 0 14px rgba(0,212,170,0.45); transform: translateY(-1px);
+    }
+    footer, .stDecoration { visibility: hidden; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    "<h1 style='text-align:center; padding-top:0.4em;'>HepatiQ</h1>"
+    "<p style='text-align:center; color:#7a8a9a; font-size:1.05em; margin-top:-0.6em;'>"
+    "5-Year Severe Event Risk Calculator · Primary Biliary Cholangitis</p>",
+    unsafe_allow_html=True,
 )
 
 DISPLAY_NAMES = {
@@ -168,8 +206,18 @@ if data is not None:
 
     band = data.get("risk_band")
     if band:
-        band_color = {"low": "green", "intermediate": "orange", "high": "red"}[band]
-        st.markdown(f"**Risk band:** :{band_color}[{band.capitalize()}]")
+        badge = {
+            "low": ("Low", "#1b5e20", "#00d4aa"),
+            "intermediate": ("Intermediate", "#7a4f00", "#ffb74d"),
+            "high": ("High", "#7f1d1d", "#ff5252"),
+        }[band]
+        st.markdown(
+            f"<span style='display:inline-block; padding:4px 16px; border-radius:20px; "
+            f"font-weight:700; font-size:0.95em; color:{badge[2]}; "
+            f"background:{badge[1]}; border:1px solid {badge[2]}40;'>"
+            f"Risk band: {badge[0]}</span>",
+            unsafe_allow_html=True,
+        )
 
     latency_ms = st.session_state.get("last_latency_ms")
     if latency_ms is not None:
@@ -191,7 +239,7 @@ if data is not None:
             for c in with_impact
         ]
         impacts = [c["impact"] for c in with_impact]
-        colors = ["indianred" if i > 0 else "steelblue" for i in impacts]
+        colors = ["#ff5252" if i > 0 else "#00d4aa" for i in impacts]
         fig = go.Figure(go.Bar(x=impacts, y=labels, orientation="h", marker_color=colors))
         fig.update_layout(
             title_text="Feature contributions (SHAP, log-odds; red = raises risk)",
