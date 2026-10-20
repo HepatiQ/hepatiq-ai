@@ -71,7 +71,7 @@ Each team member owns one folder. Keep your code there and coordinate with teamm
 | `ml/` | Nirali | Data ingestion, cohort filtering, preprocessing (IterativeImputer, StandardScaler), model training (Logistic Regression + XGBoost), cross-validation, SHAP generation |
 | `backend/` | Pranjal | FastAPI application, `/predict` endpoint, Pydantic validation, model loading (joblib), SHAP integration |
 | `frontend/` | Deekshitha | Streamlit UI, input forms, risk scorecard rendering, SHAP visualization charts (Plotly) |
-| `validation/` | Rudra | Bootstrap confidence intervals, MELD score benchmarking, Brier score, statistical testing, clinical limitations documentation |
+| `validation/` | Rudra | Bootstrap confidence intervals, out-of-fold validation runner (`run_validation.py`), class-prior baseline comparison, Brier score, clinical limitations documentation |
 | `data/` | Nirali | Raw and preprocessed Mayo Clinic PBC dataset |
 | `models/` | Nirali & Pranjal | Trained `.pkl` model files (Logistic Regression + XGBoost pipeline) |
 | `docs/` | Everyone | Team documentation, roadmap, workflow guides |

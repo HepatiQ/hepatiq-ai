@@ -54,12 +54,17 @@ ipython_config.py
 .venv
 env/
 venv/
+ve/
+source/
 ENV/
 env.bak/
 venv.bak/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Runtime SQLite prediction history
+*.db
 
 # Type checkers
 .mypy_cache/
