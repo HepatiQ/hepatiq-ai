@@ -22,3 +22,9 @@ def test_health_explainer_ready_no_error(client):
     assert h["explainer_ready"] is True
     assert h["error"] is None
     assert h["model_path"].endswith("model.pkl")
+
+
+def test_health_reports_model_version(client):
+    h = client.get("/health").json()
+    assert isinstance(h["model_version"], str)
+    assert len(h["model_version"]) == 8
