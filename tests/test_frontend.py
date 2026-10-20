@@ -72,3 +72,72 @@ def test_form_submit_renders_scorecard():
 
     assert [e.label for e in at.expander] == ["Recent predictions (local history)"]
     assert len(at.dataframe) == 1  # the prediction we just made is in the history table
+
+
+class _StubPredictResponse:
+    status_code = 200
+
+    def __init__(self):
+        self._body = {"probability": 0.5, "contributions": [], "model_loaded": True}
+
+    def json(self):
+        return self._body
+
+    def raise_for_status(self):
+        return None
+
+
+def _stub_predict_post(monkeypatch) -> dict:
+    """Replace requests.post with a stub; returns a shared call counter."""
+    calls = {"count": 0}
+
+    def fake_post(*args, **kwargs):
+        calls["count"] += 1
+        return _StubPredictResponse()
+
+    monkeypatch.setattr(requests, "post", fake_post)
+    return calls
+
+
+def test_widget_edit_does_not_post(monkeypatch):
+    """Editing form widgets (or any rerun without submit) must never POST."""
+    calls = _stub_predict_post(monkeypatch)
+    at = AppTest.from_file(str(FRONTEND), default_timeout=60)
+    at.run()
+    assert not at.exception, at.exception
+
+    at.number_input[0].set_value(61.0)  # Age
+    at.run()
+    assert not at.exception, at.exception
+    assert calls["count"] == 0
+    assert len(at.metric) == 0  # nothing rendered without a submit
+
+
+def test_result_persists_across_reruns(monkeypatch):
+    """Scorecard renders from session state, surviving unrelated reruns."""
+    calls = _stub_predict_post(monkeypatch)
+    at = AppTest.from_file(str(FRONTEND), default_timeout=60)
+    at.run()
+    at.button[0].click().run()
+    assert not at.exception, at.exception
+    assert len(at.metric) == 1
+    assert at.metric[0].value == "50.0%"
+
+    at.run()  # unrelated rerun must neither lose the result nor re-POST
+    assert not at.exception, at.exception
+    assert len(at.metric) == 1
+    assert calls["count"] == 1
+
+
+def test_rapid_double_submit_posts_once(monkeypatch):
+    """Two identical submits inside the dedupe window produce one POST."""
+    calls = _stub_predict_post(monkeypatch)
+    at = AppTest.from_file(str(FRONTEND), default_timeout=60)
+    at.run()
+    at.button[0].click().run()
+    assert not at.exception, at.exception
+    at.button[0].click().run()
+    assert not at.exception, at.exception
+
+    assert calls["count"] == 1
+    assert len(at.metric) == 1
