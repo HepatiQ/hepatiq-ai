@@ -1,6 +1,7 @@
 import json
 import os
 import time
+from pathlib import Path
 
 import plotly.graph_objects as go
 import requests
@@ -8,11 +9,17 @@ import streamlit as st
 
 BACKEND_URL = os.environ.get("HEPATIQ_BACKEND_URL", "http://localhost:8000").rstrip("/")
 
+LOGO_PATH = Path(__file__).resolve().parent / "assets" / "logo.png"
+
 # An identical payload resubmitted inside this window is treated as a rapid
 # double-click: the stored result is reused instead of POSTing (and logging) again.
 SUBMIT_DEDUPE_WINDOW_S = 5.0
 
-st.set_page_config(page_title="HepatiQ", layout="wide", page_icon="🫁")
+st.set_page_config(
+    page_title="HepatiQ",
+    layout="wide",
+    page_icon=str(LOGO_PATH) if LOGO_PATH.exists() else "🫁",
+)
 
 st.markdown(
     """
@@ -52,11 +59,15 @@ st.markdown(
 )
 
 st.markdown(
-    "<h1 style='text-align:center; padding-top:0.4em;'>HepatiQ</h1>"
-    "<p style='text-align:center; color:#7a8a9a; font-size:1.05em; margin-top:-0.6em;'>"
+    "<h1 style='text-align:center; padding-top:0.2em; margin-bottom:0.1em;'>HepatiQ</h1>"
+    "<p style='text-align:center; color:#7a8a9a; font-size:1.05em; margin-top:0;'>"
     "5-Year Severe Event Risk Calculator · Primary Biliary Cholangitis</p>",
     unsafe_allow_html=True,
 )
+
+if LOGO_PATH.exists():
+    _logo_col = st.columns([1, 1, 1])[1]
+    _logo_col.image(str(LOGO_PATH), width="stretch")
 
 DISPLAY_NAMES = {
     "trt": "Treatment", "age": "Age", "sex": "Sex", "ascites": "Ascites",
