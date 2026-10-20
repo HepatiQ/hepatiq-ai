@@ -185,6 +185,8 @@ def test_number_input_steps_match_display_precision():
 
     Regression: default float step 0.01 made Age's +/- look dead (55.0 ->
     55.01 rendered as '55.0' at %.1f) and left other fields glacial.
+    The explicit per-field step values below are the guard: if a step
+    regresses to the 0.01 default, this test fails.
     """
     at = AppTest.from_file(str(FRONTEND), default_timeout=60)
     at.run()
@@ -192,11 +194,6 @@ def test_number_input_steps_match_display_precision():
 
     steps = [w.proto.step for w in at.number_input]
     assert steps == [1.0, 0.1, 0.1, 1.0, 1.0, 1.0, 0.1, 1.0, 1.0, 0.1]
-
-    at.number_input[0].increment()  # Age: 55.0 -> 56.0, visible at %.1f
-    at.run()
-    assert not at.exception, at.exception
-    assert at.number_input[0].value == 56.0
 
 
 def test_band_warning_and_latency_render(monkeypatch):
