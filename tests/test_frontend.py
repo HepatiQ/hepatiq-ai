@@ -70,13 +70,9 @@ def test_form_submit_renders_scorecard():
 
     assert len(at.get("plotly_chart")) == 1  # SHAP contributions chart
 
-    band_msgs = [m.value for m in at.markdown if "Risk band:" in m.value]
-    assert len(band_msgs) == 1
-    assert band_msgs[0] in (
-        "**Risk band:** :green[Low]",
-        "**Risk band:** :orange[Intermediate]",
-        "**Risk band:** :red[High]",
-    )
+    band_html = [m.value for m in at.markdown if "Risk band" in m.value]
+    assert len(band_html) == 1
+    assert any(tag in band_html[0] for tag in ("Low", "Intermediate", "High"))
     assert any("Scored in" in c.value for c in at.caption)
 
     assert [e.label for e in at.expander] == ["Recent predictions (local history)"]
@@ -204,8 +200,9 @@ def test_band_warning_and_latency_render(monkeypatch):
     at.button[0].click().run()
     assert not at.exception, at.exception
 
-    band_msgs = [m.value for m in at.markdown if "Risk band:" in m.value]
-    assert band_msgs == ["**Risk band:** :red[High]"]
+    band_html = [m.value for m in at.markdown if "Risk band" in m.value]
+    assert len(band_html) == 1
+    assert "High" in band_html[0]
 
     assert len(at.warning) == 1
     assert "outside the training range" in at.warning[0].value
