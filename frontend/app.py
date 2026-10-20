@@ -1,6 +1,10 @@
+import os
+
 import plotly.graph_objects as go
 import requests
 import streamlit as st
+
+BACKEND_URL = os.environ.get("HEPATIQ_BACKEND_URL", "http://localhost:8000").rstrip("/")
 
 st.set_page_config(page_title="HepatiQ", layout="wide")
 st.title("HepatiQ — 5-Year Severe Event Risk Calculator")
@@ -89,7 +93,7 @@ if submitted:
             payload[key] = float(val)
 
     try:
-        r = requests.post("http://localhost:8000/predict", json=payload, timeout=30)
+        r = requests.post(f"{BACKEND_URL}/predict", json=payload, timeout=30)
         if r.status_code == 422:
             st.error("Validation error (422) — check input ranges and required fields.")
             st.json(r.json())
@@ -128,13 +132,13 @@ if submitted:
             st.info("No SHAP contributions available (explainer not ready — see /health).")
 
     except requests.exceptions.ConnectionError:
-        st.error("Could not reach backend at http://localhost:8000 — is it running?")
+        st.error(f"Could not reach backend at {BACKEND_URL} — is it running?")
     except Exception as e:
         st.error(f"Request to backend failed: {e}")
 
 with st.expander("Recent predictions (local history)"):
     try:
-        hr = requests.get("http://localhost:8000/history", params={"limit": 10}, timeout=5)
+        hr = requests.get(f"{BACKEND_URL}/history", params={"limit": 10}, timeout=5)
         if hr.status_code == 200:
             items = hr.json().get("items", [])
             if items:

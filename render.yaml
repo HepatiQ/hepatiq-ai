@@ -1,0 +1,31 @@
+# Render Blueprint — HepatiQ backend API.
+#
+# If your service was created manually in the dashboard instead of from this
+# blueprint, set the same values there:
+#   Start Command: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+#   Python:        3.12
+services:
+  - type: web
+    name: hepatic-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
+      # History DB lives on the (ephemeral) instance disk; it resets on each
+      # deploy/restart. Override only if you attach a persistent disk.
+      # - key: HEPATIQ_DB_PATH
+      #   value: data/hepatiq.db
+
+  # Optional — Streamlit UI as a second service (remove comment to enable):
+  # - type: web
+  #   name: hepatic-ui
+  #   runtime: python
+  #   buildCommand: pip install -r requirements.txt
+  #   startCommand: streamlit run frontend/app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
+  #   envVars:
+  #     - key: PYTHON_VERSION
+  #       value: "3.12"
+  #     - key: HEPATIQ_BACKEND_URL
+  #       value: https://hepatic-api.onrender.com  # your API service URL
