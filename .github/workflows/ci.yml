@@ -21,8 +21,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Lint
+        run: ruff check .
+
       - name: Run test suite
         run: >
           python -m pytest -v
           --cov=backend --cov=ml --cov=validation
           --cov-report=term-missing
+          --cov-fail-under=55

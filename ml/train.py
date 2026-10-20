@@ -118,7 +118,8 @@ def build_pipelines(scale_pos_weight: float) -> dict:
         ]),
         "random_forest": Pipeline([
             ("imputer", IterativeImputer(random_state=RANDOM_STATE, max_iter=10)),
-            ("scaler", StandardScaler()),  # RF doesn't need scaling; kept for a uniform predict(raw_features) interface across all 3 models
+            # RF doesn't need scaling; kept for a uniform predict(raw_features) interface across all 3 models
+            ("scaler", StandardScaler()),
             ("clf", RandomForestClassifier(
                 n_estimators=300,
                 max_depth=4,
