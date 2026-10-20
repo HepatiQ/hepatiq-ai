@@ -19,14 +19,21 @@ A 50-day build plan across four workstreams. Each phase lists what's due and who
 - Streamlit skeleton wired to the live API (Deekshitha)
 - Rudra's statistical validation can start here, in parallel with backend/frontend work — see note below
 
-## Phase 4 — Explainability & Visualization (Days 31–40) — current phase
+## Phase 4 — Explainability & Visualization (Days 31–40) — complete
 - SHAP integration in the backend, returned alongside each prediction
 - Chart rendering in Streamlit — Plotly or Altair for interactivity, rather than static matplotlib
 - Rudra's validation work continues in parallel
 
-## Phase 5 — Validation, Documentation & Delivery (Days 41–50)
-- **Days 41–45:** finish bootstrap confidence intervals, Brier score comparison, and the OOF validation runner with a class-prior baseline (Rudra) — see decision note below
-- **Days 46–50:** end-to-end testing, limitations write-up, final polish, demo/presentation prep — kept as its own block so packaging the project doesn't get squeezed by validation running late
+## Phase 5 — Validation, Documentation & Delivery (Days 41–50) — complete
+- **Days 41–45:** bootstrap confidence intervals, Brier score comparison, and the OOF
+  validation runner with a class-prior baseline (Rudra) — see decision note below — done
+- **Days 46–50:** end-to-end testing, limitations write-up, final polish, demo/presentation
+  prep — kept as its own block so packaging the project doesn't get squeezed by validation
+  running late — done
+  - Final polish shipped: risk-band badge, training-range extrapolation warnings, latency +
+    model-version display, history limit/Clear controls, dark clinical theme with logo,
+    research-prototype disclaimer footer, pinned dependencies, CI coverage floor raised to 60
+    (62 tests, ~63% coverage)
 
 ## Changes from the original plan, and why
 
