@@ -141,3 +141,22 @@ def test_rapid_double_submit_posts_once(monkeypatch):
 
     assert calls["count"] == 1
     assert len(at.metric) == 1
+
+
+def test_number_input_steps_match_display_precision():
+    """Steppers must advance visibly at each widget's format precision.
+
+    Regression: default float step 0.01 made Age's +/- look dead (55.0 ->
+    55.01 rendered as '55.0' at %.1f) and left other fields glacial.
+    """
+    at = AppTest.from_file(str(FRONTEND), default_timeout=60)
+    at.run()
+    assert not at.exception, at.exception
+
+    steps = [w.proto.step for w in at.number_input]
+    assert steps == [1.0, 0.1, 0.1, 1.0, 1.0, 1.0, 0.1, 1.0, 1.0, 0.1]
+
+    at.number_input[0].increment()  # Age: 55.0 -> 56.0, visible at %.1f
+    at.run()
+    assert not at.exception, at.exception
+    assert at.number_input[0].value == 56.0
