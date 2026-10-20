@@ -15,6 +15,7 @@ Contract:
       flagged with whether each value was imputed server-side.
 """
 
+import hashlib
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -27,7 +28,7 @@ import shap
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from backend.db import DEFAULT_DB_PATH, fetch_recent, init_db, log_prediction
+from backend.db import DEFAULT_DB_PATH, clear_predictions, fetch_recent, init_db, log_prediction
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MODEL_PATH = REPO_ROOT / "models" / "model.pkl"
@@ -52,6 +53,12 @@ FEATURE_TO_API = {
     "trig": "trig", "platelet": "platelet", "protime": "protime",
     "stage": "stage",
 }
+
+# Risk bands for display. "high" starts at the cohort's observed 5-year event
+# rate (132/329 = 0.401; validation/report.md); 0.15 separates the low tail.
+# Descriptive aids for communication, not clinical action thresholds.
+RISK_BAND_INTERMEDIATE = 0.15
+RISK_BAND_HIGH = 0.40
 
 
 class PredictRequest(BaseModel):
@@ -92,8 +99,11 @@ class Contribution(BaseModel):
 
 class PredictResponse(BaseModel):
     probability: float
+    risk_band: Literal["low", "intermediate", "high"]
     contributions: List[Contribution]
     model_loaded: bool
+    model_version: Optional[str] = None
+    warnings: List[str] = Field(default_factory=list)
 
 
 class HealthResponse(BaseModel):
@@ -102,6 +112,7 @@ class HealthResponse(BaseModel):
     n_features: int
     model_path: str
     explainer_ready: bool
+    model_version: Optional[str] = None
     error: Optional[str] = None
 
 
@@ -117,7 +128,18 @@ class HistoryResponse(BaseModel):
     items: List[HistoryItem]
 
 
-_state: dict = {"model": None, "explainer": None, "error": None, "db_path": None}
+class HistoryClearResponse(BaseModel):
+    deleted: int
+
+
+_state: dict = {
+    "model": None,
+    "explainer": None,
+    "error": None,
+    "db_path": None,
+    "model_version": None,
+    "feature_ranges": None,
+}
 
 
 def _build_explainer(model):
@@ -149,11 +171,24 @@ async def lifespan(app: FastAPI):
         model = joblib.load(MODEL_PATH)
         _state["model"] = model
         _state["explainer"] = _build_explainer(model)
+        _state["model_version"] = hashlib.sha256(MODEL_PATH.read_bytes()).hexdigest()[:8]
         _state["error"] = None
     except Exception as exc:
         _state["model"] = None
         _state["explainer"] = None
+        _state["model_version"] = None
         _state["error"] = f"{type(exc).__name__}: {exc}"
+
+    # Per-feature training ranges (data CSV) power extrapolation warnings.
+    try:
+        csv_features = pd.read_csv(DATA_PATH)[FEATURE_COLUMNS]
+        _state["feature_ranges"] = {
+            col: (float(csv_features[col].min()), float(csv_features[col].max()))
+            for col in FEATURE_COLUMNS
+            if col != "sex"
+        }
+    except Exception:
+        _state["feature_ranges"] = None
 
     try:
         db_path = Path(os.environ.get("HEPATIQ_DB_PATH") or DEFAULT_DB_PATH)
@@ -185,8 +220,37 @@ def health() -> HealthResponse:
         n_features=len(FEATURE_COLUMNS),
         model_path=str(MODEL_PATH),
         explainer_ready=explainer_ok,
+        model_version=_state.get("model_version"),
         error=_state["error"],
     )
+
+
+def _risk_band(probability: float) -> Literal["low", "intermediate", "high"]:
+    if probability >= RISK_BAND_HIGH:
+        return "high"
+    if probability >= RISK_BAND_INTERMEDIATE:
+        return "intermediate"
+    return "low"
+
+
+def _range_warnings(req: PredictRequest) -> List[str]:
+    """Flag provided values lying outside the training data's observed range."""
+    ranges = _state.get("feature_ranges")
+    if not ranges:
+        return []
+    raw = req.model_dump()
+    warnings: List[str] = []
+    for feature, (lo, hi) in ranges.items():
+        api_name = FEATURE_TO_API[feature]
+        val = raw.get(api_name)
+        if val is None:
+            continue  # imputed server-side — nothing provided to extrapolate
+        if val < lo or val > hi:
+            warnings.append(
+                f"{api_name}={val:g} is outside the training range "
+                f"[{lo:g}, {hi:g}] — the model is extrapolating"
+            )
+    return warnings
 
 
 @app.post("/predict", response_model=PredictResponse)
@@ -235,8 +299,11 @@ def predict(req: PredictRequest) -> PredictResponse:
 
     response = PredictResponse(
         probability=probability,
+        risk_band=_risk_band(probability),
         contributions=contributions,
         model_loaded=True,
+        model_version=_state.get("model_version"),
+        warnings=_range_warnings(req),
     )
 
     # History must never break a prediction: a logging failure is swallowed
@@ -264,3 +331,14 @@ def history(limit: int = Query(20, ge=1, le=100)) -> HistoryResponse:
     except Exception as exc:
         raise HTTPException(status_code=503, detail=f"Prediction history unavailable: {exc}") from exc
     return HistoryResponse(items=[HistoryItem(**item) for item in items])
+
+
+@app.delete("/history", response_model=HistoryClearResponse)
+def clear_history() -> HistoryClearResponse:
+    if _state["db_path"] is None:
+        raise HTTPException(status_code=503, detail="Prediction history unavailable (database not initialized)")
+    try:
+        deleted = clear_predictions(_state["db_path"])
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"Prediction history unavailable: {exc}") from exc
+    return HistoryClearResponse(deleted=deleted)
