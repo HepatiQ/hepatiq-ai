@@ -81,12 +81,25 @@ dmypy.json
 .idea/
 *.iml
 
+# Runtime SQLite prediction history
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
 # OS files
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Logs
 *.log
+
+# Local scratch / large source assets (trimmed logo lives in frontend/assets/)
+data/enlarged.png
+scratch/
+tmp/
+*.tmp
 
 # Note: trained .pkl models and the dataset CSV are intentionally NOT ignored.
 # Both are small (~418 rows / a few MB at most), and committing them keeps the
