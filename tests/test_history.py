@@ -35,3 +35,18 @@ def test_history_respects_limit(client):
 def test_history_limit_is_validated(client):
     assert client.get("/history?limit=0").status_code == 422
     assert client.get("/history?limit=101").status_code == 422
+
+
+def test_delete_history_clears_all_rows(client):
+    client.post("/predict", json=REQUIRED_ONLY)
+    client.post("/predict", json=SAMPLE_FULL)
+    r = client.delete("/history")
+    assert r.status_code == 200, r.text
+    assert r.json()["deleted"] == 2
+    assert client.get("/history").json()["items"] == []
+
+
+def test_delete_history_on_empty_db_is_ok(client):
+    r = client.delete("/history")
+    assert r.status_code == 200
+    assert r.json()["deleted"] == 0

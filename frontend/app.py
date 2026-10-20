@@ -36,15 +36,15 @@ def optional_number(label, min_value, max_value, format, step):
     )
 
 
-def fetch_history() -> dict:
-    """GET /history once; never raises — returns {items, error} for state."""
+def fetch_history(limit: int = 10) -> dict:
+    """GET /history; never raises — returns {items, error, limit} for state."""
     try:
-        hr = requests.get(f"{BACKEND_URL}/history", params={"limit": 10}, timeout=5)
+        hr = requests.get(f"{BACKEND_URL}/history", params={"limit": limit}, timeout=5)
         if hr.status_code == 200:
-            return {"items": hr.json().get("items", []), "error": None}
-        return {"items": None, "error": f"History unavailable (HTTP {hr.status_code})."}
+            return {"items": hr.json().get("items", []), "error": None, "limit": limit}
+        return {"items": None, "error": f"History unavailable (HTTP {hr.status_code}).", "limit": limit}
     except requests.exceptions.ConnectionError:
-        return {"items": None, "error": "Backend not reachable — history hidden."}
+        return {"items": None, "error": "Backend not reachable — history hidden.", "limit": limit}
 
 
 with st.form("patient_calculator_form"):
@@ -118,7 +118,9 @@ if submitted:
     if not rapid_duplicate:
         st.session_state.pop("last_error", None)
         try:
-            r = requests.post(f"{BACKEND_URL}/predict", json=payload, timeout=30)
+            request_start = time.perf_counter()
+            with st.spinner("Computing risk..."):
+                r = requests.post(f"{BACKEND_URL}/predict", json=payload, timeout=30)
             if r.status_code == 422:
                 st.session_state.pop("last_result", None)
                 st.session_state["last_error"] = {
@@ -134,9 +136,12 @@ if submitted:
             else:
                 r.raise_for_status()
                 st.session_state["last_result"] = r.json()
+                st.session_state["last_latency_ms"] = (time.perf_counter() - request_start) * 1000
                 st.session_state["last_payload_sig"] = payload_sig
                 st.session_state["last_success_ts"] = time.time()
-                st.session_state["history"] = fetch_history()
+                st.session_state["history"] = fetch_history(
+                    limit=st.session_state.get("history_limit", 10)
+                )
         except requests.exceptions.ConnectionError:
             st.session_state.pop("last_result", None)
             st.session_state["last_error"] = {
@@ -161,6 +166,21 @@ if data is not None:
     prob = data["probability"]
     st.metric("Estimated 5-year severe event risk", f"{prob:.1%}")
 
+    band = data.get("risk_band")
+    if band:
+        band_color = {"low": "green", "intermediate": "orange", "high": "red"}[band]
+        st.markdown(f"**Risk band:** :{band_color}[{band.capitalize()}]")
+
+    latency_ms = st.session_state.get("last_latency_ms")
+    if latency_ms is not None:
+        version = data.get("model_version")
+        version_suffix = f" · model {version}" if version else ""
+        st.caption(f"Scored in {latency_ms:.0f} ms{version_suffix}")
+
+    warnings = data.get("warnings") or []
+    if warnings:
+        st.warning("\n".join(warnings))
+
     contributions = data.get("contributions", [])
     with_impact = [c for c in contributions if c["impact"] is not None]
     if with_impact:
@@ -184,11 +204,20 @@ if data is not None:
     else:
         st.info("No SHAP contributions available (explainer not ready — see /health).")
 
-if "history" not in st.session_state:
-    st.session_state["history"] = fetch_history()
-
 with st.expander("Recent predictions (local history)"):
-    history = st.session_state["history"]
+    limit = st.selectbox("Show", [10, 25, 50], key="history_limit", format_func=lambda n: f"{n} most recent")
+    history = st.session_state.get("history")
+    if history is None or history.get("limit") != limit:
+        history = fetch_history(limit=limit)
+        st.session_state["history"] = history
+    if st.button("Clear history"):
+        try:
+            dr = requests.delete(f"{BACKEND_URL}/history", timeout=10)
+            dr.raise_for_status()
+            history = fetch_history(limit=limit)
+            st.session_state["history"] = history
+        except requests.exceptions.RequestException:
+            st.caption("Could not clear history — backend unavailable.")
     if history["error"] is not None:
         st.caption(history["error"])
     elif not history["items"]:
@@ -210,3 +239,9 @@ with st.expander("Recent predictions (local history)"):
                 ),
             })
         st.dataframe(rows, width="stretch", hide_index=True)
+
+st.divider()
+st.caption(
+    "Research prototype — not a medical device or diagnostic tool. "
+    "Model scope, calibration, and limits: docs/LIMITATIONS.md."
+)
