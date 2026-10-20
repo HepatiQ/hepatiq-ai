@@ -30,9 +30,9 @@ DISPLAY_NAMES = {
 }
 
 
-def optional_number(label, min_value, max_value, format):
+def optional_number(label, min_value, max_value, format, step):
     return st.number_input(
-        label, min_value=min_value, max_value=max_value, value=None, format=format
+        label, min_value=min_value, max_value=max_value, value=None, format=format, step=step
     )
 
 
@@ -51,16 +51,16 @@ with st.form("patient_calculator_form"):
     st.subheader("Required")
     c1, c2, c3 = st.columns(3)
     with c1:
-        age = st.number_input("Age (years)", min_value=0.0, max_value=120.0, value=55.0, format="%.1f")
+        age = st.number_input("Age (years)", min_value=0.0, max_value=120.0, value=55.0, format="%.1f", step=1.0)
     with c2:
         sex = st.selectbox("Sex", options=["f", "m"], index=0)
     with c3:
         edema = st.selectbox("Edema (0, 0.5, 1)", options=[0.0, 0.5, 1.0], index=0)
     c1, c2 = st.columns(2)
     with c1:
-        bili = st.number_input("Bilirubin (mg/dL)", min_value=0.0, max_value=100.0, value=1.0, format="%.2f")
+        bili = st.number_input("Bilirubin (mg/dL)", min_value=0.0, max_value=100.0, value=1.0, format="%.2f", step=0.1)
     with c2:
-        albumin = st.number_input("Albumin (g/dL)", min_value=0.0, max_value=10.0, value=3.5, format="%.2f")
+        albumin = st.number_input("Albumin (g/dL)", min_value=0.0, max_value=10.0, value=3.5, format="%.2f", step=0.1)
 
     st.subheader("Optional (blank = imputed)")
     c1, c2, c3, c4 = st.columns(4)
@@ -74,20 +74,20 @@ with st.form("patient_calculator_form"):
         spiders = st.selectbox("Spiders (0/1)", options=[None, 0.0, 1.0], index=0)
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        chol = optional_number("Cholesterol (mg/dL)", 0.0, 5000.0, "%.1f")
+        chol = optional_number("Cholesterol (mg/dL)", 0.0, 5000.0, "%.1f", 1.0)
     with c2:
-        copper = optional_number("Urine copper (ug/day)", 0.0, 1000.0, "%.1f")
+        copper = optional_number("Urine copper (ug/day)", 0.0, 1000.0, "%.1f", 1.0)
     with c3:
-        alk_phos = optional_number("Alk. Phos (U/L)", 0.0, 50000.0, "%.1f")
+        alk_phos = optional_number("Alk. Phos (U/L)", 0.0, 50000.0, "%.1f", 1.0)
     with c4:
-        ast = optional_number("AST (U/L)", 0.0, 10000.0, "%.2f")
+        ast = optional_number("AST (U/L)", 0.0, 10000.0, "%.2f", 0.1)
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        trig = optional_number("Triglycerides (mg/dL)", 0.0, 10000.0, "%.1f")
+        trig = optional_number("Triglycerides (mg/dL)", 0.0, 10000.0, "%.1f", 1.0)
     with c2:
-        platelet = optional_number("Platelets (thousands/uL)", 1.0, 1000.0, "%.0f")
+        platelet = optional_number("Platelets (thousands/uL)", 1.0, 1000.0, "%.0f", 1.0)
     with c3:
-        protime = optional_number("Prothrombin time (sec)", 1.0, 100.0, "%.1f")
+        protime = optional_number("Prothrombin time (sec)", 1.0, 100.0, "%.1f", 0.1)
     with c4:
         stage = st.selectbox("Histologic stage (1-4)", options=[None, 1.0, 2.0, 3.0, 4.0], index=0)
 
@@ -179,7 +179,7 @@ if data is not None:
             yaxis={"autorange": "reversed"},
             height=600,
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         st.caption("* imputed server-side (not provided in the request)")
     else:
         st.info("No SHAP contributions available (explainer not ready — see /health).")
@@ -209,4 +209,4 @@ with st.expander("Recent predictions (local history)"):
                     for c in top
                 ),
             })
-        st.dataframe(rows, use_container_width=True, hide_index=True)
+        st.dataframe(rows, width="stretch", hide_index=True)
