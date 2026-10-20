@@ -72,8 +72,9 @@ except ImportError as exc:  # pragma: no cover
 # count as leaky, etc.
 from impute_pipeline import build_feature_frame
 
-INPUT_PATH = os.path.join("data", "pbc_5yr_target.csv")
-MODELS_DIR = "models"
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+INPUT_PATH = os.path.join(REPO_ROOT, "data", "pbc_5yr_target.csv")
+MODELS_DIR = os.path.join(REPO_ROOT, "models")
 METRICS_PATH = os.path.join(MODELS_DIR, "training_metrics.json")
 
 N_FOLDS = 5

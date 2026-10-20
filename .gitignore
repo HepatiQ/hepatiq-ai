@@ -54,6 +54,8 @@ ipython_config.py
 .venv
 env/
 venv/
+ve/
+source/
 ENV/
 env.bak/
 venv.bak/

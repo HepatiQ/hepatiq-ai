@@ -50,7 +50,7 @@ Per-patient SHAP attributions via `shap.LinearExplainer` (`ml/explain.py`), appr
 - **Calibration**: Brier score of 0.136 indicates reasonable but imperfect calibration; a full reliability diagram has not yet been produced.
 - **Historical data**: the Mayo trial predates many modern PBC treatment protocols; learned risk relationships may not reflect outcomes under current standards of care.
 - **Not a diagnostic tool**: output is a probability estimate for decision support, not a diagnosis or treatment recommendation.
-- **Integration status**: The deployment interface is under active development. Backend and frontend integration for the full 17-feature workflow is currently being finalized.
+- **Integration status**: Backend and frontend are integrated with the full 17-feature workflow. The FastAPI service (`backend/main.py`) exposes `/health` and `/predict` against the trained pipeline, with per-feature SHAP contributions built once at startup. The Streamlit frontend (`frontend/app.py`) presents all 17 inputs (5 required, 12 optional with server-side imputation) and renders contributions sorted by absolute impact. Model and data paths are resolved relative to the repository root, so both services work regardless of the current working directory.
 
 ## Ethical Considerations
 - Predictions should be reviewed by a qualified clinician before informing patient care; this project is for academic/research and decision-support purposes, not standalone clinical deployment.
