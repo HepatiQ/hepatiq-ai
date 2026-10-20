@@ -131,3 +131,32 @@ if submitted:
         st.error("Could not reach backend at http://localhost:8000 — is it running?")
     except Exception as e:
         st.error(f"Request to backend failed: {e}")
+
+with st.expander("Recent predictions (local history)"):
+    try:
+        hr = requests.get("http://localhost:8000/history", params={"limit": 10}, timeout=5)
+        if hr.status_code == 200:
+            items = hr.json().get("items", [])
+            if items:
+                rows = []
+                for it in items:
+                    top = sorted(
+                        (c for c in it["contributions"] if c["impact"] is not None),
+                        key=lambda c: abs(c["impact"]),
+                        reverse=True,
+                    )[:3]
+                    rows.append({
+                        "Time (UTC)": it["created_at"],
+                        "Risk": f"{it['probability']:.1%}",
+                        "Top contributors": ", ".join(
+                            f"{DISPLAY_NAMES.get(c['feature'], c['feature'])} ({c['impact']:+.2f})"
+                            for c in top
+                        ),
+                    })
+                st.dataframe(rows, use_container_width=True, hide_index=True)
+            else:
+                st.caption("No predictions logged yet.")
+        else:
+            st.caption(f"History unavailable (HTTP {hr.status_code}).")
+    except requests.exceptions.ConnectionError:
+        st.caption("Backend not reachable — history hidden.")
