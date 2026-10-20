@@ -63,6 +63,9 @@ venv.bak/
 # Streamlit
 .streamlit/secrets.toml
 
+# Runtime SQLite prediction history
+*.db
+
 # Type checkers
 .mypy_cache/
 .dmypy.json

@@ -18,13 +18,16 @@ Contract:
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import List, Literal, Optional
+import os
 
 import joblib
 import numpy as np
 import pandas as pd
 import shap
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from backend.db import DEFAULT_DB_PATH, fetch_recent, init_db, log_prediction
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MODEL_PATH = REPO_ROOT / "models" / "model.pkl"
@@ -102,7 +105,19 @@ class HealthResponse(BaseModel):
     error: Optional[str] = None
 
 
-_state: dict = {"model": None, "explainer": None, "error": None}
+class HistoryItem(BaseModel):
+    id: int
+    created_at: str
+    request: dict
+    probability: float
+    contributions: List[Contribution]
+
+
+class HistoryResponse(BaseModel):
+    items: List[HistoryItem]
+
+
+_state: dict = {"model": None, "explainer": None, "error": None, "db_path": None}
 
 
 def _build_explainer(model):
@@ -139,6 +154,14 @@ async def lifespan(app: FastAPI):
         _state["model"] = None
         _state["explainer"] = None
         _state["error"] = f"{type(exc).__name__}: {exc}"
+
+    try:
+        db_path = Path(os.environ.get("HEPATIQ_DB_PATH") or DEFAULT_DB_PATH)
+        init_db(db_path)
+        _state["db_path"] = db_path
+    except Exception:
+        _state["db_path"] = None
+
     yield
     _state.clear()
 
@@ -210,8 +233,34 @@ def predict(req: PredictRequest) -> PredictResponse:
         for feature in FEATURE_COLUMNS
     ]
 
-    return PredictResponse(
+    response = PredictResponse(
         probability=probability,
         contributions=contributions,
         model_loaded=True,
     )
+
+    # History must never break a prediction: a logging failure is swallowed
+    # here and surfaced only through /health-style ops checks, not as a 500.
+    if _state["db_path"] is not None:
+        try:
+            log_prediction(
+                _state["db_path"],
+                request=raw,
+                probability=probability,
+                contributions=[c.model_dump() for c in contributions],
+            )
+        except Exception:
+            pass
+
+    return response
+
+
+@app.get("/history", response_model=HistoryResponse)
+def history(limit: int = Query(20, ge=1, le=100)) -> HistoryResponse:
+    if _state["db_path"] is None:
+        raise HTTPException(status_code=503, detail="Prediction history unavailable (database not initialized)")
+    try:
+        items = fetch_recent(_state["db_path"], limit)
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"Prediction history unavailable: {exc}")
+    return HistoryResponse(items=[HistoryItem(**item) for item in items])
