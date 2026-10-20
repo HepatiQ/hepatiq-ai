@@ -44,4 +44,4 @@ jobs:
           python -m pytest -v
           --cov=backend --cov=ml --cov=validation
           --cov-report=term-missing
-          --cov-fail-under=55
+          --cov-fail-under=60

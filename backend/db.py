@@ -53,6 +53,14 @@ def log_prediction(path: Path, request: dict, probability: float, contributions:
         conn.commit()
 
 
+def clear_predictions(path: Path) -> int:
+    """Delete every logged prediction; returns the number of rows removed."""
+    with closing(sqlite3.connect(path)) as conn:
+        cursor = conn.execute("DELETE FROM predictions")
+        conn.commit()
+    return cursor.rowcount
+
+
 def fetch_recent(path: Path, limit: int = 20) -> List[dict]:
     with closing(sqlite3.connect(path)) as conn:
         conn.row_factory = sqlite3.Row

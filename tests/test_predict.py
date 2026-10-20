@@ -89,3 +89,39 @@ def test_required_5_probability_matches_direct_joblib(client, model):
 def test_contributions_use_training_feature_names(client):
     contributions = client.post("/predict", json=SAMPLE_FULL).json()["contributions"]
     assert [c["feature"] for c in contributions] == FEATURE_COLUMNS
+
+
+# docs/DEMO.md patients — verified probabilities: A ≈ 9.7%, B ≈ 27.5%, C ≈ 99.4%.
+DEMO_PATIENT_A = {"age": 45.0, "sex": "f", "edema": 0.0, "bili": 0.6, "albumin": 4.0}
+DEMO_PATIENT_B = {"age": 55.0, "sex": "f", "edema": 0.0, "bili": 1.0, "albumin": 3.5}
+DEMO_PATIENT_C = {
+    "age": 68.0, "sex": "m", "edema": 0.5, "bili": 8.0, "albumin": 2.9,
+    "ascites": 1.0, "protime": 13.5, "platelet": 180.0,
+}
+
+
+@pytest.mark.parametrize(
+    "payload,band",
+    [(DEMO_PATIENT_A, "low"), (DEMO_PATIENT_B, "intermediate"), (DEMO_PATIENT_C, "high")],
+)
+def test_risk_band_matches_demo_patients(client, payload, band):
+    r = client.post("/predict", json=payload)
+    assert r.status_code == 200, r.text
+    assert r.json()["risk_band"] == band
+
+
+@pytest.mark.parametrize("payload", [REQUIRED_ONLY, SAMPLE_FULL])
+def test_in_range_inputs_produce_no_warnings(client, payload):
+    r = client.post("/predict", json=payload)
+    assert r.status_code == 200, r.text
+    assert r.json()["warnings"] == []
+
+
+def test_out_of_training_range_yields_warning(client):
+    # age 120 passes API bounds (le=120) but exceeds the training max (~76.7).
+    r = client.post("/predict", json=dict(REQUIRED_ONLY, age=120.0))
+    assert r.status_code == 200, r.text
+    warnings = r.json()["warnings"]
+    assert any(w.startswith("age=") for w in warnings)
+    assert any("outside the training range" in w for w in warnings)
+    assert any("extrapolating" in w for w in warnings)
