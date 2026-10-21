@@ -81,7 +81,7 @@ Note: Lower Brier Score indicates better probability calibration.
 | Member | Role | Tools |
 | --- | --- | --- |
 | **Nirali Verma** | Data & ML Lead | Pandas, NumPy, Scikit-learn, XGBoost, SHAP |
-| **Meet Dubey** | Backend & MLOps | FastAPI, Uvicorn, Joblib, GitHub |
+| **Pranjal Dubey** | Backend & MLOps | FastAPI, Uvicorn, Joblib, GitHub |
 | **Subbannagari Deekshitha** | Frontend UI | Streamlit, Requests, Plotly |
 | **Rudra Singh Tomar** | Clinical Validation | SciPy, Statsmodels, Scikit-learn |
 
