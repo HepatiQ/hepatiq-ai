@@ -7,7 +7,17 @@ import plotly.graph_objects as go
 import requests
 import streamlit as st
 
-BACKEND_URL = os.environ.get("HEPATIQ_BACKEND_URL", "http://localhost:8000").rstrip("/")
+def _resolve_backend_url() -> str:
+    url = os.environ.get("HEPATIQ_BACKEND_URL")
+    if not url:
+        try:
+            url = st.secrets.get("HEPATIQ_BACKEND_URL")
+        except Exception:
+            url = None
+    return (url or "http://localhost:8000").rstrip("/")
+
+
+BACKEND_URL = _resolve_backend_url()
 
 LOGO_PATH = Path(__file__).resolve().parent / "assets" / "logo.png"
 
@@ -89,11 +99,14 @@ def optional_number(label, min_value, max_value, format, step):
 def fetch_history(limit: int = 10) -> dict:
     """GET /history; never raises — returns {items, error, limit} for state."""
     try:
-        hr = requests.get(f"{BACKEND_URL}/history", params={"limit": limit}, timeout=5)
+        # Bumping timeout to 30s gives Render enough time to complete a cold start
+        hr = requests.get(f"{BACKEND_URL}/history", params={"limit": limit}, timeout=30)
         if hr.status_code == 200:
             return {"items": hr.json().get("items", []), "error": None, "limit": limit}
         return {"items": None, "error": f"History unavailable (HTTP {hr.status_code}).", "limit": limit}
-    except requests.exceptions.ConnectionError:
+    except requests.exceptions.Timeout:
+        return {"items": None, "error": "Backend is waking up (cold start) — please refresh in a few seconds.", "limit": limit}
+    except requests.exceptions.RequestException:
         return {"items": None, "error": "Backend not reachable — history hidden.", "limit": limit}
 
 
@@ -169,8 +182,9 @@ if submitted:
         st.session_state.pop("last_error", None)
         try:
             request_start = time.perf_counter()
-            with st.spinner("Computing risk..."):
-                r = requests.post(f"{BACKEND_URL}/predict", json=payload, timeout=30)
+            with st.spinner("Computing risk (may take ~30s if backend is waking up)..."):
+                # Bumping timeout to 60s to accommodate Render free-tier cold starts
+                r = requests.post(f"{BACKEND_URL}/predict", json=payload, timeout=60)
             if r.status_code == 422:
                 st.session_state.pop("last_result", None)
                 st.session_state["last_error"] = {
@@ -192,6 +206,12 @@ if submitted:
                 st.session_state["history"] = fetch_history(
                     limit=st.session_state.get("history_limit", 10)
                 )
+        except requests.exceptions.Timeout:
+            st.session_state.pop("last_result", None)
+            st.session_state["last_error"] = {
+                "title": "Backend timed out waking up (cold start). Render is spinning up — please click 'Compute risk' again in a few seconds.",
+                "detail": None,
+            }
         except requests.exceptions.ConnectionError:
             st.session_state.pop("last_result", None)
             st.session_state["last_error"] = {

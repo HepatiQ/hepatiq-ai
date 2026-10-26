@@ -2,26 +2,26 @@
 # Pin deliberately: an unpinned install once pulled a newer Streamlit whose
 # form-widget behaviour differed from the version tests were written against.
 
-# Data & ML (Nirali)
+# Data & ML
 pandas==3.0.5
 numpy==2.5.1
 scikit-learn==1.9.0
 xgboost==3.4.1
 shap==0.52.0
 
-# Backend API (Meet)
+# Backend API 
 fastapi==0.141.1
 uvicorn[standard]==0.52.4
 joblib==1.5.3
 pydantic==2.13.5
 httpx==0.28.1
 
-# Frontend (Deekshitha)
+# Frontend
 streamlit==1.62.0
 requests==2.34.2
 plotly==7.0.0
 
-# Validation (Rudra)
+# Validation 
 scipy==1.18.1
 statsmodels==0.15.0
 
