@@ -103,7 +103,11 @@ def fetch_history(limit: int = 10) -> dict:
         # Bumping timeout to 30s gives Render enough time to complete a cold start
         hr = requests.get(f"{BACKEND_URL}/history", params={"limit": limit}, timeout=30)
         if hr.status_code == 200:
-            return {"items": hr.json().get("items", []), "error": None, "limit": limit}
+            return {
+                "items": hr.json().get("items", []),
+                "error": None,
+                "limit": limit,
+            }
         return {
             "items": None,
             "error": f"History unavailable (HTTP {hr.status_code}).",
