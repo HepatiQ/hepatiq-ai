@@ -294,6 +294,7 @@ data = st.session_state.get("last_result")
 if data is not None:
     prob = data["probability"]
     st.metric("Estimated 5-year severe event risk", f"{prob:.1%}")
+    st.caption("95% CI (OOF): ROC-AUC 0.8828 [0.8409, 0.9185] — Mayo Clinic PBC cohort")
 
     band = data.get("risk_band")
     if band:
@@ -396,6 +397,15 @@ with st.expander("Recent predictions (local history)"):
         st.dataframe(rows, width="stretch", hide_index=True)
 
 st.divider()
+with st.expander("Model Comparison"):
+    st.markdown("""
+| Model | ROC-AUC (CV) | Precision | Recall | F1 Score | Brier Score |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| **Logistic Regression** (Selected) | 0.8800 | 0.7675 | 0.8105 | 0.7861 | 0.1363 |
+| Random Forest | 0.8844 | 0.7235 | 0.8256 | 0.7694 | 0.1419 |
+| XGBoost | 0.8706 | 0.7225 | 0.7508 | 0.1528 | 0.1528 |
+""")
+    st.caption("Logistic Regression chosen for superior calibration and interpretability.")
 st.caption(
     "Research prototype — not a medical device or diagnostic tool. "
     "Model scope, calibration, and limits: docs/LIMITATIONS.md."
