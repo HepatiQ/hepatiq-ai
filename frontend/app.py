@@ -30,8 +30,24 @@ SUBMIT_DEDUPE_WINDOW_S = 5.0
 st.set_page_config(
     page_title="HepatiQ",
     layout="wide",
-    page_icon=str(LOGO_PATH) if LOGO_PATH.exists() else "🫁",
+    page_icon=str(LOGO_PATH) if LOGO_PATH.exists() else "🧬",
 )
+
+# Backend status indicator
+with st.sidebar:
+    st.markdown("### System Status")
+    try:
+        _health = requests.get(f"{BACKEND_URL}/health", timeout=3)
+        if _health.status_code == 200:
+            st.success("Backend: Online")
+        else:
+            st.warning(f"Backend: Issue (HTTP {_health.status_code})")
+    except requests.exceptions.Timeout:
+        st.warning("Backend: Waking up (cold start)")
+    except requests.exceptions.RequestException:
+        st.error("Backend: Unreachable")
+    st.caption("API: " + BACKEND_URL)
+    st.divider()
 
 st.markdown(
     """
