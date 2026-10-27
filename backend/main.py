@@ -28,9 +28,11 @@ import shap
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from backend.db import DEFAULT_DB_PATH, clear_predictions, fetch_recent, init_db, log_prediction
+from backend.db import DEFAULT_DB_PATH, clear_predictions, fetch_recent, get_stats, init_db, log_prediction
+from backend.agent import ClinicalAgent
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+_agent = ClinicalAgent()
 MODEL_PATH = REPO_ROOT / "models" / "model.pkl"
 DATA_PATH = REPO_ROOT / "data" / "pbc_5yr_target.csv"
 BACKGROUND_SAMPLE_SIZE = 100
@@ -310,7 +312,6 @@ def predict(req: PredictRequest) -> PredictResponse:
     # here and surfaced only through /health-style ops checks, not as a 500.
     if _state["db_path"] is not None:
         try:
-            import time as _time
             log_prediction(
                 _state["db_path"],
                 request=raw,
@@ -322,6 +323,55 @@ def predict(req: PredictRequest) -> PredictResponse:
             pass
 
     return response
+
+
+class AgentRequest(BaseModel):
+    age: float
+    sex: Literal["f", "m"]
+    edema: float
+    bili: float
+    albumin: float
+    trt: Optional[float] = None
+    ascites: Optional[float] = None
+    hepato: Optional[float] = None
+    spiders: Optional[float] = None
+    chol: Optional[float] = None
+    copper: Optional[float] = None
+    alk_phos: Optional[float] = None
+    ast: Optional[float] = None
+    trig: Optional[float] = None
+    platelet: Optional[float] = None
+    protime: Optional[float] = None
+    stage: Optional[float] = None
+
+
+@app.post("/agent/reason")
+def agent_reason(req: AgentRequest):
+    """AI agent loop for clinical reasoning and recommendations."""
+    raw = req.model_dump()
+    # First get prediction
+    pred_req = PredictRequest(**raw)
+    pred_response = predict(pred_req)
+    # Run agent loop
+    contributions = [c.model_dump() for c in pred_response.contributions]
+    result = _agent.reason_loop(raw, pred_response.probability, contributions)
+    return {
+        "prediction": {
+            "probability": pred_response.probability,
+            "risk_band": pred_response.risk_band,
+        },
+        "agent_analysis": result,
+    }
+
+
+@app.get("/stats")
+def stats():
+    if _state["db_path"] is None:
+        raise HTTPException(status_code=503, detail="Database not initialized")
+    try:
+        return get_stats(_state["db_path"])
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 @app.get("/history", response_model=HistoryResponse)
