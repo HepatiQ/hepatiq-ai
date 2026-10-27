@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 import requests
 import streamlit as st
 
+
 def _resolve_backend_url() -> str:
     url = os.environ.get("HEPATIQ_BACKEND_URL")
     if not url:
@@ -105,7 +106,11 @@ def fetch_history(limit: int = 10) -> dict:
             return {"items": hr.json().get("items", []), "error": None, "limit": limit}
         return {"items": None, "error": f"History unavailable (HTTP {hr.status_code}).", "limit": limit}
     except requests.exceptions.Timeout:
-        return {"items": None, "error": "Backend is waking up (cold start) — please refresh in a few seconds.", "limit": limit}
+        return {
+            "items": None,
+            "error": "Backend is waking up (cold start) — please refresh in a few seconds.",
+            "limit": limit,
+        }
     except requests.exceptions.RequestException:
         return {"items": None, "error": "Backend not reachable — history hidden.", "limit": limit}
 
@@ -209,7 +214,10 @@ if submitted:
         except requests.exceptions.Timeout:
             st.session_state.pop("last_result", None)
             st.session_state["last_error"] = {
-                "title": "Backend timed out waking up (cold start). Render is spinning up — please click 'Compute risk' again in a few seconds.",
+                "title": (
+                    "Backend timed out waking up (cold start). Render is spinning up — "
+                    "please click 'Compute risk' again in a few seconds."
+                ),
                 "detail": None,
             }
         except requests.exceptions.ConnectionError:
