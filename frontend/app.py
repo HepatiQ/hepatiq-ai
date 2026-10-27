@@ -258,6 +258,7 @@ if submitted:
             else:
                 r.raise_for_status()
                 st.session_state["last_result"] = r.json()
+                st.session_state["last_payload"] = payload
                 st.session_state["last_latency_ms"] = (time.perf_counter() - request_start) * 1000
                 st.session_state["last_payload_sig"] = payload_sig
                 st.session_state["last_success_ts"] = time.time()
@@ -347,6 +348,7 @@ if data is not None:
             _model_version = data.get("model_version") or "-"
             _prob = data.get("probability", prob)
             _band = _risk_band(_prob)
+            _payload = st.session_state.get("last_payload", payload) if 'payload' in dir() else st.session_state.get("last_payload", {})
             pdf = FPDF()
             pdf.add_page()
             pdf.set_font("Helvetica", "B", 16)
@@ -357,7 +359,7 @@ if data is not None:
             pdf.set_font("Helvetica", "B", 12)
             pdf.cell(0, 8, "Patient Inputs", ln=True)
             pdf.set_font("Helvetica", "", 10)
-            for k, v in payload.items():
+            for k, v in _payload.items():
                 if k in DISPLAY_NAMES:
                     pdf.cell(0, 6, f"  {DISPLAY_NAMES[k]}: {v}", ln=True)
             pdf.ln(3)
