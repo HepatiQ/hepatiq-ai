@@ -380,10 +380,10 @@ if data is not None:
             pdf.ln(5)
             pdf.set_font("Helvetica", "I", 8)
             pdf.multi_cell(0, 4, "RESEARCH PROTOTYPE - Not a medical device or diagnostic tool. Not a substitute for physician judgment. See docs/LIMITATIONS.md for details.")
-            pdf_bytes = pdf.output()
+            pdf_bytes = pdf.output(dest='S').encode('latin-1')
             st.download_button(
                 label="Download PDF Report",
-                data=bytes(pdf_bytes),
+                data=pdf_bytes,
                 file_name=f"hepatiq_report_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.pdf",
                 mime="application/pdf",
             )
