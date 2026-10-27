@@ -117,6 +117,15 @@ DISPLAY_NAMES = {
 }
 
 
+def _risk_band(probability: float) -> str:
+    if probability >= 0.40:
+        return "high"
+    elif probability >= 0.15:
+        return "intermediate"
+    else:
+        return "low"
+
+
 def optional_number(label, min_value, max_value, format, step):
     return st.number_input(
         label, min_value=min_value, max_value=max_value, value=None, format=format, step=step
