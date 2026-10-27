@@ -1,11 +1,13 @@
 import json
 import os
 import time
+from datetime import datetime
 from pathlib import Path
 
 import plotly.graph_objects as go
 import requests
 import streamlit as st
+from fpdf import FPDF
 
 
 def _resolve_backend_url() -> str:
@@ -341,6 +343,48 @@ if data is not None:
         )
         st.plotly_chart(fig, width="stretch")
         st.caption("* imputed server-side (not provided in the request)")
+        try:
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Helvetica", "B", 16)
+            pdf.cell(0, 10, "HepatiQ - Risk Assessment Report", ln=True, align="C")
+            pdf.set_font("Helvetica", "", 10)
+            pdf.cell(0, 6, f"Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}", ln=True, align="C")
+            pdf.ln(5)
+            pdf.set_font("Helvetica", "B", 12)
+            pdf.cell(0, 8, "Patient Inputs", ln=True)
+            pdf.set_font("Helvetica", "", 10)
+            for k, v in payload.items():
+                if k in DISPLAY_NAMES:
+                    pdf.cell(0, 6, f"  {DISPLAY_NAMES[k]}: {v}", ln=True)
+            pdf.ln(3)
+            pdf.set_font("Helvetica", "B", 12)
+            pdf.cell(0, 8, "Results", ln=True)
+            pdf.set_font("Helvetica", "", 10)
+            pdf.cell(0, 6, f"  5-year severe event risk: {prob:.1%}", ln=True)
+            pdf.cell(0, 6, f"  Risk band: {band.capitalize()}", ln=True)
+            pdf.cell(0, 6, f"  Model: {model_version}", ln=True)
+            pdf.ln(3)
+            pdf.set_font("Helvetica", "B", 12)
+            pdf.cell(0, 8, "Top Risk Contributors (SHAP)", ln=True)
+            pdf.set_font("Helvetica", "", 9)
+            top_contribs = sorted([c for c in contribs if c.get('impact') is not None], key=lambda x: abs(x['impact']), reverse=True)[:5]
+            for c in top_contribs:
+                name = DISPLAY_NAMES.get(c['feature'], c['feature'])
+                imp = c['impact']
+                pdf.cell(0, 5, f"  {name}: {imp:+.3f} ({'raises' if imp > 0 else 'lowers'} risk)", ln=True)
+            pdf.ln(5)
+            pdf.set_font("Helvetica", "I", 8)
+            pdf.multi_cell(0, 4, "RESEARCH PROTOTYPE - Not a medical device or diagnostic tool. Not a substitute for physician judgment. See docs/LIMITATIONS.md for details.")
+            pdf_bytes = pdf.output()
+            st.download_button(
+                label="Download PDF Report",
+                data=bytes(pdf_bytes),
+                file_name=f"hepatiq_report_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.pdf",
+                mime="application/pdf",
+            )
+        except Exception as e:
+            st.caption(f"PDF export unavailable: {e}")
     else:
         st.info("No SHAP contributions available (explainer not ready — see /health).")
 
