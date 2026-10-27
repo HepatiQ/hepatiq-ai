@@ -9,10 +9,10 @@ import streamlit as st
 
 
 def _resolve_backend_url() -> str:
-    url = os.environ.get("HEPatiQ_BACKEND_URL")
+    url = os.environ.get("HEPATIQ_BACKEND_URL")
     if not url:
         try:
-            url = st.secrets.get("HEPatiQ_BACKEND_URL")
+            url = st.secrets.get("HEPATIQ_BACKEND_URL")
         except Exception:
             url = None
     return (url or "http://localhost:8000").rstrip("/")
