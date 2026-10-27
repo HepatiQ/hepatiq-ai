@@ -310,11 +310,13 @@ def predict(req: PredictRequest) -> PredictResponse:
     # here and surfaced only through /health-style ops checks, not as a 500.
     if _state["db_path"] is not None:
         try:
+            import time as _time
             log_prediction(
                 _state["db_path"],
                 request=raw,
                 probability=probability,
                 contributions=[c.model_dump() for c in contributions],
+                model_version=_state.get("model_version") or MODEL_VERSION,
             )
         except Exception:
             pass
@@ -323,11 +325,11 @@ def predict(req: PredictRequest) -> PredictResponse:
 
 
 @app.get("/history", response_model=HistoryResponse)
-def history(limit: int = Query(20, ge=1, le=100)) -> HistoryResponse:
+def history(limit: int = Query(20, ge=1, le=100), risk_band: str = Query(None)) -> HistoryResponse:
     if _state["db_path"] is None:
         raise HTTPException(status_code=503, detail="Prediction history unavailable (database not initialized)")
     try:
-        items = fetch_recent(_state["db_path"], limit)
+        items = fetch_recent(_state["db_path"], limit, risk_band=risk_band)
     except Exception as exc:
         raise HTTPException(status_code=503, detail=f"Prediction history unavailable: {exc}") from exc
     return HistoryResponse(items=[HistoryItem(**item) for item in items])

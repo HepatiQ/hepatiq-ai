@@ -114,11 +114,13 @@ def optional_number(label, min_value, max_value, format, step):
     )
 
 
-def fetch_history(limit: int = 10) -> dict:
+def fetch_history(limit: int = 10, risk_band: str = None) -> dict:
     """GET /history; never raises — returns {items, error, limit} for state."""
     try:
-        # Bumping timeout to 30s gives Render enough time to complete a cold start
-        hr = requests.get(f"{BACKEND_URL}/history", params={"limit": limit}, timeout=30)
+        params = {"limit": limit}
+        if risk_band and risk_band != "All":
+            params["risk_band"] = risk_band
+        hr = requests.get(f"{BACKEND_URL}/history", params=params, timeout=30)
         if hr.status_code == 200:
             return {
                 "items": hr.json().get("items", []),
