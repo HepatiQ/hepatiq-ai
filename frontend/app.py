@@ -15,7 +15,8 @@ def _resolve_backend_url() -> str:
             url = st.secrets.get("HEPATIQ_BACKEND_URL")
         except Exception:
             url = None
-    return (url or "http://localhost:8000").rstrip("/")
+    # Default to deployed backend; allow overrides for local dev
+    return (url or "https://hepatiq-ai.onrender.com").rstrip("/")
 
 
 BACKEND_URL = _resolve_backend_url()
