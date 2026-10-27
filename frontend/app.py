@@ -371,7 +371,8 @@ if data is not None:
             pdf.set_font("Helvetica", "B", 12)
             pdf.cell(0, 8, "Top Risk Contributors (SHAP)", ln=True)
             pdf.set_font("Helvetica", "", 9)
-            top_contribs = sorted([c for c in contribs if c.get('impact') is not None], key=lambda x: abs(x['impact']), reverse=True)[:5]
+            _contribs = data.get('contributions', []) or contributions
+            top_contribs = sorted([c for c in _contribs if c.get('impact') is not None], key=lambda x: abs(x['impact']), reverse=True)[:5]
             for c in top_contribs:
                 name = DISPLAY_NAMES.get(c['feature'], c['feature'])
                 imp = c['impact']
