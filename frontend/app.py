@@ -47,6 +47,15 @@ with st.sidebar:
     except requests.exceptions.RequestException:
         st.error("Backend: Unreachable")
     st.caption("API: " + BACKEND_URL)
+    try:
+        _stats = requests.get(f"{BACKEND_URL}/stats", timeout=3)
+        if _stats.status_code == 200:
+            s = _stats.json()
+            st.markdown("### Predictions")
+            st.metric("Total", s.get("total", 0))
+            st.metric("High Risk", f"{s.get('high_risk_count', 0)} ({s.get('high_risk_pct', 0)}%)")
+    except Exception:
+        pass
     st.divider()
 
 st.markdown(
@@ -326,16 +335,21 @@ if data is not None:
         st.info("No SHAP contributions available (explainer not ready — see /health).")
 
 with st.expander("Recent predictions (local history)"):
-    limit = st.selectbox("Show", [10, 25, 50], key="history_limit", format_func=lambda n: f"{n} most recent")
+    col_a, col_b, _ = st.columns([1, 1, 4])
+    with col_a:
+        limit = st.selectbox("Show", [10, 25, 50, 100], key="history_limit", format_func=lambda n: f"{n} most recent")
+    with col_b:
+        risk_filter = st.selectbox("Risk band", ['All', 'low', 'intermediate', 'high'], index=0)
     history = st.session_state.get("history")
-    if history is None or history.get("limit") != limit:
-        history = fetch_history(limit=limit)
+    if history is None or history.get("limit") != limit or st.session_state.get("history_filter") != risk_filter:
+        history = fetch_history(limit=limit, risk_band=risk_filter)
         st.session_state["history"] = history
+        st.session_state["history_filter"] = risk_filter
     if st.button("Clear history"):
         try:
             dr = requests.delete(f"{BACKEND_URL}/history", timeout=10)
             dr.raise_for_status()
-            history = fetch_history(limit=limit)
+            history = fetch_history(limit=limit, risk_band=risk_filter)
             st.session_state["history"] = history
         except requests.exceptions.RequestException:
             st.caption("Could not clear history — backend unavailable.")
@@ -344,6 +358,16 @@ with st.expander("Recent predictions (local history)"):
     elif not history["items"]:
         st.caption("No predictions logged yet.")
     else:
+        try:
+            import csv, io
+            output = io.StringIO()
+            writer = csv.writer(output)
+            writer.writerow(['Time (UTC)', 'Risk', 'Risk Band'])
+            for it in history["items"]:
+                writer.writerow([it['created_at'], f"{it['probability']:.1%}", _risk_band(it['probability'])])
+            st.download_button('Download CSV', output.getvalue(), file_name='hepatiq_history.csv', mime='text/csv')
+        except Exception:
+            pass
         rows = []
         for it in history["items"]:
             top = sorted(
@@ -354,6 +378,7 @@ with st.expander("Recent predictions (local history)"):
             rows.append({
                 "Time (UTC)": it["created_at"],
                 "Risk": f"{it['probability']:.1%}",
+                "Risk Band": _risk_band(it['probability']),
                 "Top contributors": ", ".join(
                     f"{DISPLAY_NAMES.get(c['feature'], c['feature'])} ({c['impact']:+.2f})"
                     for c in top
