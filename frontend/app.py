@@ -9,10 +9,10 @@ import streamlit as st
 
 
 def _resolve_backend_url() -> str:
-    url = os.environ.get("HEPATIQ_BACKEND_URL")
+    url = os.environ.get("HEPatiQ_BACKEND_URL")
     if not url:
         try:
-            url = st.secrets.get("HEPATIQ_BACKEND_URL")
+            url = st.secrets.get("HEPatiQ_BACKEND_URL")
         except Exception:
             url = None
     return (url or "http://localhost:8000").rstrip("/")
@@ -104,15 +104,25 @@ def fetch_history(limit: int = 10) -> dict:
         hr = requests.get(f"{BACKEND_URL}/history", params={"limit": limit}, timeout=30)
         if hr.status_code == 200:
             return {"items": hr.json().get("items", []), "error": None, "limit": limit}
-        return {"items": None, "error": f"History unavailable (HTTP {hr.status_code}).", "limit": limit}
+        return {
+            "items": None,
+            "error": f"History unavailable (HTTP {hr.status_code}).",
+            "limit": limit,
+        }
     except requests.exceptions.Timeout:
         return {
             "items": None,
-            "error": "Backend is waking up (cold start) — please refresh in a few seconds.",
+            "error": (
+                "Backend is waking up (cold start) — please refresh in a few seconds."
+            ),
             "limit": limit,
         }
     except requests.exceptions.RequestException:
-        return {"items": None, "error": "Backend not reachable — history hidden.", "limit": limit}
+        return {
+            "items": None,
+            "error": "Backend not reachable — history hidden.",
+            "limit": limit,
+        }
 
 
 with st.form("patient_calculator_form"):
