@@ -4,6 +4,12 @@ Explainable Clinical Risk Prediction for Primary Biliary Cholangitis
 
 **HepatiQ** is an explainable clinical decision-support web application that estimates 5-year severe event risk (death or liver transplant) for patients with Primary Biliary Cholangitis (PBC) using routine liver function tests and machine learning with SHAP-based interpretability.
 
+## 🚀 Live Demo
+
+- **Web App (Streamlit):** [https://hepatiq-ai.streamlit.app](https://hepatiq-ai.streamlit.app)
+- **Backend API (Render):** [https://hepatiq-ai.onrender.com](https://hepatiq-ai.onrender.com)
+- **API Docs (Swagger):** [https://hepatiq-ai.onrender.com/docs](https://hepatiq-ai.onrender.com/docs)
+
 ## Overview
 
 Clinicians use Liver Function Tests (LFTs) and blood biochemistry to assess hepatic risk, but manual interpretation of multidimensional physiological data is time-consuming, subject to practitioner variability, and inconsistent across facilities. While machine learning can reliably process these inputs, most deployed clinical AI tools are "black boxes" — they output a probability with no explanation of why, creating a significant barrier to clinical trust and adoption.
