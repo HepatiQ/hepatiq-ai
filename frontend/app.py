@@ -344,6 +344,7 @@ if data is not None:
         st.plotly_chart(fig, width="stretch")
         st.caption("* imputed server-side (not provided in the request)")
         try:
+            _model_version = model_version
             pdf = FPDF()
             pdf.add_page()
             pdf.set_font("Helvetica", "B", 16)
@@ -363,7 +364,7 @@ if data is not None:
             pdf.set_font("Helvetica", "", 10)
             pdf.cell(0, 6, f"  5-year severe event risk: {prob:.1%}", ln=True)
             pdf.cell(0, 6, f"  Risk band: {band.capitalize()}", ln=True)
-            pdf.cell(0, 6, f"  Model: {model_version}", ln=True)
+            pdf.cell(0, 6, f"  Model: {_model_version}", ln=True)
             pdf.ln(3)
             pdf.set_font("Helvetica", "B", 12)
             pdf.cell(0, 8, "Top Risk Contributors (SHAP)", ln=True)
