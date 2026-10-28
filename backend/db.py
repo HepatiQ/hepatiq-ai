@@ -78,7 +78,15 @@ def init_db(path) -> None:
         conn.commit()
 
 
-def log_prediction(path, request: dict, probability: float, contributions: List[dict], model_version: Optional[str] = None, session_id: Optional[str] = None, latency_ms: Optional[float] = None) -> None:
+def log_prediction(
+    path,
+    request: dict,
+    probability: float,
+    contributions: List[dict],
+    model_version: Optional[str] = None,
+    session_id: Optional[str] = None,
+    latency_ms: Optional[float] = None,
+) -> None:
     risk_band = _compute_risk_band(float(probability))
     age = request.get("age")
     sex = request.get("sex")
@@ -87,7 +95,12 @@ def log_prediction(path, request: dict, probability: float, contributions: List[
     edema = request.get("edema")
     with closing(sqlite3.connect(path, timeout=5.0)) as conn:
         conn.execute(
-            "INSERT INTO predictions (created_at, request_json, probability, contributions_json, risk_band, model_version, session_id, latency_ms, age, sex, bili, albumin, edema) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                "INSERT INTO predictions "
+                "(created_at, request_json, probability, contributions_json, risk_band, "
+                "model_version, session_id, latency_ms, age, sex, bili, albumin, edema) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            ),
             (
                 datetime.now(timezone.utc).isoformat(timespec="seconds"),
                 json.dumps(request, default=str),
@@ -114,10 +127,18 @@ def clear_predictions(path) -> int:
     return cursor.rowcount
 
 
-def fetch_recent(path, limit: int = 20, risk_band: Optional[str] = None, session_id: Optional[str] = None) -> List[dict]:
+def fetch_recent(
+    path,
+    limit: int = 20,
+    risk_band: Optional[str] = None,
+    session_id: Optional[str] = None,
+) -> List[dict]:
     with closing(sqlite3.connect(path, timeout=5.0)) as conn:
         conn.row_factory = sqlite3.Row
-        query = "SELECT id, created_at, request_json, probability, contributions_json, risk_band, model_version, session_id, latency_ms FROM predictions"
+        query = (
+            "SELECT id, created_at, request_json, probability, contributions_json, "
+            "risk_band, model_version, session_id, latency_ms FROM predictions"
+        )
         conditions = []
         params = []
         if risk_band:
@@ -152,10 +173,19 @@ def get_stats(path) -> dict:
         conn.row_factory = sqlite3.Row
         total = conn.execute("SELECT COUNT(*) as cnt FROM predictions").fetchone()["cnt"]
         if total == 0:
-            return {"total": 0, "avg_probability": 0, "high_risk_count": 0, "intermediate_risk_count": 0, "low_risk_count": 0, "high_risk_pct": 0}
+            return {
+                "total": 0,
+                "avg_probability": 0,
+                "high_risk_count": 0,
+                "intermediate_risk_count": 0,
+                "low_risk_count": 0,
+                "high_risk_pct": 0,
+            }
         avg_prob = conn.execute("SELECT AVG(probability) as avg FROM predictions").fetchone()["avg"]
         high_risk = conn.execute("SELECT COUNT(*) as cnt FROM predictions WHERE risk_band = 'high'").fetchone()["cnt"]
-        intermediate = conn.execute("SELECT COUNT(*) as cnt FROM predictions WHERE risk_band = 'intermediate'").fetchone()["cnt"]
+        intermediate = conn.execute(
+            "SELECT COUNT(*) as cnt FROM predictions WHERE risk_band = 'intermediate'"
+        ).fetchone()["cnt"]
         low_risk = conn.execute("SELECT COUNT(*) as cnt FROM predictions WHERE risk_band = 'low'").fetchone()["cnt"]
         return {
             "total": total,

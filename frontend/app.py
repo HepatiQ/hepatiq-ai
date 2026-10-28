@@ -17,8 +17,9 @@ def _resolve_backend_url() -> str:
             url = st.secrets.get("HEPATIQ_BACKEND_URL")
         except Exception:
             url = None
-    # Default to deployed backend; allow overrides for local dev
-    return (url or "https://hepatiq-ai.onrender.com").rstrip("/")
+    default_url = "http://localhost:8000" if os.environ.get("CI") else "https://hepatiq-ai.onrender.com"
+    # Default to deployed backend; force localhost during CI for local E2E tests.
+    return (url or default_url).rstrip("/")
 
 
 BACKEND_URL = _resolve_backend_url()
@@ -339,7 +340,11 @@ if data is not None:
             _model_version = data.get("model_version") or "-"
             _prob = data.get("probability", prob)
             _band = _risk_band(_prob)
-            _payload = st.session_state.get("last_payload", payload) if 'payload' in dir() else st.session_state.get("last_payload", {})
+            _payload = (
+                st.session_state.get("last_payload", payload)
+                if "payload" in dir()
+                else st.session_state.get("last_payload", {})
+            )
             pdf = FPDF()
             pdf.add_page()
             pdf.set_font("Helvetica", "B", 16)
@@ -364,18 +369,35 @@ if data is not None:
             pdf.set_font("Helvetica", "B", 12)
             pdf.cell(0, 8, "Top Risk Contributors (SHAP)", ln=True)
             pdf.set_font("Helvetica", "", 9)
-            _contribs = data.get('contributions', []) or contributions
-            top_contribs = sorted([c for c in _contribs if c.get('impact') is not None], key=lambda x: abs(x['impact']), reverse=True)[:5]
+            _contribs = data.get("contributions", []) or contributions
+            top_contribs = sorted(
+                [c for c in _contribs if c.get("impact") is not None],
+                key=lambda x: abs(x["impact"]),
+                reverse=True,
+            )[:5]
             for c in top_contribs:
-                name = DISPLAY_NAMES.get(c['feature'], c['feature'])
-                imp = c['impact']
-                pdf.cell(0, 5, f"  {name}: {imp:+.3f} ({'raises' if imp > 0 else 'lowers'} risk)", ln=True)
+                name = DISPLAY_NAMES.get(c["feature"], c["feature"])
+                imp = c["impact"]
+                pdf.cell(
+                    0,
+                    5,
+                    f"  {name}: {imp:+.3f} ({'raises' if imp > 0 else 'lowers'} risk)",
+                    ln=True,
+                )
             pdf.ln(5)
             pdf.set_font("Helvetica", "I", 8)
-            pdf.multi_cell(0, 4, "RESEARCH PROTOTYPE - Not a medical device or diagnostic tool. Not a substitute for physician judgment. See docs/LIMITATIONS.md for details.")
-            pdf_bytes = pdf.output(dest='S')
+            pdf.multi_cell(
+                0,
+                4,
+                (
+                    "RESEARCH PROTOTYPE - Not a medical device or diagnostic tool. "
+                    "Not a substitute for physician judgment. "
+                    "See docs/LIMITATIONS.md for details."
+                ),
+            )
+            pdf_bytes = pdf.output(dest="S")
             if isinstance(pdf_bytes, str):
-                pdf_bytes = pdf_bytes.encode('latin-1')
+                pdf_bytes = pdf_bytes.encode("latin-1")
             st.download_button(
                 label="Download PDF Report",
                 data=pdf_bytes,
@@ -412,13 +434,26 @@ with st.expander("Recent predictions (local history)"):
         st.caption("No predictions logged yet.")
     else:
         try:
-            import csv, io
+            import csv
+            import io
+
             output = io.StringIO()
             writer = csv.writer(output)
-            writer.writerow(['Time (UTC)', 'Risk', 'Risk Band'])
+            writer.writerow(["Time (UTC)", "Risk", "Risk Band"])
             for it in history["items"]:
-                writer.writerow([it['created_at'], f"{it['probability']:.1%}", _risk_band(it['probability'])])
-            st.download_button('Download CSV', output.getvalue(), file_name='hepatiq_history.csv', mime='text/csv')
+                writer.writerow(
+                    [
+                        it["created_at"],
+                        f"{it['probability']:.1%}",
+                        _risk_band(it["probability"]),
+                    ]
+                )
+            st.download_button(
+                "Download CSV",
+                output.getvalue(),
+                file_name="hepatiq_history.csv",
+                mime="text/csv",
+            )
         except Exception:
             pass
         rows = []

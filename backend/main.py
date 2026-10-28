@@ -28,8 +28,21 @@ import shap
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from backend.db import DEFAULT_DB_PATH, clear_predictions, fetch_recent, get_stats, init_db, log_prediction
-from backend.agent import ClinicalAgent
+from backend.db import (
+    DEFAULT_DB_PATH,
+    clear_predictions,
+    fetch_recent,
+    get_stats,
+    init_db,
+    log_prediction,
+)
+
+try:
+    from backend.agent import ClinicalAgent
+except ImportError:  # optional dependency in some environments
+    class ClinicalAgent:  # type: ignore[no-redef]
+        def reason_loop(self, *_args, **_kwargs):
+            raise RuntimeError("Clinical agent module is unavailable")
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 _agent = ClinicalAgent()
@@ -317,7 +330,7 @@ def predict(req: PredictRequest) -> PredictResponse:
                 request=raw,
                 probability=probability,
                 contributions=[c.model_dump() for c in contributions],
-                model_version=_state.get("model_version") or MODEL_VERSION,
+                model_version=_state.get("model_version"),
             )
         except Exception:
             pass
