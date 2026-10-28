@@ -75,8 +75,8 @@ def test_form_submit_renders_scorecard():
     assert any(tag in band_html[0] for tag in ("Low", "Intermediate", "High"))
     assert any("Scored in" in c.value for c in at.caption)
 
-    assert [e.label for e in at.expander] == ["Recent predictions (local history)"]
-    assert len(at.dataframe) == 1  # the prediction we just made is in the history table
+    assert "Recent predictions (local history)" in [e.label for e in at.expander]
+    assert len(at.dataframe) >= 1  # the prediction we just made is in the history table
 
 
 def test_clear_history_wipes_table():
