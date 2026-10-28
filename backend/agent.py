@@ -1,12 +1,14 @@
 ﻿"""Clinical reasoning agent with multi-step loop for HepatiQ."""
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
 
 class ClinicalAgent:
     def __init__(self):
         self.reasoning_steps = []
 
-    def reason_loop(self, patient: Dict[str, Any], probability: float, contributions: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def reason_loop(
+        self, patient: Dict[str, Any], probability: float, contributions: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         self.reasoning_steps = []
         assessment = self._assess_risk(probability)
         drivers = self._identify_drivers(contributions)
