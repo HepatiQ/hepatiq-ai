@@ -49,15 +49,6 @@ with st.sidebar:
     except requests.exceptions.RequestException:
         st.error("Backend: Unreachable")
     st.caption("API: " + BACKEND_URL)
-    try:
-        _stats = requests.get(f"{BACKEND_URL}/stats", timeout=3)
-        if _stats.status_code == 200:
-            s = _stats.json()
-            st.markdown("### Predictions")
-            st.metric("Total", s.get("total", 0))
-            st.metric("High Risk", f"{s.get('high_risk_count', 0)} ({s.get('high_risk_pct', 0)}%)")
-    except Exception:
-        pass
     st.divider()
 
 st.markdown(
