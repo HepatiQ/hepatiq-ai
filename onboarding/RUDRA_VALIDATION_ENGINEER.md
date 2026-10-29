@@ -109,7 +109,7 @@ pip install -r requirements.txt
 ## STEP 7: READ THE DOCUMENTATION
 
 1. **README.md** (3 min)
-2. **validation/README.md** (5 min)
+2. **src/hepatiq/validation/README.md** (5 min)
 3. **docs/TEAM_WORKFLOW.md** (5 min)
 
 ---
@@ -117,7 +117,7 @@ pip install -r requirements.txt
 ## STEP 8: RUN YOUR FIRST VALIDATION TEST
 
 ```bash
-python validation/validate.py
+python -m hepatiq.validation.run_validation
 ```
 
 Expected Output:
@@ -135,7 +135,7 @@ Tests passed! ✓
 ```bash
 git checkout -b rudra-validation-tests
 
-# Edit validation/validate.py
+# Edit src/hepatiq/validation/validate.py
 # Add: # Validation tests by Rudra - [Date]
 
 git add .
@@ -168,7 +168,7 @@ code .
 ```bash
 git checkout -b your-branch
 # Make changes...
-python validation/validate.py   # Test
+python -m hepatiq.validation.run_validation   # Test
 ```
 
 **End of day:**
@@ -183,7 +183,7 @@ deactivate
 
 ## NEXT STEPS
 
-1. Read: validation/README.md
+1. Read: src/hepatiq/validation/README.md
 2. Learn about MELD score
 3. Explore validation tests
 4. Create first issue: "Implement MELD benchmarking"

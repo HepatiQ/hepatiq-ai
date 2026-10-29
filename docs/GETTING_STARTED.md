@@ -39,8 +39,9 @@ venv\Scripts\activate
 # On macOS/Linux:
 source venv/bin/activate
 
-# Install dependencies
+# Install dependencies and the local package (editable, src-layout)
 pip install -r requirements.txt
+pip install -e . --no-deps
 ```
 
 ## Create Your Own Branch
@@ -68,26 +69,27 @@ Each team member owns one folder. Keep your code there and coordinate with teamm
 
 | Folder | Owner | Responsibility |
 |---|---|---|
-| `ml/` | Nirali | Data ingestion, cohort filtering, preprocessing (IterativeImputer, StandardScaler), model training (Logistic Regression + XGBoost), cross-validation, SHAP generation |
-| `backend/` | Pranjal | FastAPI application, `/predict` endpoint, Pydantic validation, model loading (joblib), SHAP integration |
-| `frontend/` | Deekshitha | Streamlit UI, input forms, risk scorecard rendering, SHAP visualization charts (Plotly) |
-| `validation/` | Rudra | Bootstrap confidence intervals, out-of-fold validation runner (`run_validation.py`), class-prior baseline comparison, Brier score, clinical limitations documentation |
-| `data/` | Nirali | Raw and preprocessed Mayo Clinic PBC dataset |
-| `models/` | Nirali & Pranjal | Trained `.pkl` model files (Logistic Regression + XGBoost pipeline) |
+| `src/hepatiq/ml/` | Nirali | Data ingestion, cohort filtering, preprocessing (IterativeImputer, StandardScaler), model training (Logistic Regression + XGBoost), cross-validation, SHAP generation |
+| `src/hepatiq/backend/` | Pranjal | FastAPI application, `/predict` endpoint, Pydantic validation, model loading (joblib), SHAP integration |
+| `src/hepatiq/frontend/` | Deekshitha | Streamlit UI, input forms, risk scorecard rendering, SHAP visualization charts (Plotly) |
+| `src/hepatiq/validation/` | Rudra | Bootstrap confidence intervals, out-of-fold validation runner (`run_validation.py`), class-prior baseline comparison, Brier score, clinical limitations documentation |
+| `src/hepatiq/paths.py` | Everyone | Path constants shared by every module; change these instead of hardcoding paths |
+| `data/raw\|processed\|interim/` | Nirali | Raw dataset, labeled cohort, and imputed exploratory artifacts |
+| `models/` | Nirali & Pranjal | `model.pkl` (deployed) and `candidates/` (benchmark models + metrics) |
 | `docs/` | Everyone | Team documentation, roadmap, workflow guides |
 
 ## Running the Project Locally
 
 Start the backend (in one terminal):
 ```bash
-uvicorn backend.main:app --reload
+uvicorn hepatiq.backend.main:app --reload
 ```
 
 The backend will run at `http://localhost:8000`.
 
 Start the frontend (in a separate terminal):
 ```bash
-streamlit run frontend/app.py
+streamlit run src/hepatiq/frontend/app.py
 ```
 
 The frontend will run at `http://localhost:8501`. Open it in your browser.

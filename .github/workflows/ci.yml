@@ -20,13 +20,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install -e . --no-deps
 
       - name: Lint
         run: ruff check .
 
       - name: Start backend for E2E frontend tests
         run: |
-          python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 > uvicorn.log 2>&1 &
+          python -m uvicorn hepatiq.backend.main:app --host 127.0.0.1 --port 8000 > uvicorn.log 2>&1 &
           python -c "
           import sys, time, urllib.request
           for _ in range(60):
@@ -42,6 +43,6 @@ jobs:
       - name: Run test suite
         run: >
           python -m pytest -v
-          --cov=backend --cov=ml --cov=validation
+          --cov=hepatiq.backend --cov=hepatiq.ml --cov=hepatiq.validation
           --cov-report=term-missing
           --cov-fail-under=60

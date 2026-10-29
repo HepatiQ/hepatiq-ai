@@ -135,7 +135,7 @@ Open these files in order:
    - See the tech stack
    - Learn system flow
 
-2. **ml/README.md** (5 min)
+2. **src/hepatiq/ml/README.md** (5 min)
    - Understand your responsibilities
    - See development guidelines
    - Learn model management
@@ -154,7 +154,7 @@ Open these files in order:
 
 ```bash
 # Make sure virtual environment is activated (venv)
-python ml/train.py
+python -m hepatiq.ml.train
 ```
 
 Expected Output:
@@ -173,7 +173,7 @@ Model saved to models/
 git checkout -b nirali-ml-training
 ```
 
-2. Open `ml/train.py` and add a comment at the top:
+2. Open `src/hepatiq/ml/train.py` and add a comment at the top:
 ```python
 # ML Training Pipeline by Nirali - [Date]
 ```
@@ -214,7 +214,7 @@ code .
 ```bash
 git checkout -b your-branch
 # Make changes...
-python ml/train.py          # Test your code
+python -m hepatiq.ml.train          # Test your code
 ```
 
 **End of day:**
@@ -249,17 +249,17 @@ deactivate
 ✅ **NOW DO:**
 
 1. Read these files:
-   - [ ] ml/README.md
+   - [ ] src/hepatiq/ml/README.md
    - [ ] data/README.md
    - [ ] docs/TEAM_WORKFLOW.md
 
 2. Explore the codebase:
-   - [ ] Open ml/train.py
+   - [ ] Open src/hepatiq/ml/train.py
    - [ ] Open data/ folder
    - [ ] Check data structure
 
 3. Run your first training:
-   - [ ] Run: `python ml/train.py`
+   - [ ] Run: `python -m hepatiq.ml.train`
    - [ ] Check output
 
 4. Create your first issue on GitHub

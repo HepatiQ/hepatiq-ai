@@ -6,8 +6,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
 
-DEFAULT_DB_PATH = Path(__file__).resolve().parents[1] / "data" / "hepatiq.db"
-
 RISK_BAND_INTERMEDIATE = 0.15
 RISK_BAND_HIGH = 0.40
 

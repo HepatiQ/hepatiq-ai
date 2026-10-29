@@ -18,22 +18,23 @@ Why time/status are dropped here (not just "not used"):
     for a new patient, you won't know their future time/status anyway.
 
 Run:
-    python ml/impute_pipeline.py
+    python -m hepatiq.ml.impute_pipeline
 
-Input:  data/pbc_5yr_target.csv
-Output: data/pbc_imputed.csv         (imputed, unscaled — human-readable)
-        data/pbc_imputed_scaled.csv  (imputed + standardized — model-ready)
+Input:  data/processed/pbc_5yr_target.csv
+Output: data/interim/pbc_imputed.csv         (imputed, unscaled — human-readable)
+        data/interim/pbc_imputed_scaled.csv  (imputed + standardized — model-ready)
 """
 
-import os
 import pandas as pd
 from sklearn.experimental import enable_iterative_imputer  # noqa: F401 (required to unlock IterativeImputer)
 from sklearn.impute import IterativeImputer
 from sklearn.preprocessing import StandardScaler
 
-INPUT_PATH = os.path.join("data", "pbc_5yr_target.csv")
-IMPUTED_PATH = os.path.join("data", "pbc_imputed.csv")
-IMPUTED_SCALED_PATH = os.path.join("data", "pbc_imputed_scaled.csv")
+from hepatiq.paths import INTERIM_DIR, PROCESSED_DATA
+
+INPUT_PATH = str(PROCESSED_DATA)
+IMPUTED_PATH = str(INTERIM_DIR / "pbc_imputed.csv")
+IMPUTED_SCALED_PATH = str(INTERIM_DIR / "pbc_imputed_scaled.csv")
 
 LEAKY_COLS = ["time", "status"]          # derived-from columns: must not be features
 ID_COL = "id"                             # identifier: keep for reference, never impute/scale

@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hepatiq-ai"
+version = "0.1.0"
+description = "Explainable clinical risk prediction for primary biliary cholangitis"
+readme = "README.md"
+requires-python = ">=3.10"
+
+# Runtime and dev dependencies stay pinned in requirements.txt so CI, Render,
+# and local installs resolve the exact versions the test suite was written
+# against. Install the package itself with: pip install -e . --no-deps
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+hepatiq = ["frontend/assets/*"]
+"hepatiq.frontend" = ["assets/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+filterwarnings = [
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated:DeprecationWarning",
+]
+
+[tool.coverage.run]
+# These are one-shot developer CLI scripts, not library modules exercised by
+# the test suite; excluding them keeps the coverage gate about testable code.
+omit = [
+    "src/hepatiq/ml/build_5yr_target.py",
+    "src/hepatiq/ml/explain.py",
+    "src/hepatiq/validation/calibration_plot.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # import sorting
+    "B",   # bugbear (common footguns)
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Scripts read top-to-bottom with stdlib-first import blocks; sorting them
+# reorders sys.path setup ahead of its consumers.
+"src/hepatiq/ml/*.py" = ["I001"]
+"src/hepatiq/validation/run_validation.py" = ["I001"]

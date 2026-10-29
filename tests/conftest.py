@@ -1,18 +1,11 @@
 """Shared fixtures for the HepatiQ test suite."""
 
-import sys
-from pathlib import Path
-
+import joblib
 import pandas as pd
 import pytest
+from fastapi.testclient import TestClient
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO_ROOT))
-
-import joblib  # noqa: E402
-from fastapi.testclient import TestClient  # noqa: E402
-
-from backend.main import FEATURE_COLUMNS, MODEL_PATH, app  # noqa: E402
+from hepatiq.backend.main import FEATURE_COLUMNS, MODEL_PATH, app
 
 REQUIRED_ONLY = {"age": 58.0, "sex": "f", "edema": 0.0, "bili": 1.2, "albumin": 3.6}
 

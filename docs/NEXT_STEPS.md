@@ -13,9 +13,9 @@ Last updated alongside commit `714f6e3` (Phase 5 delivery). Status: all CI green
 The application is complete and honest as a **research prototype**:
 
 - Model: Logistic Regression, leakage-controlled 5-fold CV, OOF ROC-AUC
-  **0.8828 [0.8409, 0.9185]** vs class-prior baseline 0.4924 (`validation/report.md`).
-- Backend: FastAPI (`backend/main.py`) — `/health`, `/predict`, `GET /history`, `DELETE /history`.
-- Frontend: Streamlit (`frontend/app.py`) — dark theme, logo, risk-band badge,
+  **0.8828 [0.8409, 0.9185]** vs class-prior baseline 0.4924 (`src/hepatiq/validation/report.md`).
+- Backend: FastAPI (`src/hepatiq/backend/main.py`) — `/health`, `/predict`, `GET /history`, `DELETE /history`.
+- Frontend: Streamlit (`src/hepatiq/frontend/app.py`) — dark theme, logo, risk-band badge,
   training-range warnings, latency/version caption, history controls.
 - Quality: 62 tests incl. a live form→API→model E2E, ruff clean, CI coverage floor 60.
 - Docs: `README.md`, `docs/LIMITATIONS.md`, `docs/model_card.md`, `docs/DEMO.md`,
@@ -35,10 +35,10 @@ Options, in order of honesty/value:
   an outcome column. Candidate cohorts: UK-PBC, GLOBAL PBC / GLOBE, or the
   Mayo/VA cohorts (the latter also carry creatinine + INR, which would finally
   enable a real MELD benchmark — see `docs/LIMITATIONS.md`).
-  - **What to build when a cohort exists:** `validation/run_external_validation.py`
+  - **What to build when a cohort exists:** `src/hepatiq/validation/run_external_validation.py`
     that loads the frozen model, scores the new cohort, reports ROC-AUC / Brier /
     calibration with 95% bootstrap CIs vs a class-prior baseline, and writes
-    `validation/external_report.md`. Label it clearly as *external* (not OOF).
+    `src/hepatiq/validation/external_report.md`. Label it clearly as *external* (not OOF).
   - **Blocker:** requires data access. Nothing to code until a second dataset is
     in hand.
 - **Option B — held-out test (bridge, weaker).** Deterministic 80/20 stratified
@@ -65,11 +65,11 @@ Options, in order of honesty/value:
 
 ## Known issues / cautions
 
-- **Leaked GitHub PAT (unresolved, likely moot).** `create_issues.py` (line ~18)
-  contained a hardcoded `ghp_…` token. It is tracked in git history. It now
-  returns **HTTP 401** (revoked/expired), so the credential is dead — but the file
-  still contains the string. If it was never revoked, **revoke it** at
-  github.com/settings/tokens, then remove the file. A secret-scan step in CI would
+- **Leaked GitHub PAT (action required: revoke + rotate).** `create_issues.py`
+  contained a hardcoded `ghp_…` token. The file has been deleted from the working
+  tree, but the string remains in **git history**, so deleting the file is not
+  enough. Revoke the token at github.com/settings/tokens and rotate any credential
+  it could reach; do not rely on expiration alone. A secret-scan step in CI would
   prevent recurrence.
 - **Dependency pins are deliberate.** `requirements.txt` pins exact versions
   (e.g. `streamlit==1.62.0`). Reason: an unpinned install once pulled a newer
@@ -90,14 +90,14 @@ Options, in order of honesty/value:
 pip install -r requirements.txt
 
 # API
-python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+python -m uvicorn hepatiq.backend.main:app --host 127.0.0.1 --port 8000
 
 # UI
-python -m streamlit run frontend/app.py --server.port 8501 --server.headless true
+python -m streamlit run src/hepatiq/frontend/app.py --server.port 8501 --server.headless true
 # open http://localhost:8501  ·  API docs: http://localhost:8000/docs
 
 # tests (CI-equivalent)
-python -m pytest --cov=backend --cov=ml --cov=validation --cov-fail-under=60
+python -m pytest --cov=hepatiq.backend --cov=hepatiq.ml --cov=hepatiq.validation --cov-fail-under=60
 ```
 
 Deployment: Render (backend) and Streamlit Cloud (UI) auto-redeploy from `main`.

@@ -1,19 +1,23 @@
 """Streamlit AppTest smoke: the frontend script executes without exceptions."""
 
 import os
-import sys
 from pathlib import Path
 
 import pytest
 import requests
 from streamlit.testing.v1 import AppTest
 
+from tests.conftest import build_model_frame
+
+# AppTest executes frontend/app.py, which probes the backend in the sidebar.
+# Point it at a reserved-domain host so the probe fails instantly instead of
+# waiting on the deployed Render cold start (which can exceed the submit
+# dedupe window and make timing-sensitive tests flaky).
+os.environ["HEPATIQ_BACKEND_URL"] = "http://hepatiq-backend.invalid:8000"
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
-FRONTEND = REPO_ROOT / "frontend" / "app.py"
-
-sys.path.insert(0, str(REPO_ROOT))
-
-from tests.conftest import build_model_frame  # noqa: E402
+FRONTEND = REPO_ROOT / "src" / "hepatiq" / "frontend" / "app.py"
+E2E_BACKEND_URL = os.environ.get("HEPATIQ_E2E_BACKEND_URL", "http://localhost:8000")
 
 
 def test_frontend_renders_without_exception():
@@ -33,18 +37,19 @@ def test_frontend_form_has_required_inputs():
 
 def _backend_reachable() -> bool:
     try:
-        return requests.get("http://localhost:8000/health", timeout=3).status_code == 200
+        return requests.get(f"{E2E_BACKEND_URL}/health", timeout=3).status_code == 200
     except requests.exceptions.RequestException:
         return False
 
 
-def test_form_submit_renders_scorecard():
+def test_form_submit_renders_scorecard(monkeypatch):
     """True E2E: form -> real HTTP -> FastAPI -> model -> rendered scorecard."""
     if not _backend_reachable():
         if os.environ.get("CI"):
-            pytest.fail("backend on localhost:8000 unreachable in CI — uvicorn start step broken")
-        pytest.skip("backend on localhost:8000 not running")
+            pytest.fail(f"backend on {E2E_BACKEND_URL} unreachable in CI - uvicorn start step broken")
+        pytest.skip(f"backend on {E2E_BACKEND_URL} not running")
 
+    monkeypatch.setenv("HEPATIQ_BACKEND_URL", E2E_BACKEND_URL)
     at = AppTest.from_file(str(FRONTEND), default_timeout=60)
     at.run()
     assert not at.exception, at.exception
@@ -63,7 +68,7 @@ def test_form_submit_renders_scorecard():
     )
     import joblib
 
-    from backend.main import MODEL_PATH
+    from hepatiq.backend.main import MODEL_PATH
 
     expected = float(joblib.load(MODEL_PATH).predict_proba(direct)[0, 1])
     assert at.metric[0].value == f"{expected:.1%}"
@@ -79,13 +84,14 @@ def test_form_submit_renders_scorecard():
     assert len(at.dataframe) >= 1  # the prediction we just made is in the history table
 
 
-def test_clear_history_wipes_table():
+def test_clear_history_wipes_table(monkeypatch):
     """Clear history button DELETEs server-side rows and refreshes the panel."""
     if not _backend_reachable():
         if os.environ.get("CI"):
-            pytest.fail("backend on localhost:8000 unreachable in CI — uvicorn start step broken")
-        pytest.skip("backend on localhost:8000 not running")
+            pytest.fail(f"backend on {E2E_BACKEND_URL} unreachable in CI - uvicorn start step broken")
+        pytest.skip(f"backend on {E2E_BACKEND_URL} not running")
 
+    monkeypatch.setenv("HEPATIQ_BACKEND_URL", E2E_BACKEND_URL)
     at = AppTest.from_file(str(FRONTEND), default_timeout=60)
     at.run()
     assert not at.exception, at.exception

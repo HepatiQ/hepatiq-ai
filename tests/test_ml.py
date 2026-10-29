@@ -1,18 +1,14 @@
 """ml/ guards: leakage columns stay out, sex encoding matches training, selection rule is deterministic."""
 
-import sys
-from pathlib import Path
-
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO_ROOT / "ml"))
-
-from impute_pipeline import ID_COL, LEAKY_COLS, TARGET_COL, build_feature_frame  # noqa: E402
+from hepatiq.ml.impute_pipeline import ID_COL, LEAKY_COLS, TARGET_COL, build_feature_frame
+from hepatiq.ml.train import select_winner
+from hepatiq.paths import PROCESSED_DATA
 
 
 def test_feature_frame_drops_leaky_and_id_columns():
-    df = pd.read_csv(REPO_ROOT / "data" / "pbc_5yr_target.csv")
+    df = pd.read_csv(PROCESSED_DATA)
     features, ids, target = build_feature_frame(df)
     for col in [*LEAKY_COLS, ID_COL, TARGET_COL]:
         assert col not in features.columns
@@ -21,7 +17,7 @@ def test_feature_frame_drops_leaky_and_id_columns():
 
 
 def test_sex_encoding_is_f_0_m_1():
-    df = pd.read_csv(REPO_ROOT / "data" / "pbc_5yr_target.csv")
+    df = pd.read_csv(PROCESSED_DATA)
     features, _, _ = build_feature_frame(df)
     assert features["sex"].isna().sum() == 0
     assert set(features["sex"].unique()) == {0, 1}
@@ -40,9 +36,6 @@ def _roc_block(mean, lower):
 
 
 def test_select_winner_picks_top_when_cis_clearly_separated():
-    sys.path.insert(0, str(REPO_ROOT / "ml"))
-    from train import select_winner
-
     results = {"a": _roc_block(0.90, 0.85), "b": _roc_block(0.80, 0.70)}
     winner, reason = select_winner(results)
     assert winner == "a"
@@ -50,9 +43,6 @@ def test_select_winner_picks_top_when_cis_clearly_separated():
 
 
 def test_select_winner_falls_back_to_calibration_on_overlapping_cis():
-    sys.path.insert(0, str(REPO_ROOT / "ml"))
-    from train import select_winner
-
     a = _roc_block(0.90, 0.80)
     a["brier_score"] = {"mean": 0.15}
     b = _roc_block(0.88, 0.82)

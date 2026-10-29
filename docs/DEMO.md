@@ -7,10 +7,10 @@ scenarios below are verified against the live API — the numbers are what you s
 
 ```bash
 # terminal 1 — API
-uvicorn backend.main:app --port 8000
+uvicorn hepatiq.backend.main:app --port 8000
 
 # terminal 2 — UI
-streamlit run frontend/app.py
+streamlit run src/hepatiq/frontend/app.py
 ```
 
 Open **http://localhost:8501** (dark theme, logo above the title). Confirm
@@ -77,7 +77,8 @@ model, not causation.
 ## 4. Closing claims (safe to make)
 
 - Leakage-controlled OOF ROC-AUC **0.8828 [0.8409, 0.9185]** vs 0.4924 class-prior
-  baseline (`validation/report.md`) — reproducible: `python validation/run_validation.py`.
+  baseline (`src/hepatiq/validation/report.md`) — reproducible:
+  `python -m hepatiq.validation.run_validation`.
 - API output is bit-for-bit consistent with direct model inference — enforced by 62
   tests including a live form→API→model E2E.
 - Honest limits, in writing: `docs/LIMITATIONS.md` (no INR/creatinine → no MELD;
