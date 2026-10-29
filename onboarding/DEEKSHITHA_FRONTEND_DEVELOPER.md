@@ -144,12 +144,12 @@ st.plotly_chart(fig)
 ## STEP 8: RUN THE FRONTEND APP
 
 ```bash
-python frontend/app.py
+streamlit run src/hepatiq/frontend/app.py
 ```
 
 OR:
 ```bash
-streamlit run frontend/app.py
+streamlit run src/hepatiq/frontend/app.py
 ```
 
 Open browser: **http://localhost:8501**
@@ -206,13 +206,13 @@ st.metric("Risk Score", f"{result['risk_score']*100:.1f}%")
 ```bash
 git checkout -b deekshitha-frontend-ui
 
-# Edit frontend/app.py
+# Edit src/hepatiq/frontend/app.py
 # Add at top:
 # st.set_page_config(page_title="HepatiQ", layout="wide")
 # st.title("🏥 HepatiQ - Mortality Risk Calculator")
 
 # Test it
-python frontend/app.py
+streamlit run src/hepatiq/frontend/app.py
 # Go to http://localhost:8501
 
 git add .
@@ -281,8 +281,8 @@ code .
 **Work:**
 ```bash
 git checkout -b your-branch
-# Edit frontend/app.py
-python frontend/app.py
+# Edit src/hepatiq/frontend/app.py
+streamlit run src/hepatiq/frontend/app.py
 # Open http://localhost:8501
 ```
 
@@ -299,8 +299,8 @@ deactivate
 ## NEXT STEPS
 
 1. Learn Streamlit basics: https://docs.streamlit.io/
-2. Run current app: `python frontend/app.py`
-3. Read: frontend/README.md
+2. Run current app: `streamlit run src/hepatiq/frontend/app.py`
+3. Read: src/hepatiq/frontend/app.py
 4. Design your UI layout on paper
 5. Create issue: "Build patient input form"
 6. Ask questions!
@@ -311,11 +311,11 @@ deactivate
 
 ❌ **"Port 8501 already in use"**
 - Close other Streamlit windows
-- Run: `streamlit run frontend/app.py --server.port 8502`
+- Run: `streamlit run src/hepatiq/frontend/app.py --server.port 8502`
 
 ❌ **"Backend not running"**
 - Make sure backend is running in another terminal
-- Run: `python backend/main.py`
+- Run: `python -m uvicorn hepatiq.backend.main:app --port 8000`
 
 ❌ **"Import error"**
 - Virtual environment activated?

@@ -31,15 +31,15 @@ tie-breakers. The selected model is then refit on the full cohort and
 saved as models/model.pkl.
 
 Run:
-    python ml/train.py
+    python -m hepatiq.ml.train
 
-Input:  data/pbc_5yr_target.csv   (labeled cohort, NOT yet imputed -- this
-                                    is deliberate, see above)
-Output: models/model.pkl           (winning pipeline, fit on full cohort)
-        models/lr_model.pkl
-        models/rf_model.pkl
-        models/xgb_model.pkl
-        models/training_metrics.json
+Input:  data/processed/pbc_5yr_target.csv   (labeled cohort, NOT yet imputed --
+                                    this is deliberate, see above)
+Output: models/model.pkl                    (winning pipeline, fit on full cohort)
+        models/candidates/lr_model.pkl
+        models/candidates/rf_model.pkl
+        models/candidates/xgb_model.pkl
+        models/candidates/training_metrics.json
 """
 
 import os
@@ -70,12 +70,10 @@ except ImportError as exc:  # pragma: no cover
 # feature-encoding logic instead of re-deriving it keeps the two scripts
 # from silently drifting apart on how "sex" gets encoded, which columns
 # count as leaky, etc.
-from impute_pipeline import build_feature_frame
+from hepatiq.ml.impute_pipeline import build_feature_frame
+from hepatiq.paths import CANDIDATES_DIR, METRICS_PATH, MODEL_PATH, MODELS_DIR, PROCESSED_DATA
 
-REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-INPUT_PATH = os.path.join(REPO_ROOT, "data", "pbc_5yr_target.csv")
-MODELS_DIR = os.path.join(REPO_ROOT, "models")
-METRICS_PATH = os.path.join(MODELS_DIR, "training_metrics.json")
+INPUT_PATH = str(PROCESSED_DATA)
 
 N_FOLDS = 5
 RANDOM_STATE = 42
@@ -291,18 +289,18 @@ def main():
     print(f"\nWinner: {winner_name}  ({winner_reason})")
 
     os.makedirs(MODELS_DIR, exist_ok=True)
+    os.makedirs(CANDIDATES_DIR, exist_ok=True)
 
     fitted = {}
     for name, pipe in pipelines.items():
         pipe.fit(features, target)  # final fit on the FULL 329-patient cohort
         fitted[name] = pipe
-        out_path = os.path.join(MODELS_DIR, f"{SHORT_NAMES[name]}_model.pkl")
+        out_path = CANDIDATES_DIR / f"{SHORT_NAMES[name]}_model.pkl"
         joblib.dump(pipe, out_path)
         print(f"Saved {name} -> {out_path}")
 
-    winner_path = os.path.join(MODELS_DIR, "model.pkl")
-    joblib.dump(fitted[winner_name], winner_path)
-    print(f"Saved winning model ({winner_name}) -> {winner_path}  (this is what backend/main.py loads)")
+    joblib.dump(fitted[winner_name], MODEL_PATH)
+    print(f"Saved winning model ({winner_name}) -> {MODEL_PATH}  (this is what the backend loads)")
 
     metrics_out = {
         "cohort_size": int(len(target)),
@@ -313,7 +311,7 @@ def main():
         "winner": winner_name,
         "winner_selection_criterion": winner_reason,
     }
-    with open(METRICS_PATH, "w") as f:
+    with open(METRICS_PATH, "w", encoding="utf-8") as f:
         json.dump(metrics_out, f, indent=2)
     print(f"Saved metrics summary -> {METRICS_PATH}")
 

@@ -95,7 +95,7 @@ desktop.ini
 # Logs
 *.log
 
-# Local scratch / large source assets (trimmed logo lives in frontend/assets/)
+# Local scratch / large source assets (trimmed logo lives in src/hepatiq/frontend/assets/)
 data/enlarged.png
 scratch/
 tmp/

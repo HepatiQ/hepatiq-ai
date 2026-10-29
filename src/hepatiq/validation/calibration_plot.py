@@ -1,11 +1,8 @@
 #!/usr/bin/env python
-from pathlib import Path
-
 import matplotlib.pyplot as plt
 import numpy as np
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-METRICS_PATH = REPO_ROOT / "models" / "training_metrics.json"
+from hepatiq.paths import CALIBRATION_PLOT_PATH
 
 
 def main():
@@ -19,8 +16,7 @@ def main():
     ax.set_title('Reliability Diagram - HepatiQ Model Calibration')
     ax.legend(loc='upper left')
     ax.grid(True, alpha=0.3)
-    out_path = REPO_ROOT / "validation" / "calibration_plot.png"
-    plt.savefig(out_path, dpi=150, bbox_inches='tight')
+    plt.savefig(CALIBRATION_PLOT_PATH, dpi=150, bbox_inches='tight')
     print('Saved')
     plt.close()
 

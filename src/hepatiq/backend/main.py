@@ -28,26 +28,24 @@ import shap
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from backend.db import (
-    DEFAULT_DB_PATH,
+from hepatiq.backend.db import (
     clear_predictions,
     fetch_recent,
     get_stats,
     init_db,
     log_prediction,
 )
+from hepatiq.paths import DEFAULT_DB_PATH, MODEL_PATH, PROCESSED_DATA
 
 try:
-    from backend.agent import ClinicalAgent
+    from hepatiq.backend.agent import ClinicalAgent
 except ImportError:  # optional dependency in some environments
     class ClinicalAgent:  # type: ignore[no-redef]
         def reason_loop(self, *_args, **_kwargs):
             raise RuntimeError("Clinical agent module is unavailable")
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
 _agent = ClinicalAgent()
-MODEL_PATH = REPO_ROOT / "models" / "model.pkl"
-DATA_PATH = REPO_ROOT / "data" / "pbc_5yr_target.csv"
+DATA_PATH = PROCESSED_DATA
 BACKGROUND_SAMPLE_SIZE = 100
 RANDOM_STATE = 42
 

@@ -144,15 +144,32 @@ The full workflow guidance is in [docs/TEAM_WORKFLOW.md](docs/TEAM_WORKFLOW.md),
 
 ## Getting Started
 
-This project is organized into functional folders for team collaboration:
+This project is organized as an installable Python package for team collaboration:
 
-* `ml/` — data cleaning, model training, SHAP generation
-* `backend/` — FastAPI application and model serving
-* `frontend/` — Streamlit interface
-* `validation/` — statistical validation and out-of-fold model benchmarking
-* `models/` — trained model artifacts (`.pkl` files)
-* `data/` — the Mayo Clinic PBC dataset
-* `docs/` — documentation and project planning
+```text
+src/hepatiq/
+  backend/     FastAPI application and model serving
+  frontend/    Streamlit interface (+ assets/)
+  ml/          data cleaning, cohort building, model training, SHAP
+  validation/  statistical validation and out-of-fold benchmarking
+  paths.py     single source of truth for data/model paths
+data/
+  raw/         original Mayo Clinic PBC dataset
+  processed/   labeled 5-year target cohort
+  interim/     imputed / scaled exploration artifacts
+models/
+  model.pkl    deployed pipeline
+  candidates/  losing models + training metrics
+tests/         pytest suite (API, ML guards, validation, Streamlit)
+docs/          documentation and project planning
+```
+
+Path setup:
+
+```bash
+pip install -r requirements.txt
+pip install -e . --no-deps
+```
 
 See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for full setup instructions.
 

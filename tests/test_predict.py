@@ -2,7 +2,7 @@
 
 import pytest
 
-from backend.main import FEATURE_COLUMNS
+from hepatiq.backend.main import FEATURE_COLUMNS
 from tests.conftest import OLD_5FEATURE, REQUIRED_ONLY, SAMPLE_FULL, build_model_frame
 
 

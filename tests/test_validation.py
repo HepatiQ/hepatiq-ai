@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from validation.validate import bootstrap_ci, compare_to_meld
+from hepatiq.validation.validate import bootstrap_ci, compare_to_meld
 
 
 def test_bootstrap_ci_brackets_the_statistic():

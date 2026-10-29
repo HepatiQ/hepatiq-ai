@@ -12,7 +12,8 @@ Statistical validation for the HepatiQ model (owner: Rudra).
 
 ```bash
 pip install -r requirements.txt   # once, from the repo root
-python validation/run_validation.py
+pip install -e . --no-deps
+python -m hepatiq.validation.run_validation
 ```
 
 Latest results (n=329, 132 events): **ROC-AUC 0.8828 [0.8409, 0.9185]** vs. class-prior baseline 0.4924; Brier 0.1364 vs. 0.2403 — the model separates clearly from the baseline on both.
@@ -31,4 +32,4 @@ A clinical-score benchmark (MELD) needs bilirubin, INR and creatinine. The Mayo 
 
 - **ML** (`../ml/`) — model and preprocessing being validated
 - **Backend** (`../backend/`) — API endpoints the report backs up
-- **Data** (`../data/`) — the cohort
+- **Data** (`../../../data/`) — the cohort

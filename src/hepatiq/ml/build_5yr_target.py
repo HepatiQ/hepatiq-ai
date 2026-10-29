@@ -10,18 +10,19 @@ Definition (per README "Scope & Limitations" and "Dataset & Attribution"):
                            5-year mark — their 5-year outcome is unknown
 
 Run:
-    python ml/build_5yr_target.py
+    python -m hepatiq.ml.build_5yr_target
 
-Input:  data/pbc.csv
-Output: data/pbc_5yr_target.csv
+Input:  data/raw/pbc.csv
+Output: data/processed/pbc_5yr_target.csv
 """
 
-import os
 import pandas as pd  # pyright: ignore[reportMissingModuleSource]
 
+from hepatiq.paths import PROCESSED_DATA, RAW_DATA
+
 FIVE_YEAR_DAYS = 1825
-INPUT_PATH = os.path.join("data", "pbc.csv")
-OUTPUT_PATH = os.path.join("data", "pbc_5yr_target.csv")
+INPUT_PATH = str(RAW_DATA)
+OUTPUT_PATH = str(PROCESSED_DATA)
 
 
 def label_severe_event(row: pd.Series) -> float:

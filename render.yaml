@@ -2,14 +2,15 @@
 #
 # If your service was created manually in the dashboard instead of from this
 # blueprint, set the same values there:
-#   Start Command: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+#   Build Command: pip install -r requirements.txt && pip install -e . --no-deps
+#   Start Command: uvicorn hepatiq.backend.main:app --host 0.0.0.0 --port $PORT
 #   Python:        3.12
 services:
   - type: web
     name: hepatic-api
     runtime: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install -r requirements.txt && pip install -e . --no-deps
+    startCommand: uvicorn hepatiq.backend.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: "3.12"
@@ -22,8 +23,8 @@ services:
   # - type: web
   #   name: hepatic-ui
   #   runtime: python
-  #   buildCommand: pip install -r requirements.txt
-  #   startCommand: streamlit run frontend/app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
+  #   buildCommand: pip install -r requirements.txt && pip install -e . --no-deps
+  #   startCommand: streamlit run src/hepatiq/frontend/app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
   #   envVars:
   #     - key: PYTHON_VERSION
   #       value: "3.12"

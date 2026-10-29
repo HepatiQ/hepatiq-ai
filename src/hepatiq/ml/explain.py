@@ -16,10 +16,9 @@ instead -- LinearExplainer will raise an error on a non-linear model. The
 check below fails loudly rather than silently producing wrong output.
 
 Run:
-    python ml/explain.py
+    python -m hepatiq.ml.explain
 """
 
-import os
 import sys
 
 import joblib
@@ -27,11 +26,10 @@ import pandas as pd
 import shap
 from sklearn.linear_model import LogisticRegression
 
-from impute_pipeline import build_feature_frame
+from hepatiq.ml.impute_pipeline import build_feature_frame
+from hepatiq.paths import MODEL_PATH, PROCESSED_DATA
 
-REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODEL_PATH = os.path.join(REPO_ROOT, "models", "model.pkl")
-DATA_PATH = os.path.join(REPO_ROOT, "data", "pbc_5yr_target.csv")
+DATA_PATH = str(PROCESSED_DATA)
 BACKGROUND_SAMPLE_SIZE = 100
 RANDOM_STATE = 42
 

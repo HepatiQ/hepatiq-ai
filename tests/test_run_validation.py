@@ -2,7 +2,8 @@
 
 import numpy as np
 
-from validation.run_validation import build_report, score
+from hepatiq.paths import VALIDATION_REPORT_PATH
+from hepatiq.validation.run_validation import build_report, score
 
 COHORT = {"n": 200, "events": 80, "nonevents": 120, "features": 17}
 
@@ -45,8 +46,6 @@ def test_build_report_contains_headline_numbers():
 
 
 def test_committed_report_exists_and_has_current_headline():
-    from pathlib import Path
-
-    report = (Path(__file__).resolve().parents[1] / "validation" / "report.md").read_text(encoding="utf-8")
+    report = VALIDATION_REPORT_PATH.read_text(encoding="utf-8")
     assert "## Results (OOF, n=329)" in report
     assert "0.8828" in report  # regenerate with: python validation/run_validation.py

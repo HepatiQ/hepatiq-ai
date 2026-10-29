@@ -2,7 +2,7 @@
 
 HepatiQ is an academic research prototype. This document states what the model and the
 software *cannot* support, so results are never read as more than the evidence allows.
-Numbers cited here come from `validation/report.md` and `models/training_metrics.json`.
+Numbers cited here come from `src/hepatiq/validation/report.md` and `models/candidates/training_metrics.json`.
 
 ## Cohort and data
 

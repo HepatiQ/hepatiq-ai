@@ -34,14 +34,14 @@
 | XGBoost | 0.870 [0.827, 0.913] | 0.722 | 0.788 | 0.750 | 0.153 |
 
 ### Model selection
-Selected via a documented rule (`ml/train.py::select_winner`), not a bare "highest ROC-AUC" pick. Random Forest achieved the highest mean ROC-AUC (0.8844), but the ROC-AUC confidence intervals overlapped substantially across models and were therefore not statistically separable. Under HepatiQ's documented model-selection policy, calibration (Brier score) is used as the primary tie-break criterion for clinically interpretable risk estimation. Logistic Regression achieved the best calibration (Brier = 0.1363) and was therefore selected as the deployment model.
+Selected via a documented rule (`src/hepatiq/ml/train.py::select_winner`), not a bare "highest ROC-AUC" pick. Random Forest achieved the highest mean ROC-AUC (0.8844), but the ROC-AUC confidence intervals overlapped substantially across models and were therefore not statistically separable. Under HepatiQ's documented model-selection policy, calibration (Brier score) is used as the primary tie-break criterion for clinically interpretable risk estimation. Logistic Regression achieved the best calibration (Brier = 0.1363) and was therefore selected as the deployment model.
 
 **Winner: Logistic Regression.**
 
-The model-selection procedure is fully deterministic through fixed random seeds (`random_state=42`) and documented in `ml/train.py`.
+The model-selection procedure is fully deterministic through fixed random seeds (`random_state=42`) and documented in `src/hepatiq/ml/train.py`.
 
 ## Explainability
-Per-patient SHAP attributions via `shap.LinearExplainer` (`ml/explain.py`), appropriate here because the winning model is linear. Example: a patient with severely elevated bilirubin (14.5 mg/dL, ~14× the upper limit of normal), edema, low albumin, and stage 4 fibrosis was scored at 99.9% risk, with each of those features correctly identified as risk-increasing — consistent with known PBC prognostic markers, and matching this patient's actual observed outcome.
+Per-patient SHAP attributions via `shap.LinearExplainer` (`src/hepatiq/ml/explain.py`), appropriate here because the winning model is linear. Example: a patient with severely elevated bilirubin (14.5 mg/dL, ~14× the upper limit of normal), edema, low albumin, and stage 4 fibrosis was scored at 99.9% risk, with each of those features correctly identified as risk-increasing — consistent with known PBC prognostic markers, and matching this patient's actual observed outcome.
 
 ## Limitations
 - **Disease scope**: trained exclusively on PBC patients from a single historical Mayo Clinic trial cohort. Not validated for general cirrhosis, other liver diseases, or populations outside this trial's era and demographics.
@@ -50,7 +50,7 @@ Per-patient SHAP attributions via `shap.LinearExplainer` (`ml/explain.py`), appr
 - **Calibration**: Brier score of 0.136 indicates reasonable but imperfect calibration; a full reliability diagram has not yet been produced.
 - **Historical data**: the Mayo trial predates many modern PBC treatment protocols; learned risk relationships may not reflect outcomes under current standards of care.
 - **Not a diagnostic tool**: output is a probability estimate for decision support, not a diagnosis or treatment recommendation.
-- **Integration status**: Backend and frontend are integrated with the full 17-feature workflow. The FastAPI service (`backend/main.py`) exposes `/health` and `/predict` against the trained pipeline, with per-feature SHAP contributions built once at startup. The Streamlit frontend (`frontend/app.py`) presents all 17 inputs (5 required, 12 optional with server-side imputation) and renders contributions sorted by absolute impact. Model and data paths are resolved relative to the repository root, so both services work regardless of the current working directory.
+- **Integration status**: Backend and frontend are integrated with the full 17-feature workflow. The FastAPI service (`src/hepatiq/backend/main.py`) exposes `/health` and `/predict` against the trained pipeline, with per-feature SHAP contributions built once at startup. The Streamlit frontend (`src/hepatiq/frontend/app.py`) presents all 17 inputs (5 required, 12 optional with server-side imputation) and renders contributions sorted by absolute impact. Model and data paths are resolved through `src/hepatiq/paths.py`, so both services work regardless of the current working directory.
 
 ## Ethical Considerations
 - Predictions should be reviewed by a qualified clinician before informing patient care; this project is for academic/research and decision-support purposes, not standalone clinical deployment.
@@ -66,11 +66,13 @@ Per-patient SHAP attributions via `shap.LinearExplainer` (`ml/explain.py`), appr
 
 ## Reproducing These Results
 ```
-python ml/build_5yr_target.py   # data/pbc.csv -> data/pbc_5yr_target.csv
-python ml/train.py              # trains, cross-validates, and selects the winner
-python ml/explain.py            # SHAP explanation for one patient
+pip install -r requirements.txt && pip install -e . --no-deps
+
+python -m hepatiq.ml.build_5yr_target   # data/raw/pbc.csv -> data/processed/pbc_5yr_target.csv
+python -m hepatiq.ml.train              # trains, cross-validates, and selects the winner
+python -m hepatiq.ml.explain            # SHAP explanation for one patient
 ```
-Full fold-by-fold numbers: `models/training_metrics.json`.
+Full fold-by-fold numbers: `models/candidates/training_metrics.json`.
 
 ---
 *HepatiQ — Anand School of Engineering and Technology, Sharda University. Guided by Prof. Parag Gajbhiye.*

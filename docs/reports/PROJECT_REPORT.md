@@ -66,21 +66,21 @@ Frontend (Streamlit) --> Backend (FastAPI) --> ML Pipeline (sklearn)
 
 ## Implementation
 
-### Backend (`backend/`)
+### Backend (`src/hepatiq/backend/`)
 - `main.py`: FastAPI app with `/predict`, `/health`, `/history`, `/stats` endpoints
 - `db.py`: SQLite with WAL mode, indexes, migrations, prediction logging
 - `schemas.py`: Pydantic validation models
 
-### Frontend (`frontend/`)
+### Frontend (`src/hepatiq/frontend/`)
 - `app.py`: Streamlit UI with forms, visualizations, history, PDF export
 - Risk bands: Low (<0.15), Intermediate (0.15-0.40), High (≥0.40)
 - SHAP waterfall plots, feature importance
 - CSV/PDF export capabilities
 
 ### ML Pipeline
-- Training scripts in `ml/`: data prep, training, evaluation
-- Artifacts in `models/`: `model.pkl`, `training_metrics.json`
-- Validation in `validation/`: calibration plots, reports
+- Training scripts in `src/hepatiq/ml/`: data prep, training, evaluation
+- Artifacts in `models/`: `model.pkl`, `candidates/training_metrics.json`
+- Validation in `src/hepatiq/validation/`: calibration plots, reports
 
 ## Features
 - [x] Risk prediction with 17 clinical features

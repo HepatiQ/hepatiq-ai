@@ -2,7 +2,7 @@
 
 from fastapi.testclient import TestClient
 
-from backend import main as main_module
+from hepatiq.backend import main as main_module
 from tests.conftest import REQUIRED_ONLY
 
 
