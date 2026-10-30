@@ -9,10 +9,11 @@ Numbers cited here come from `src/hepatiq/validation/report.md` and `models/cand
 - **Single historical cohort.** Everything is trained and evaluated on the Mayo Clinic PBC
   dataset (1974–1984). Treatment standards, assay methods, and patient populations have
   changed since; performance elsewhere is unproven.
-- **Small sample.** 419 initial records, 329 after the 5-year outcome filter (90 patients
+- **Small sample.** 418 canonical records, 329 after the 5-year outcome filter (89 patients
   censored before 5 years were excluded). With 132 events, every confidence interval is
   wide — out-of-fold ROC-AUC is **0.8828 [0.8409, 0.9185]**, and intervals this wide mean
-  the true value on new patients could plausibly sit anywhere in that band.
+  the true value on new patients could plausibly sit anywhere in that band. (`data/raw/pbc.csv`
+  has one extra non-canonical row, id 419; it is dropped by the filter and does not change v1.)
 - **Censoring handled by exclusion, not modeling.** Dropping patients censored before
   5 years removes exactly those whose outcomes are unknown; if censoring relates to
   prognosis (sicker patients lost to follow-up), the training distribution is biased.
@@ -29,8 +30,29 @@ Numbers cited here come from `src/hepatiq/validation/report.md` and `models/cand
   class-prior baseline (ROC-AUC ≈ 0.5 by construction). The model clearly beats it
   (0.8828 vs 0.4924), but "beats naive guessing" is a much weaker claim than
   "beats the established clinical standard."
-- Mayo Risk Score, GLOBE, and UK-PBC comparisons remain future work and require either
-  those datasets or the missing labs.
+- **The Mayo Risk Score is computable and is now benchmarked (v2).** Its five
+  inputs — age, bilirubin, albumin, prothrombin time, and edema — are all present
+  in the cohort, so the claim that the missing labs block it was wrong. Only MELD
+  remains impossible (no INR or creatinine). GLOBE and UK-PBC still require
+  external cohorts or post-UDCA treated patients and remain future work.
+- **`survival::pbc` is the Dickson 1989 cohort itself.** The 312 randomized
+  patients are the score's derivation set and the 106 non-randomized patients are
+  its published independent validation set. Consequently:
+  - the full-cohort Mayo Risk Score AUC (0.886) is *apparent*, not external;
+  - v1 has **no truly external validation**, because the 106 were part of its
+    training data;
+  - the only honest head-to-head is to retrain v1 on the 312 and test on the 106.
+- **Held-out result (n=70 with a complete score, 33 events):** fixed Mayo Risk
+  Score AUC **0.851** vs retrained v1 pipeline **0.816** (c-index 0.775 vs
+  0.731). The confidence intervals overlap, so neither is proven superior — but
+  v1's apparent advantage does not survive held-out testing. The 17-feature model
+  has not demonstrated added value over a five-variable 1989 score.
+- **UDCA is not a clean external validation.** `survival::udca1` is a
+  UDCA-treated cohort with a *composite progression* endpoint and short
+  follow-up (maximum ~1,896 days), and it stores the Mayo Risk Score without the
+  inputs needed to recompute it. Its stored-score c-index is 0.621 (n=169,
+  composite endpoint), which is not comparable to the Mayo death/transplant
+  endpoint. Full details: [`SCORE_BENCHMARK.md`](SCORE_BENCHMARK.md).
 
 ## Model and predictions
 
@@ -68,4 +90,5 @@ On this cohort, with this pipeline (leakage-controlled 5-fold CV, seed 42), the 
 Logistic Regression discriminates 5-year severe events substantially better than a
 constant baseline, with calibration better than the baseline, and the API's numerical
 output is exactly reproducible against direct `joblib` inference (asserted in the test
-suite). That is the claim; nothing beyond it is.
+suite). It does **not** outperform the 1989 Mayo Risk Score on held-out patients, and no
+external cohort has confirmed either model. That is the claim; nothing beyond it is.
