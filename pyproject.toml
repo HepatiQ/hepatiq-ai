@@ -4,10 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hepatiq-ai"
-version = "0.1.0"
+version = "2.0.0"
 description = "Explainable clinical risk prediction for primary biliary cholangitis"
 readme = "README.md"
 requires-python = ">=3.10"
+authors = [{ name = "Pranjal Dubey" }]
+maintainers = [{ name = "Pranjal Dubey" }]
+
+[project.optional-dependencies]
+# One-off tooling for scripts/export_r_datasets.py; never needed at runtime.
+export = ["rdata>=1.1"]
 
 # Runtime and dev dependencies stay pinned in requirements.txt so CI, Render,
 # and local installs resolve the exact versions the test suite was written
