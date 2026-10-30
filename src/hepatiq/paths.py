@@ -26,6 +26,14 @@ RAW_DATA = DATA_DIR / "raw" / "pbc.csv"
 PROCESSED_DATA = DATA_DIR / "processed" / "pbc_5yr_target.csv"
 INTERIM_DIR = DATA_DIR / "interim"
 
+EXTERNAL_DATA_DIR = DATA_DIR / "external"
+EXTERNAL_PBC = EXTERNAL_DATA_DIR / "pbc.csv"
+EXTERNAL_PBCSEQ = EXTERNAL_DATA_DIR / "pbcseq.csv"
+EXTERNAL_UDCA = EXTERNAL_DATA_DIR / "udca.csv"
+EXTERNAL_UDCA1 = EXTERNAL_DATA_DIR / "udca1.csv"
+EXTERNAL_UDCA2 = EXTERNAL_DATA_DIR / "udca2.csv"
+EXTERNAL_PROVENANCE = EXTERNAL_DATA_DIR / "PROVENANCE.json"
+
 MODELS_DIR = Path(os.environ.get("HEPATIQ_MODELS_DIR") or REPO_ROOT / "models")
 MODEL_PATH = MODELS_DIR / "model.pkl"
 CANDIDATES_DIR = MODELS_DIR / "candidates"
