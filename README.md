@@ -4,6 +4,19 @@ Explainable Clinical Risk Prediction for Primary Biliary Cholangitis
 
 **HepatiQ** is an explainable clinical decision-support web application that estimates 5-year severe event risk (death or liver transplant) for patients with Primary Biliary Cholangitis (PBC) using routine liver function tests and machine learning with SHAP-based interpretability.
 
+> **Version 2 — clinical rebuild.** The `v2/clinical-rebuild` branch replaces the
+> single 5-year classifier with a censoring-aware survival model, adds
+> published-score benchmarks and a 12-month landmark model, and moves the UI to
+> multipage Streamlit. V2 is designed, created, and maintained solely by
+> **Pranjal Dubey**; v1 was a team project. See [AUTHORS.md](AUTHORS.md). V1
+> remains runnable for comparison until v2 reaches parity.
+>
+> **Phase 1 benchmark (done).** On the 106 held-out Mayo patients, the fixed
+> 1989 Mayo Risk Score reaches 5-year AUC **0.851**; the v1 pipeline retrained on
+> the 312 derivation patients reaches **0.816** (overlapping CIs, 70 patients /
+> 33 events). V1's apparent advantage does not survive held-out testing. Details:
+> [`docs/SCORE_BENCHMARK.md`](docs/SCORE_BENCHMARK.md).
+
 ## 🚀 Live Demo
 
 - **Web App (Streamlit):** [https://hepatiq-ai.streamlit.app](https://hepatiq-ai.streamlit.app)
@@ -175,11 +188,38 @@ See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for full setup instructio
 
 ## Dataset & Attribution
 
-**Source:** Mayo Clinic Primary Biliary Cholangitis (PBC) trial dataset (1974–1984)
-**Initial records:** 419 patients
-**After 5-year censoring filter:** 329 patients (90 excluded: censored with outcome unknown)
-**Class balance:** 40.1% severe event, 59.9% event-free (near-balanced, uses `class_weight='balanced'` during training)
-**License:** Commonly redistributed mirrors (e.g., UCI) are shared under CC BY 4.0, permitting reuse with attribution
+**Primary cohort (v2):** canonical `survival::pbc` — **418** Mayo Clinic PBC
+patients (1974–1984), 312 of them randomized in the D-penicillamine vs placebo
+trial. `trt` is `1 = D-penicillamine`, `2 = placebo`; the cohort **predates
+UDCA**, so it describes pre-UDCA natural history.
+**Longitudinal cohort:** `survival::pbcseq` — 1945 serial visits for the same
+312 randomized patients.
+**External benchmark cohort:** `survival::udca` — 170 patients from the Lindor
+et al. 1994 UDCA trial, with a stored Mayo Risk Score.
+
+These CSVs live in [`data/external/`](data/external/README.md) and are exported
+from CRAN `survival` 3.8-12 with pinned SHA-256 provenance. `pbcseq` is **not**
+an independent cohort; do not call a `pbc` → `pbcseq` comparison external
+validation.
+
+**Dickson 1989 provenance.** `survival::pbc` *is* the cohort used to derive the
+Mayo Risk Score: the **312 randomized** patients are its derivation set and the
+**106 non-randomized** patients are its published independent validation set.
+The score was therefore derived on this data, so its full-cohort AUC (0.886) is
+apparent. The 106 patients are the only held-out set available — but they were
+part of v1's training data, so v1 has no external validation.
+
+> **v1 data note:** `data/raw/pbc.csv` has **419** rows because v1 added a sparse
+> non-canonical row (`id = 419`, no treatment arm, censored at 985 days). The
+> other 418 rows are identical to the canonical file, and the extra row is
+> dropped by v1's 5-year filter, so v1's 329-patient training set and metrics are
+> unchanged. V2 reads the canonical 418-row file instead.
+
+**v1 5-year filter:** 329 patients (90 censored before 5 years, outcome unknown)
+**Class balance (v1):** 40.1% severe event, 59.9% event-free (`class_weight='balanced'`)
+**License:** `survival` is LGPL (>= 2); datasets are redistributed from published
+sources — cite Dickson 1989, Murtaugh 1994, and Lindor 1994 (see
+[data/external/README.md](data/external/README.md)).
 
 ## Contributing
 
@@ -190,9 +230,10 @@ This is a **student team project** at Sharda University's Anand School of Engine
 ### Clinical Benchmarking
 
 * Compare HepatiQ against established prognostic tools:
-* Mayo Risk Score
-* GLOBE Score
-* UK-PBC Risk Score
+* ~~Mayo Risk Score~~ — implemented and benchmarked in
+  [`docs/SCORE_BENCHMARK.md`](docs/SCORE_BENCHMARK.md)
+* GLOBE Score (requires post-UDCA treatment response; not computable here)
+* UK-PBC Risk Score (requires an external UK registry cohort)
 
 
 

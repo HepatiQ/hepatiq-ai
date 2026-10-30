@@ -1,0 +1,141 @@
+{
+  "pbc": [
+    {
+      "score": "Mayo Risk Score (1989)",
+      "n_5y": 327,
+      "events_5y": 131,
+      "auc_5y": 0.886430908241159,
+      "auc_ci_low": 0.8459604115615863,
+      "auc_ci_high": 0.918206405656781,
+      "c_index": 0.8124594419208306,
+      "c_ci_low": 0.7794310664013392,
+      "c_ci_high": 0.8432758351132406,
+      "n_survival": 416
+    },
+    {
+      "score": "ALBI",
+      "n_5y": 329,
+      "events_5y": 132,
+      "auc_5y": 0.8652130441470542,
+      "auc_ci_low": 0.8243488481866261,
+      "auc_ci_high": 0.9026137122503237,
+      "c_index": 0.7803391733151586,
+      "c_ci_low": 0.7476129397868391,
+      "c_ci_high": 0.8151247186410868,
+      "n_survival": 418
+    },
+    {
+      "score": "APRI",
+      "n_5y": 253,
+      "events_5y": 98,
+      "auc_5y": 0.7355826201448321,
+      "auc_ci_low": 0.6786952988846288,
+      "auc_ci_high": 0.7952368101869078,
+      "c_index": 0.6794899156973642,
+      "c_ci_low": 0.635114760818954,
+      "c_ci_high": 0.7229667790063161,
+      "n_survival": 308
+    },
+    {
+      "score": "HepatiQ v1 logistic regression (resubstitution)",
+      "n_5y": 329,
+      "events_5y": 132,
+      "auc_5y": 0.915128441778188,
+      "auc_ci_low": 0.8846994169983494,
+      "auc_ci_high": 0.943232986297131,
+      "c_index": 0.8247404081305376,
+      "c_ci_low": 0.7981169010161273,
+      "c_ci_high": 0.8510212019441016,
+      "n_survival": 418
+    },
+    {
+      "score": "Class prior (constant)",
+      "n_5y": 329,
+      "events_5y": 132,
+      "auc_5y": 0.5,
+      "auc_ci_low": NaN,
+      "auc_ci_high": NaN,
+      "c_index": 0.5,
+      "c_ci_low": NaN,
+      "c_ci_high": NaN,
+      "n_survival": 418
+    }
+  ],
+  "holdout": {
+    "derivation": {
+      "n": 257,
+      "events": 98,
+      "mrs_apparent": {
+        "score": "Mayo Risk Score (1989), derivation cohort",
+        "n_5y": 257,
+        "events_5y": 98,
+        "auc_5y": 0.8930817610062894,
+        "auc_ci_low": 0.8487088229169437,
+        "auc_ci_high": 0.9293784271035533,
+        "c_index": 0.8166753698868582,
+        "c_ci_low": 0.7777230030341449,
+        "c_ci_high": 0.8542005071314461,
+        "n_survival": 312
+      }
+    },
+    "validation": {
+      "n": 72,
+      "events": 34,
+      "n_with_mrs": 70
+    },
+    "scores": [
+      {
+        "score": "Mayo Risk Score (1989)",
+        "n_5y": 70,
+        "events_5y": 33,
+        "auc_5y": 0.8509418509418509,
+        "auc_ci_low": 0.7491830065359477,
+        "auc_ci_high": 0.9280470430107527,
+        "c_index": 0.7751171264966163,
+        "c_ci_low": 0.7088435744839854,
+        "c_ci_high": 0.8364092745856473,
+        "n_survival": 70
+      },
+      {
+        "score": "HepatiQ v1 pipeline, retrained on 312",
+        "n_5y": 70,
+        "events_5y": 33,
+        "auc_5y": 0.8157248157248158,
+        "auc_ci_low": 0.7121500682926298,
+        "auc_ci_high": 0.9053193027210884,
+        "c_index": 0.7313899010931806,
+        "c_ci_low": 0.654356404222214,
+        "c_ci_high": 0.7953299470457385,
+        "n_survival": 70
+      }
+    ]
+  },
+  "udca1": {
+    "score": "Mayo Risk Score, stored (UDCA cohort)",
+    "n_5y": 80,
+    "events_5y": 72,
+    "auc_5y": 0.6909722222222222,
+    "auc_ci_low": 0.4949105392156863,
+    "auc_ci_high": 0.8634474206349206,
+    "c_index": 0.6213551625239006,
+    "c_ci_low": 0.557740350927201,
+    "c_ci_high": 0.6899609572859597,
+    "n_survival": 169,
+    "cohort": "Lindor 1994 UDCA trial (n=169)",
+    "endpoint": "composite progression (not death/transplant)",
+    "implementation_check": {
+      "computed_pbc": {
+        "n": 416,
+        "mean": 5.1982371493631385,
+        "median": 4.798393845721113,
+        "sd": 1.5748113885155457
+      },
+      "stored_udca": {
+        "n": 169,
+        "mean": 5.127218934911243,
+        "median": 5.0,
+        "sd": 1.1483808293258577
+      }
+    }
+  }
+}
