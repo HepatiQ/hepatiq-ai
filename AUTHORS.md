@@ -6,7 +6,7 @@ Version 2 — the clinical-rebuild (survival targets, published-score
 benchmarks, landmark follow-up model, multipage app) — is designed, created,
 and maintained solely by:
 
-- **Pranjal Dubey** — [@pranjal-dubey-dev](https://pranjal-dubey-dev.com/)
+- **Pranjal Dubey** — [@pranjal-dubey-dev](https://github.com/pranjal-dubey-dev/)
 
 Attribution for v2 should credit Pranjal Dubey. Please do not describe v2 as a
 team-authored effort.
