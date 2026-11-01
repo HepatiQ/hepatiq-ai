@@ -281,8 +281,20 @@ if last_error is not None:
 data = st.session_state.get("last_result")
 if data is not None:
     prob = data["probability"]
-    st.metric("Estimated 5-year severe event risk", f"{prob:.1%}")
-    st.caption("95% CI (OOF): ROC-AUC 0.8828 [0.8409, 0.9185] — Mayo Clinic PBC cohort")
+    st.metric(
+    "Estimated 5-Year Risk of Death or Liver Transplantation",
+    f"{prob:.1%}"
+    )
+    st.caption(
+        "The model estimates the probability of the composite outcome "
+        "of death or liver transplantation within five years for "
+        "patients with Primary Biliary Cholangitis (PBC)."
+    )
+    st.caption(
+    "Model discrimination: ROC-AUC 0.8828 "
+    "(95% CI: 0.8409–0.9185), evaluated using "
+    "out-of-fold predictions on the historical Mayo Clinic PBC cohort."
+    )
 
     band = data.get("risk_band")
     if band:
@@ -489,4 +501,4 @@ st.caption(
     "Research prototype — not a medical device or diagnostic tool. "
     "Model scope, calibration, and limits: docs/LIMITATIONS.md."
 )
-st.caption("HepatiQ v2 - designed and maintained by Pranjal Dubey. v1 was a team project.")
+st.caption("HepatiQ | Explainable Clinical Risk Assessment.")
