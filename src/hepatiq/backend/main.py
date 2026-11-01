@@ -16,6 +16,7 @@ Contract:
 """
 
 import hashlib
+import logging
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -36,6 +37,9 @@ from hepatiq.backend.db import (
     log_prediction,
 )
 from hepatiq.paths import DEFAULT_DB_PATH, MODEL_PATH, PROCESSED_DATA
+from hepatiq.risk_bands import risk_category
+
+logger = logging.getLogger(__name__)
 
 try:
     from hepatiq.backend.agent import ClinicalAgent
@@ -44,7 +48,6 @@ except ImportError:  # optional dependency in some environments
         def reason_loop(self, *_args, **_kwargs):
             raise RuntimeError("Clinical agent module is unavailable")
 
-_agent = ClinicalAgent()
 DATA_PATH = PROCESSED_DATA
 BACKGROUND_SAMPLE_SIZE = 100
 RANDOM_STATE = 42
@@ -66,13 +69,6 @@ FEATURE_TO_API = {
     "trig": "trig", "platelet": "platelet", "protime": "protime",
     "stage": "stage",
 }
-
-# Risk bands for display. "high" starts at the cohort's observed 5-year event
-# rate (132/329 = 0.401; validation/report.md); 0.15 separates the low tail.
-# Descriptive aids for communication, not clinical action thresholds.
-RISK_BAND_INTERMEDIATE = 0.15
-RISK_BAND_HIGH = 0.40
-
 
 class PredictRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -123,7 +119,6 @@ class HealthResponse(BaseModel):
     status: str
     model_loaded: bool
     n_features: int
-    model_path: str
     explainer_ready: bool
     model_version: Optional[str] = None
     error: Optional[str] = None
@@ -191,6 +186,7 @@ async def lifespan(app: FastAPI):
         _state["explainer"] = None
         _state["model_version"] = None
         _state["error"] = f"{type(exc).__name__}: {exc}"
+        logger.exception("Model failed to load from %s", MODEL_PATH)
 
     # Per-feature training ranges (data CSV) power extrapolation warnings.
     try:
@@ -202,6 +198,7 @@ async def lifespan(app: FastAPI):
         }
     except Exception:
         _state["feature_ranges"] = None
+        logger.exception("Feature ranges unavailable; extrapolation warnings disabled")
 
     try:
         db_path = Path(os.environ.get("HEPATIQ_DB_PATH") or DEFAULT_DB_PATH)
@@ -209,6 +206,7 @@ async def lifespan(app: FastAPI):
         _state["db_path"] = db_path
     except Exception:
         _state["db_path"] = None
+        logger.exception("Prediction history database failed to initialize")
 
     yield
     _state.clear()
@@ -231,19 +229,10 @@ def health() -> HealthResponse:
         status=status,
         model_loaded=model_ok,
         n_features=len(FEATURE_COLUMNS),
-        model_path=str(MODEL_PATH),
         explainer_ready=explainer_ok,
         model_version=_state.get("model_version"),
-        error=_state["error"],
+        error="model unavailable" if _state["error"] else None,
     )
-
-
-def _risk_band(probability: float) -> Literal["low", "intermediate", "high"]:
-    if probability >= RISK_BAND_HIGH:
-        return "high"
-    if probability >= RISK_BAND_INTERMEDIATE:
-        return "intermediate"
-    return "low"
 
 
 def _range_warnings(req: PredictRequest) -> List[str]:
@@ -270,7 +259,8 @@ def _range_warnings(req: PredictRequest) -> List[str]:
 def predict(req: PredictRequest) -> PredictResponse:
     model = _state["model"]
     if model is None:
-        raise HTTPException(status_code=503, detail=f"Model not loaded: {_state['error']}")
+        logger.warning("Prediction requested before model loaded: %s", _state["error"])
+        raise HTTPException(status_code=503, detail="Model not loaded")
 
     raw = req.model_dump()
 
@@ -312,7 +302,7 @@ def predict(req: PredictRequest) -> PredictResponse:
 
     response = PredictResponse(
         probability=probability,
-        risk_band=_risk_band(probability),
+        risk_band=risk_category(probability),
         contributions=contributions,
         model_loaded=True,
         model_version=_state.get("model_version"),
@@ -331,7 +321,7 @@ def predict(req: PredictRequest) -> PredictResponse:
                 model_version=_state.get("model_version"),
             )
         except Exception:
-            pass
+            logger.exception("Failed to persist prediction history")
 
     return response
 
@@ -365,7 +355,8 @@ def agent_reason(req: AgentRequest):
     pred_response = predict(pred_req)
     # Run agent loop
     contributions = [c.model_dump() for c in pred_response.contributions]
-    result = _agent.reason_loop(raw, pred_response.probability, contributions)
+    # Instantiate per request so no mutable state is shared across threads.
+    result = ClinicalAgent().reason_loop(raw, pred_response.probability, contributions)
     return {
         "prediction": {
             "probability": pred_response.probability,
@@ -382,7 +373,8 @@ def stats():
     try:
         return get_stats(_state["db_path"])
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        logger.exception("Failed to read prediction stats")
+        raise HTTPException(status_code=500, detail="Internal server error") from exc
 
 
 @app.get("/history", response_model=HistoryResponse)
@@ -392,7 +384,8 @@ def history(limit: int = Query(20, ge=1, le=100), risk_band: str = Query(None)) 
     try:
         items = fetch_recent(_state["db_path"], limit, risk_band=risk_band)
     except Exception as exc:
-        raise HTTPException(status_code=503, detail=f"Prediction history unavailable: {exc}") from exc
+        logger.exception("Failed to read prediction history")
+        raise HTTPException(status_code=503, detail="Prediction history unavailable") from exc
     return HistoryResponse(items=[HistoryItem(**item) for item in items])
 
 
@@ -403,5 +396,6 @@ def clear_history() -> HistoryClearResponse:
     try:
         deleted = clear_predictions(_state["db_path"])
     except Exception as exc:
-        raise HTTPException(status_code=503, detail=f"Prediction history unavailable: {exc}") from exc
+        logger.exception("Failed to clear prediction history")
+        raise HTTPException(status_code=503, detail="Prediction history unavailable") from exc
     return HistoryClearResponse(deleted=deleted)

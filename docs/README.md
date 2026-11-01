@@ -17,7 +17,8 @@ Start here. Docs are grouped by audience and intent.
 
 ## Planning & status
 
-- [NEXT_STEPS.md](NEXT_STEPS.md) — highest-value remaining work
+- [IMPROVEMENT_ROADMAP.md](IMPROVEMENT_ROADMAP.md) — prioritized remaining work and execution plan
+- [NEXT_STEPS.md](NEXT_STEPS.md) — earlier handoff notes (partially stale after P0)
 - [reports/PROJECT_REPORT.md](reports/PROJECT_REPORT.md) — full project report
 - [reports/WEEK_BY_WEEK_PROGRESS.md](reports/WEEK_BY_WEEK_PROGRESS.md) — weekly progress log
 

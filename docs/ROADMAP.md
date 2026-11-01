@@ -1,5 +1,9 @@
 # HepatiQ Roadmap
 
+> For forward-looking, prioritized engineering work, see
+> [`IMPROVEMENT_ROADMAP.md`](IMPROVEMENT_ROADMAP.md). This file is the historical
+> build plan and decision record.
+
 A 50-day build plan across four workstreams. Each phase lists what's due and who owns it. Currently in **Phase 4 (Days 31–40)**.
 
 ## Phase 1 — Foundation (Days 1–10)

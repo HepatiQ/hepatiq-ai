@@ -87,7 +87,7 @@ Note: Lower Brier Score indicates better probability calibration.
 
 | Category | Technology |
 | --- | --- |
-| **Programming** | Python 3.10+ |
+| **Programming** | Python 3.12+ |
 | **Database** | SQLite (Python stdlib sqlite3) |
 | **Frontend** | Streamlit (custom-themed UI) |
 | **Backend** | FastAPI & Uvicorn (modular inference API) |

@@ -1,5 +1,8 @@
 # Next Steps & Open Items
 
+> Forward planning now lives in [`IMPROVEMENT_ROADMAP.md`](IMPROVEMENT_ROADMAP.md).
+> The status details below predate the P0 remediation and are kept as handoff context.
+
 Handoff notes for whoever picks this project up next (human teammate or a fresh
 AI session). Everything shipped is committed on `main`; this file captures the
 *informal* context that isn't obvious from the code — what's deliberately not
