@@ -10,7 +10,10 @@ the work, run the stated verification, then update the status board and evidence
 - **Serving model:** v1 17-feature Logistic Regression pipeline at `models/model.pkl`
 - **Assessment baseline:** 91 passed, 2 skipped, 74.88% local full-`src` coverage
 - **CI gate:** `ruff check .` and pytest with a 60% coverage floor
-- **Open manual action:** the leaked GitHub PAT must be revoked by its owner
+- **Incident status:** exposed classic PAT returned HTTP 401; the 115-commit
+  history rewrite and 12-branch force-push are reported complete
+- **Open security action:** verify post-rewrite containment, enable GitHub secret
+  protection, and add CI secret scanning
 
 > The historical 50-day build plan remains in [`ROADMAP.md`](ROADMAP.md). This file
 > covers remaining improvements after the P0 remediation described below.
@@ -68,11 +71,37 @@ the work, run the stated verification, then update the status board and evidence
 
 ### P0 caveats still open
 
-- [ ] The P0 changes are **uncommitted** in the working tree. Review and commit
-  them before starting P1 work.
+- [x] The P0 changes were committed before the history rewrite. This working clone
+  still predates that rewrite and must be re-cloned after exporting these doc edits.
 - [ ] A full Docker image build exceeded the 15-minute network timeout. Dockerfile
   validation and non-root user creation were verified, but the image was not run.
-- [ ] The leaked GitHub PAT remains valid until the owner revokes it.
+- [x] The exposed classic PAT returned HTTP 401 when tested. It was invalid at test
+  time, but that does not prove it was never valid or used before the rewrite.
+
+### Secret-history remediation completed
+
+Reported on 2026-11-01. Treat this as an incident record, not proof that every
+GitHub-side copy has been purged.
+
+- [x] Identified the exposed classic PAT in historical `create_issues.py`.
+- [x] Verified the token returned HTTP 401 from `https://api.github.com/user`.
+- [x] Created an untouched mirror backup of the public repository.
+- [x] Created a separate mirror and installed `git-filter-repo` 2.47.0.
+- [x] Rewrote all 115 commits and replaced the token pattern with a fixed marker.
+- [x] Scanned 436 reachable historical file versions; found zero pattern matches.
+- [x] Force-pushed all 12 rewritten branches.
+- [x] Confirmed all 12 remote branch hashes matched the rewritten local refs.
+- [ ] Run an independent full-history secret scan, not only the replacement regex.
+- [ ] Push and verify rewritten tags and any refs outside `refs/heads/*`.
+- [ ] Inspect and clean pull-request refs, forks, releases, and Actions caches.
+- [ ] Ask GitHub Support to purge cached views and unreachable public objects.
+- [ ] Secure, encrypt, or destroy the mirror backup; it still contains the token.
+- [ ] Re-clone the original working repository, which still has the old objects.
+- [ ] Review account and organization security/audit logs for historical token use.
+- [ ] Enable secret scanning, push protection, validity checks, and Dependabot.
+- [ ] Add `gitleaks` or TruffleHog to CI and pre-commit.
+- [ ] Remove stale commit references and token-like placeholders from current docs.
+- [ ] Re-run CI and deployment checks on the rewritten `main` and active branches.
 
 ## 3. Priority Definitions
 
@@ -90,7 +119,7 @@ blocked on external input.
 
 | ID | Task | Priority | Status | Effort | Depends on |
 | --- | --- | --- | --- | --- | --- |
-| SEC-01 | Revoke secret and add secret scanning | P1 | Open | S | None |
+| SEC-01 | Secret history removal and containment | P1 | Partial: rewrite done, containment open | M | GitHub Support |
 | SEC-02 | API authentication, rate limits, CORS/XSRF | P1 | Open | M | None |
 | DATA-01 | Canonical v1 data lineage and provenance | P1 | Open | M | None |
 | DEP-01 | Complete Docker CI, healthcheck, and image scan | P1 | Open | M | P0 Docker review |
@@ -111,34 +140,58 @@ blocked on external input.
 
 ## 5. P1 Task Cards
 
-### SEC-01 - Revoke the secret and prevent recurrence
+### SEC-01 - Secret history removal and post-rewrite containment
 
-**Why:** A `ghp_...` GitHub token remains in git history in `create_issues.py` and
-`docs/NEXT_STEPS.md`. Deleting the file does not revoke the credential.
+**Why:** A classic GitHub PAT was committed to a public repository. Deleting the
+current file was insufficient because the credential remained in historical
+objects and could have been scraped. Branch history has been rewritten, but GitHub
+can retain unreachable objects, pull-request refs, caches, and forks.
 
-**Steps**
+**Completed**
 
-- [ ] Owner revokes the token at GitHub settings and rotates any credential it
-  could reach. Do not rely on expiration alone.
-- [ ] Inventory other secrets with a scanner that does not print raw values.
-- [ ] Remove the secret from history using `git filter-repo` or BFG on a coordinated
-  clone. Rewriting shared history requires team notification and a force-push
-  window; do not do this silently.
-- [ ] Add a CI secret-scanning job (for example `gitleaks` or TruffleHog) on pull
-  requests and pushes.
+- [x] Identified the exposed classic PAT in historical `create_issues.py`.
+- [x] Tested the token; GitHub returned HTTP 401 (invalid at test time).
+- [x] Created an untouched mirror backup before rewriting anything.
+- [x] Rewrote a separate mirror with `git-filter-repo` 2.47.0.
+- [x] Rewrote all 115 commits and replaced the token pattern with a fixed marker.
+- [x] Scanned 436 reachable historical file versions; found zero matches.
+- [x] Force-pushed all 12 rewritten branches.
+- [x] Verified all 12 remote branch hashes matched the rewritten local refs.
+
+**Remaining**
+
+- [ ] Run `gitleaks` and TruffleHog against the full rewritten history; do not rely
+  only on the replacement regex.
+- [ ] Push and verify rewritten tags and any refs outside `refs/heads/*`.
+- [ ] Inspect `refs/pull/*`, forks, releases, Actions caches, and artifacts.
+- [ ] Ask GitHub Support to purge cached views and unreachable public objects.
+- [ ] Secure or destroy the mirror backup; it still contains the token.
+- [ ] Re-clone the original local repository; its old object database still has the
+  token. Preserve uncommitted work with a patch first.
+- [ ] Review account and organization security/audit logs from the exposure date
+  onward for token use, workflow edits, deploy keys, webhooks, and releases.
+- [ ] Enable secret scanning, push protection, validity checks, and Dependabot.
+- [ ] Add a CI secret-scanning job and pre-commit hook.
 - [ ] Add a short secret-handling section to `docs/TEAM_WORKFLOW.md`.
+- [ ] Remove stale commit hashes and token-like placeholders from current docs.
+- [ ] Re-run CI and deployment checks on the rewritten `main` and active branches.
 
-**Files:** `.github/workflows/ci.yml`, `docs/TEAM_WORKFLOW.md`, repository history.
+**Files:** `.github/workflows/ci.yml`, `docs/TEAM_WORKFLOW.md`, repository refs,
+GitHub settings, and local clone/backup storage.
 
 **Acceptance**
 
-- [ ] The token is revoked and confirmed invalid.
+- [ ] An independent full-history scan reports zero live credentials.
 - [ ] A fresh clone contains no matching token in history.
+- [ ] No matching token remains in branches, tags, PR refs, forks, or caches.
+- [ ] GitHub secret scanning and push protection are enabled.
 - [ ] CI fails on a deliberately planted test secret in a throwaway branch.
+- [ ] The backup is encrypted with restricted access or destroyed.
 - [ ] No secret value appears in logs, reports, or this document.
 
-**Verify:** `gitleaks detect --source . --no-git` plus a full-history scan. Do not
-paste scan output containing a live secret.
+**Verify:** use an approved scanner against the full history, then compare local
+and remote refs with `git ls-remote origin`. Do not paste scan output containing a
+live secret.
 
 ---
 
@@ -369,8 +422,10 @@ watch for updates. Exact pins are deliberate and must stay.
 
 ### DOC-01 - Documentation truth pass
 
-- `docs/NEXT_STEPS.md` still describes 62 tests and pre-P0 status. Update it or
-  mark it historical and point to this roadmap.
+- [x] Mark `docs/NEXT_STEPS.md` as historical, remove the stale commit pointer and
+  test count, and point readers to this roadmap.
+- [ ] Update `docs/NEXT_STEPS.md` security notes and quality baseline whenever a
+  later task changes them.
 - Add the OOF confidence interval to `docs/model_card.md` so it matches the README
   and validation report.
 - Ensure limitations remain explicit: single historical cohort, no external
@@ -484,11 +539,27 @@ requires a new manifest entry and an explicit note in the execution log.
 | 2026-11-01 | Run Docker as UID/GID 1000 | Reduce container privilege; validate on Linux bind mounts before production use |
 | 2026-11-01 | External validation is the top research priority | One historical cohort cannot establish generalization |
 | 2026-11-01 | Do not change model hyperparameters during P0 | P0 is correctness/security work; model changes require separate evaluation |
+| 2026-11-01 | Rewrite all branch history and force-push | The PAT was public; deleting the file or revoking the token would not remove copies. Backup retained for forensics; 115 commits and 12 branches were rewritten and verified. |
 
 ## 11. Execution Log
 
 Append entries here when a task changes status. Keep evidence short and
 reproducible.
+
+```text
+Date: 2026-11-01
+Task: SEC-01
+Status: Partial - history rewrite complete; containment and prevention open
+Change: Identified a classic PAT in historical create_issues.py, verified HTTP
+  401, created a mirror backup, rewrote a separate mirror with git-filter-repo
+  2.47.0, force-pushed 12 branches, and verified remote hashes.
+Files: repository history; GitHub refs/settings; local mirror backup
+Verification: 115 commits rewritten; 436 reachable historical file versions
+  scanned; 0 token-pattern matches; 401 from /user; 12 remote hashes matched.
+Notes / follow-up: independent full-history scan, tags/PR refs/forks/caches,
+  GitHub Support purge, backup destruction, local re-clone, audit-log review,
+  secret scanning/push protection, and CI scanning remain open.
+```
 
 ```text
 Date:

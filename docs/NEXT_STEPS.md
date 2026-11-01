@@ -8,8 +8,9 @@ AI session). Everything shipped is committed on `main`; this file captures the
 *informal* context that isn't obvious from the code — what's deliberately not
 done, what was deferred, and known issues.
 
-Last updated alongside commit `714f6e3` (Phase 5 delivery). Status: all CI green,
-62 tests passing, ~63% coverage gate.
+Last updated at Phase 5 delivery. This file is retained as historical handoff
+context; [`IMPROVEMENT_ROADMAP.md`](IMPROVEMENT_ROADMAP.md) is now the canonical
+status and task tracker.
 
 ## Where the project stands
 
@@ -20,7 +21,7 @@ The application is complete and honest as a **research prototype**:
 - Backend: FastAPI (`src/hepatiq/backend/main.py`) — `/health`, `/predict`, `GET /history`, `DELETE /history`.
 - Frontend: Streamlit (`src/hepatiq/frontend/app.py`) — dark theme, logo, risk-band badge,
   training-range warnings, latency/version caption, history controls.
-- Quality: 62 tests incl. a live form→API→model E2E, ruff clean, CI coverage floor 60.
+- Quality: 91 tests incl. a live form→API→model E2E, ruff clean, CI coverage floor 60.
 - Docs: `README.md`, `docs/LIMITATIONS.md`, `docs/model_card.md`, `docs/DEMO.md`,
   `docs/ROADMAP.md` (Phases 4 & 5 marked complete).
 
@@ -68,12 +69,14 @@ Options, in order of honesty/value:
 
 ## Known issues / cautions
 
-- **Leaked GitHub PAT (action required: revoke + rotate).** `create_issues.py`
-  contained a hardcoded `ghp_…` token. The file has been deleted from the working
-  tree, but the string remains in **git history**, so deleting the file is not
-  enough. Revoke the token at github.com/settings/tokens and rotate any credential
-  it could reach; do not rely on expiration alone. A secret-scan step in CI would
-  prevent recurrence.
+- **Leaked GitHub PAT (history rewritten; containment ongoing).** `create_issues.py`
+  contained a hardcoded classic GitHub PAT. The file was deleted, and all branch
+  history was rewritten and force-pushed (115 commits, 12 branches, zero matches
+  in 436 reachable historical file versions). The token returned HTTP 401 when
+  tested, but treat it as compromised. Remaining work: verify tags, PR refs, forks,
+  and caches; request a GitHub Support purge; secure or destroy the mirror backup;
+  re-clone local copies; review audit logs; enable secret scanning and push
+  protection; and add CI secret scanning. Do not reintroduce credentials.
 - **Dependency pins are deliberate.** `requirements.txt` pins exact versions
   (e.g. `streamlit==1.62.0`). Reason: an unpinned install once pulled a newer
   Streamlit whose form-widget behaviour differed from what the tests were written
