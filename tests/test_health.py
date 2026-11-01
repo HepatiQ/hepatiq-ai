@@ -21,7 +21,10 @@ def test_health_explainer_ready_no_error(client):
     h = client.get("/health").json()
     assert h["explainer_ready"] is True
     assert h["error"] is None
-    assert h["model_path"].endswith("model.pkl")
+
+
+def test_health_does_not_expose_model_path(client):
+    assert "model_path" not in client.get("/health").json()
 
 
 def test_health_reports_model_version(client):

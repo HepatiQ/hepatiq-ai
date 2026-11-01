@@ -9,6 +9,8 @@ import requests
 import streamlit as st
 from fpdf import FPDF
 
+from hepatiq.risk_bands import risk_category
+
 
 def _resolve_backend_url() -> str:
     url = os.environ.get("HEPATIQ_BACKEND_URL")
@@ -109,15 +111,6 @@ DISPLAY_NAMES = {
     "trig": "Triglycerides", "platelet": "Platelet", "protime": "Protime",
     "stage": "Stage",
 }
-
-
-def _risk_band(probability: float) -> str:
-    if probability >= 0.40:
-        return "high"
-    elif probability >= 0.15:
-        return "intermediate"
-    else:
-        return "low"
 
 
 def optional_number(label, min_value, max_value, format, step):
@@ -339,7 +332,7 @@ if data is not None:
         try:
             _model_version = data.get("model_version") or "-"
             _prob = data.get("probability", prob)
-            _band = _risk_band(_prob)
+            _band = risk_category(_prob)
             _payload = (
                 st.session_state.get("last_payload", payload)
                 if "payload" in dir()
@@ -453,7 +446,7 @@ with st.expander("Recent predictions (local history)"):
                     [
                         it["created_at"],
                         f"{it['probability']:.1%}",
-                        _risk_band(it["probability"]),
+                        risk_category(it["probability"]),
                     ]
                 )
             st.download_button(
@@ -474,7 +467,7 @@ with st.expander("Recent predictions (local history)"):
             rows.append({
                 "Time (UTC)": it["created_at"],
                 "Risk": f"{it['probability']:.1%}",
-                "Risk Band": _risk_band(it['probability']),
+                "Risk Band": risk_category(it["probability"]),
                 "Top contributors": ", ".join(
                     f"{DISPLAY_NAMES.get(c['feature'], c['feature'])} ({c['impact']:+.2f})"
                     for c in top
@@ -489,10 +482,11 @@ with st.expander("Model Comparison"):
 | --- | ---: | ---: | ---: | ---: | ---: |
 | **Logistic Regression** (Selected) | 0.8800 | 0.7675 | 0.8105 | 0.7861 | 0.1363 |
 | Random Forest | 0.8844 | 0.7235 | 0.8256 | 0.7694 | 0.1419 |
-| XGBoost | 0.8706 | 0.7225 | 0.7508 | 0.1528 | 0.1528 |
+| XGBoost | 0.8706 | 0.7225 | 0.7508 | 0.7508 | 0.1528 |
 """)
     st.caption("Logistic Regression chosen for superior calibration and interpretability.")
 st.caption(
     "Research prototype — not a medical device or diagnostic tool. "
     "Model scope, calibration, and limits: docs/LIMITATIONS.md."
 )
+st.caption("HepatiQ v2 - designed and maintained by Pranjal Dubey. v1 was a team project.")

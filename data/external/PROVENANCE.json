@@ -1,0 +1,129 @@
+{
+  "generated_at_utc": "2026-10-30T04:45:43+00:00",
+  "package": "survival",
+  "package_version": "3.8-12",
+  "source_tarball": "https://cran.r-project.org/src/contrib/survival_3.8-12.tar.gz",
+  "tarball_sha256": "ebb70d9a4e7e8ad7f886a563184d6f079e64c0591a0bce219ae90967f0bdf994",
+  "license": "LGPL (>= 2); datasets are redistributed from published sources",
+  "notes": [
+    "pbcseq is bundled inside survival/data/pbc.rda together with pbc.",
+    "udca.rda contains udca (event dates), udca1 (survival-ready) and udca2 (multiple endpoints).",
+    "R Date columns in udca were converted from days-since-1970-01-01 to ISO YYYY-MM-DD strings."
+  ],
+  "datasets": {
+    "pbc": {
+      "object": "pbc",
+      "file": "pbc.csv",
+      "source_member": "survival/data/pbc.rda",
+      "rows": 418,
+      "columns": [
+        "id",
+        "time",
+        "status",
+        "trt",
+        "age",
+        "sex",
+        "ascites",
+        "hepato",
+        "spiders",
+        "edema",
+        "bili",
+        "chol",
+        "albumin",
+        "copper",
+        "alk.phos",
+        "ast",
+        "trig",
+        "platelet",
+        "protime",
+        "stage"
+      ],
+      "sha256": "3c52ee2a81f8ffe0d8eb008ee6abf1d90501ebae3f931c439d130e7091d383c9"
+    },
+    "pbcseq": {
+      "object": "pbcseq",
+      "file": "pbcseq.csv",
+      "source_member": "survival/data/pbc.rda",
+      "rows": 1945,
+      "columns": [
+        "id",
+        "futime",
+        "status",
+        "trt",
+        "age",
+        "sex",
+        "day",
+        "ascites",
+        "hepato",
+        "spiders",
+        "edema",
+        "bili",
+        "chol",
+        "albumin",
+        "alk.phos",
+        "ast",
+        "platelet",
+        "protime",
+        "stage"
+      ],
+      "sha256": "181105fcf0aee4e614fcd9df2e235e65051034a41e0e9346014cb3bb6a3efb6f"
+    },
+    "udca": {
+      "object": "udca",
+      "file": "udca.csv",
+      "source_member": "survival/data/udca.rda",
+      "rows": 170,
+      "columns": [
+        "id",
+        "trt",
+        "entry.dt",
+        "last.dt",
+        "stage",
+        "bili",
+        "riskscore",
+        "death.dt",
+        "tx.dt",
+        "hprogress.dt",
+        "varices.dt",
+        "ascites.dt",
+        "enceph.dt",
+        "double.dt",
+        "worsen.dt"
+      ],
+      "sha256": "7aee17688782c98202890531f557c91544b5f1c96148f97fc4128bf765df3cd4"
+    },
+    "udca1": {
+      "object": "udca1",
+      "file": "udca1.csv",
+      "source_member": "survival/data/udca.rda",
+      "rows": 170,
+      "columns": [
+        "id",
+        "trt",
+        "stage",
+        "bili",
+        "riskscore",
+        "futime",
+        "status"
+      ],
+      "sha256": "4749c30dd76875b9132dc3d77f7fa1054c4d25f7fcab82a3b5c9f013a4bb38b6"
+    },
+    "udca2": {
+      "object": "udca2",
+      "file": "udca2.csv",
+      "source_member": "survival/data/udca.rda",
+      "rows": 1360,
+      "columns": [
+        "id",
+        "trt",
+        "stage",
+        "bili",
+        "riskscore",
+        "futime",
+        "status",
+        "endpoint"
+      ],
+      "sha256": "9c2eadf0f10af496467d50445b80f4dc2169d5dac8fcc74d686eec43193814a5"
+    }
+  }
+}

@@ -6,18 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
 
-RISK_BAND_INTERMEDIATE = 0.15
-RISK_BAND_HIGH = 0.40
-
-
-def _compute_risk_band(probability: float) -> str:
-    if probability >= RISK_BAND_HIGH:
-        return "high"
-    elif probability >= RISK_BAND_INTERMEDIATE:
-        return "intermediate"
-    else:
-        return "low"
-
+from hepatiq.risk_bands import risk_category
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS predictions (
@@ -85,7 +74,7 @@ def log_prediction(
     session_id: Optional[str] = None,
     latency_ms: Optional[float] = None,
 ) -> None:
-    risk_band = _compute_risk_band(float(probability))
+    risk_band = risk_category(float(probability))
     age = request.get("age")
     sex = request.get("sex")
     bili = request.get("bili")

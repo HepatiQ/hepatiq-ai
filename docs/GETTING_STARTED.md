@@ -7,7 +7,7 @@ HepatiQ is a clinical decision-support system that predicts 5-year severe event 
 ## Prerequisites
 
 Before you begin, install:
-- **Python 3.10+** — [python.org](https://python.org)
+- **Python 3.12+** — [python.org](https://python.org)
 - **Git** — [git-scm.com](https://git-scm.com)
 - **VS Code** (or your preferred editor) — [code.visualstudio.com](https://code.visualstudio.com)
 - A **GitHub account**, added to the `HepatiQ/hepatiq-ai` repository
