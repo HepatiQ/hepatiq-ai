@@ -32,3 +32,5 @@ ruff==0.17.1
 
 # Reports
 fpdf2==2.8.2
+
+-e .
