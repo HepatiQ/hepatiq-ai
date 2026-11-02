@@ -282,8 +282,8 @@ some missingness mechanisms and harm under outcome-dependent missingness.
 
 - Use exactly once, after this protocol is frozen.
 - Derivation: 312 randomized patients; held-out: 106 non-randomized patients.
-- The held-out set has 72 labeled patients and 33 events; 70 have a complete
-  Mayo score.
+- The held-out set has 72 labeled patients and 34 events; 70 have a complete
+  Mayo score (33 events).
 - No model selection, no threshold tuning, no recalibration fitting.
 - Report discrimination and Brier as supportive. Do not present calibration
   slope from a model fitted on held-out labels.
@@ -493,5 +493,11 @@ secondary or exploratory.
 
 ## 18. Changelog and deviations
 
-No deviations yet. Any post-freeze change must be appended here with a date,
-reason and whether it is exploratory.
+- **2026-11-02, pre-analysis correction:** clarified the held-out counts. The
+  106-patient validation split contains 72 labeled patients with 34 events;
+  70 of those patients have a complete Mayo score, and those 70 contain 33
+  events. The held-out split had not been evaluated when this correction was
+  made. This is a factual clarification, not an analysis change.
+
+No other deviations yet. Any post-freeze change must be appended here with a
+date, reason and whether it is exploratory.
