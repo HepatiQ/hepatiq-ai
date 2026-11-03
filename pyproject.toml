@@ -39,7 +39,6 @@ filterwarnings = [
 omit = [
     "src/hepatiq/ml/build_5yr_target.py",
     "src/hepatiq/ml/explain.py",
-    "src/hepatiq/validation/calibration_plot.py",
 ]
 
 [tool.coverage.report]
