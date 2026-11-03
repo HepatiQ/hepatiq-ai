@@ -1,0 +1,645 @@
+{
+  "F17": {
+    "baseline_matches_documented": true,
+    "baseline_prediction": 0.274846560155602,
+    "expected_reference": 0.274846560155602,
+    "imputed_values": {
+      "age": 55.0,
+      "albumin": 3.5,
+      "alk.phos": 2049.650512334087,
+      "ascites": 0.03696923587056933,
+      "ast": 112.81579291123464,
+      "bili": 1.0,
+      "chol": 345.7895647789306,
+      "copper": 94.68133835195685,
+      "edema": 0.0,
+      "hepato": 0.4838403376496928,
+      "platelet": 258.48982338811965,
+      "protime": 10.724486652552496,
+      "sex": 0.0,
+      "spiders": 0.28636813391858,
+      "stage": 3.0697525592849564,
+      "trig": 115.93431626770827,
+      "trt": 1.480933001194599
+    },
+    "multiple_imputation": {
+      "band_counts": {
+        "high": 5,
+        "low": 6,
+        "moderate": 9
+      },
+      "max": 0.6372893039357561,
+      "mean": 0.27829078477308944,
+      "min": 0.036243568467967856,
+      "n": 20,
+      "q10": 0.07723742089455052,
+      "q50": 0.27556547578114976,
+      "q90": 0.49472457774857864,
+      "range_pp": 60.10457354677883,
+      "sd": 0.1726449596708965
+    },
+    "note": "imputed values are synthetic; never treat them as measurements",
+    "scenarios": [
+      {
+        "delta_pp": 0.0,
+        "prediction": 0.274846560155602,
+        "scenario": "only_observed"
+      },
+      {
+        "delta_pp": 0.12444861019101916,
+        "prediction": 0.2760910462575122,
+        "scenario": "cohort_typical"
+      },
+      {
+        "delta_pp": -25.543509714966866,
+        "prediction": 0.01941146300593333,
+        "scenario": "clinically_normal"
+      },
+      {
+        "delta_pp": -22.572618686407743,
+        "prediction": 0.049120373291524556,
+        "scenario": "p10_optional"
+      },
+      {
+        "delta_pp": 0.12444861019101916,
+        "prediction": 0.2760910462575122,
+        "scenario": "p50_optional"
+      },
+      {
+        "delta_pp": 55.256552315925525,
+        "prediction": 0.8274120833148572,
+        "scenario": "p90_optional"
+      },
+      {
+        "delta_pp": 0.051183430833295906,
+        "prediction": 0.27535839446393495,
+        "scenario": "protime_10_8"
+      },
+      {
+        "delta_pp": -1.1727941287225818,
+        "prediction": 0.2631186188683762,
+        "scenario": "stage_3"
+      },
+      {
+        "delta_pp": 3.952294581023863,
+        "prediction": 0.3143695059658406,
+        "scenario": "age_60"
+      },
+      {
+        "delta_pp": 3.103495813367696,
+        "prediction": 0.30588151828927895,
+        "scenario": "albumin_3_4"
+      },
+      {
+        "delta_pp": 0.632952334382475,
+        "prediction": 0.28117608349942674,
+        "scenario": "bili_1_1"
+      }
+    ],
+    "tornado": [
+      {
+        "delta_pp": 0.4986568572273087,
+        "feature": "trt",
+        "prediction": 0.2798331287278751,
+        "scenario": "p10",
+        "value": 1.0
+      },
+      {
+        "delta_pp": 0.4986568572273087,
+        "feature": "trt",
+        "prediction": 0.2798331287278751,
+        "scenario": "p50",
+        "value": 1.0
+      },
+      {
+        "delta_pp": -0.5320675697428168,
+        "feature": "trt",
+        "prediction": 0.2695258844581738,
+        "scenario": "p90",
+        "value": 2.0
+      },
+      {
+        "delta_pp": 0.4986568572273087,
+        "feature": "trt",
+        "prediction": 0.2798331287278751,
+        "scenario": "clinically_normal",
+        "value": 1.0
+      },
+      {
+        "delta_pp": 0.4986568572273087,
+        "feature": "trt",
+        "prediction": 0.2798331287278751,
+        "scenario": "cohort_typical",
+        "value": 1.0
+      },
+      {
+        "delta_pp": -0.45048155262116807,
+        "feature": "ascites",
+        "prediction": 0.2703417446293903,
+        "scenario": "p10",
+        "value": 0.0
+      },
+      {
+        "delta_pp": -0.45048155262116807,
+        "feature": "ascites",
+        "prediction": 0.2703417446293903,
+        "scenario": "p50",
+        "value": 0.0
+      },
+      {
+        "delta_pp": -0.45048155262116807,
+        "feature": "ascites",
+        "prediction": 0.2703417446293903,
+        "scenario": "p90",
+        "value": 0.0
+      },
+      {
+        "delta_pp": -0.45048155262116807,
+        "feature": "ascites",
+        "prediction": 0.2703417446293903,
+        "scenario": "clinically_normal",
+        "value": 0.0
+      },
+      {
+        "delta_pp": -0.45048155262116807,
+        "feature": "ascites",
+        "prediction": 0.2703417446293903,
+        "scenario": "cohort_typical",
+        "value": 0.0
+      },
+      {
+        "delta_pp": -7.879452765469744,
+        "feature": "hepato",
+        "prediction": 0.19605203250090456,
+        "scenario": "p10",
+        "value": 0.0
+      },
+      {
+        "delta_pp": 10.273409273746886,
+        "feature": "hepato",
+        "prediction": 0.37758065289307086,
+        "scenario": "p50",
+        "value": 1.0
+      },
+      {
+        "delta_pp": 10.273409273746886,
+        "feature": "hepato",
+        "prediction": 0.37758065289307086,
+        "scenario": "p90",
+        "value": 1.0
+      },
+      {
+        "delta_pp": -7.879452765469744,
+        "feature": "hepato",
+        "prediction": 0.19605203250090456,
+        "scenario": "clinically_normal",
+        "value": 0.0
+      },
+      {
+        "delta_pp": 10.273409273746886,
+        "feature": "hepato",
+        "prediction": 0.37758065289307086,
+        "scenario": "cohort_typical",
+        "value": 1.0
+      },
+      {
+        "delta_pp": -3.5336842611315253,
+        "feature": "spiders",
+        "prediction": 0.23950971754428674,
+        "scenario": "p10",
+        "value": 0.0
+      },
+      {
+        "delta_pp": -3.5336842611315253,
+        "feature": "spiders",
+        "prediction": 0.23950971754428674,
+        "scenario": "p50",
+        "value": 0.0
+      },
+      {
+        "delta_pp": 10.060698368720832,
+        "feature": "spiders",
+        "prediction": 0.3754535438428103,
+        "scenario": "p90",
+        "value": 1.0
+      },
+      {
+        "delta_pp": -3.5336842611315253,
+        "feature": "spiders",
+        "prediction": 0.23950971754428674,
+        "scenario": "clinically_normal",
+        "value": 0.0
+      },
+      {
+        "delta_pp": -3.5336842611315253,
+        "feature": "spiders",
+        "prediction": 0.23950971754428674,
+        "scenario": "cohort_typical",
+        "value": 0.0
+      },
+      {
+        "delta_pp": -4.145025873115579,
+        "feature": "chol",
+        "prediction": 0.2333963014244462,
+        "scenario": "p10",
+        "value": 209.2
+      },
+      {
+        "delta_pp": -1.3485107569395471,
+        "feature": "chol",
+        "prediction": 0.2613614525862065,
+        "scenario": "p50",
+        "value": 303.0
+      },
+      {
+        "delta_pp": 8.05012606347108,
+        "feature": "chol",
+        "prediction": 0.3553478207903128,
+        "scenario": "p90",
+        "value": 579.6000000000001
+      },
+      {
+        "delta_pp": -4.971864745689855,
+        "feature": "chol",
+        "prediction": 0.22512791269870344,
+        "scenario": "clinically_normal",
+        "value": 180.0
+      },
+      {
+        "delta_pp": -1.3485107569395471,
+        "feature": "chol",
+        "prediction": 0.2613614525862065,
+        "scenario": "cohort_typical",
+        "value": 303.0
+      },
+      {
+        "delta_pp": -12.463223210099825,
+        "feature": "copper",
+        "prediction": 0.15021432805460375,
+        "scenario": "p10",
+        "value": 24.0
+      },
+      {
+        "delta_pp": -4.221218069736035,
+        "feature": "copper",
+        "prediction": 0.23263437945824164,
+        "scenario": "p50",
+        "value": 74.0
+      },
+      {
+        "delta_pp": 31.8378135472626,
+        "feature": "copper",
+        "prediction": 0.593224695628228,
+        "scenario": "p90",
+        "value": 219.6
+      },
+      {
+        "delta_pp": -13.005810286742797,
+        "feature": "copper",
+        "prediction": 0.14478845728817402,
+        "scenario": "clinically_normal",
+        "value": 20.0
+      },
+      {
+        "delta_pp": -4.221218069736035,
+        "feature": "copper",
+        "prediction": 0.23263437945824164,
+        "scenario": "cohort_typical",
+        "value": 74.0
+      },
+      {
+        "delta_pp": 3.153687471455785,
+        "feature": "alk.phos",
+        "prediction": 0.30638343487015984,
+        "scenario": "p10",
+        "value": 664.2
+      },
+      {
+        "delta_pp": 1.5776470203853254,
+        "feature": "alk.phos",
+        "prediction": 0.29062303035945525,
+        "scenario": "p50",
+        "value": 1345.0
+      },
+      {
+        "delta_pp": -6.325739432673289,
+        "feature": "alk.phos",
+        "prediction": 0.2115891658288691,
+        "scenario": "p90",
+        "value": 5170.640000000001
+      },
+      {
+        "delta_pp": 4.4952234797915995,
+        "feature": "alk.phos",
+        "prediction": 0.319798794953518,
+        "scenario": "clinically_normal",
+        "value": 100.0
+      },
+      {
+        "delta_pp": 1.5776470203853254,
+        "feature": "alk.phos",
+        "prediction": 0.29062303035945525,
+        "scenario": "cohort_typical",
+        "value": 1345.0
+      },
+      {
+        "delta_pp": -10.55762763973395,
+        "feature": "ast",
+        "prediction": 0.1692702837582625,
+        "scenario": "p10",
+        "value": 61.452000000000005
+      },
+      {
+        "delta_pp": 1.0166661421922185,
+        "feature": "ast",
+        "prediction": 0.2850132215775242,
+        "scenario": "p50",
+        "value": 117.0
+      },
+      {
+        "delta_pp": 24.106571345038148,
+        "feature": "ast",
+        "prediction": 0.5159122736059835,
+        "scenario": "p90",
+        "value": 198.4
+      },
+      {
+        "delta_pp": -15.887937258612775,
+        "feature": "ast",
+        "prediction": 0.11596718756947424,
+        "scenario": "clinically_normal",
+        "value": 25.0
+      },
+      {
+        "delta_pp": 1.0166661421922185,
+        "feature": "ast",
+        "prediction": 0.2850132215775242,
+        "scenario": "cohort_typical",
+        "value": 117.0
+      },
+      {
+        "delta_pp": -4.410256001213214,
+        "feature": "trig",
+        "prediction": 0.23074400014346985,
+        "scenario": "p10",
+        "value": 63.0
+      },
+      {
+        "delta_pp": -0.8701872085226325,
+        "feature": "trig",
+        "prediction": 0.26614468807037567,
+        "scenario": "p50",
+        "value": 106.0
+      },
+      {
+        "delta_pp": 8.503769572264902,
+        "feature": "trig",
+        "prediction": 0.359884255878251,
+        "scenario": "p90",
+        "value": 205.3
+      },
+      {
+        "delta_pp": 0.3543325922704177,
+        "feature": "trig",
+        "prediction": 0.27838988607830617,
+        "scenario": "clinically_normal",
+        "value": 120.0
+      },
+      {
+        "delta_pp": -0.8701872085226325,
+        "feature": "trig",
+        "prediction": 0.26614468807037567,
+        "scenario": "cohort_typical",
+        "value": 106.0
+      },
+      {
+        "delta_pp": 8.37523248347216,
+        "feature": "platelet",
+        "prediction": 0.3585988849903236,
+        "scenario": "p10",
+        "value": 134.8
+      },
+      {
+        "delta_pp": 0.5350633330023169,
+        "feature": "platelet",
+        "prediction": 0.28019719348562516,
+        "scenario": "p50",
+        "value": 250.0
+      },
+      {
+        "delta_pp": -7.918345679128399,
+        "feature": "platelet",
+        "prediction": 0.195663103364318,
+        "scenario": "p90",
+        "value": 399.6
+      },
+      {
+        "delta_pp": 0.5350633330023169,
+        "feature": "platelet",
+        "prediction": 0.28019719348562516,
+        "scenario": "clinically_normal",
+        "value": 250.0
+      },
+      {
+        "delta_pp": 0.5350633330023169,
+        "feature": "platelet",
+        "prediction": 0.28019719348562516,
+        "scenario": "cohort_typical",
+        "value": 250.0
+      },
+      {
+        "delta_pp": -0.6219758620646165,
+        "feature": "protime",
+        "prediction": 0.26862680153495583,
+        "scenario": "p10",
+        "value": 9.8
+      },
+      {
+        "delta_pp": -0.08428216395588994,
+        "feature": "protime",
+        "prediction": 0.2740037385160431,
+        "scenario": "p50",
+        "value": 10.6
+      },
+      {
+        "delta_pp": 0.9417550500998795,
+        "feature": "protime",
+        "prediction": 0.2842641106566008,
+        "scenario": "p90",
+        "value": 12.1
+      },
+      {
+        "delta_pp": -0.1518591551533166,
+        "feature": "protime",
+        "prediction": 0.2733279686040688,
+        "scenario": "clinically_normal",
+        "value": 10.5
+      },
+      {
+        "delta_pp": -0.08428216395588994,
+        "feature": "protime",
+        "prediction": 0.2740037385160431,
+        "scenario": "cohort_typical",
+        "value": 10.6
+      },
+      {
+        "delta_pp": -14.303140148897105,
+        "feature": "stage",
+        "prediction": 0.13181515866663093,
+        "scenario": "p10",
+        "value": 2.0
+      },
+      {
+        "delta_pp": -1.1727941287225818,
+        "feature": "stage",
+        "prediction": 0.2631186188683762,
+        "scenario": "p50",
+        "value": 3.0
+      },
+      {
+        "delta_pp": 18.160408293982115,
+        "feature": "stage",
+        "prediction": 0.45645064309542316,
+        "scenario": "p90",
+        "value": 4.0
+      },
+      {
+        "delta_pp": -21.420325624797325,
+        "feature": "stage",
+        "prediction": 0.060643303907628746,
+        "scenario": "clinically_normal",
+        "value": 1.0
+      },
+      {
+        "delta_pp": -1.1727941287225818,
+        "feature": "stage",
+        "prediction": 0.2631186188683762,
+        "scenario": "cohort_typical",
+        "value": 3.0
+      }
+    ]
+  },
+  "F5": {
+    "baseline_matches_documented": false,
+    "baseline_prediction": 0.29784041411943285,
+    "expected_reference": 0.274846560155602,
+    "imputed_values": {
+      "age": 55.0,
+      "albumin": 3.5,
+      "bili": 1.0,
+      "edema": 0.0,
+      "protime": 10.67207448800717
+    },
+    "multiple_imputation": {
+      "band_counts": {
+        "high": 0,
+        "low": 0,
+        "moderate": 20
+      },
+      "max": 0.31668897001540236,
+      "mean": 0.29240091609795865,
+      "min": 0.27571687354521424,
+      "n": 20,
+      "q10": 0.28037454900862063,
+      "q50": 0.2907673290814293,
+      "q90": 0.3029523495456203,
+      "range_pp": 4.097209647018812,
+      "sd": 0.010333940825482944
+    },
+    "note": "exploratory full-cohort F5 fit, not the deployed model",
+    "scenarios": [
+      {
+        "delta_pp": 0.0,
+        "prediction": 0.29784041411943285,
+        "scenario": "only_observed"
+      },
+      {
+        "delta_pp": -0.0735549952045833,
+        "prediction": 0.297104864167387,
+        "scenario": "cohort_typical"
+      },
+      {
+        "delta_pp": -0.17543520931078138,
+        "prediction": 0.29608606202632504,
+        "scenario": "clinically_normal"
+      },
+      {
+        "delta_pp": -0.8828877632792997,
+        "prediction": 0.28901153648663985,
+        "scenario": "p10_optional"
+      },
+      {
+        "delta_pp": -0.0735549952045833,
+        "prediction": 0.297104864167387,
+        "scenario": "p50_optional"
+      },
+      {
+        "delta_pp": 1.4785390267519682,
+        "prediction": 0.31262580438695253,
+        "scenario": "p90_optional"
+      },
+      {
+        "delta_pp": 0.1308110796338302,
+        "prediction": 0.29914852491577115,
+        "scenario": "protime_10_8"
+      },
+      {
+        "delta_pp": 0.0,
+        "prediction": 0.29784041411943285,
+        "scenario": "stage_3"
+      },
+      {
+        "delta_pp": 3.4329673880157454,
+        "prediction": 0.3321700879995903,
+        "scenario": "age_60"
+      },
+      {
+        "delta_pp": 3.2642185069531484,
+        "prediction": 0.33048259918896433,
+        "scenario": "albumin_3_4"
+      },
+      {
+        "delta_pp": 0.8618031439041218,
+        "prediction": 0.30645844555847407,
+        "scenario": "bili_1_1"
+      }
+    ],
+    "tornado": [
+      {
+        "delta_pp": -0.8828877632792997,
+        "feature": "protime",
+        "prediction": 0.28901153648663985,
+        "scenario": "p10",
+        "value": 9.8
+      },
+      {
+        "delta_pp": -0.0735549952045833,
+        "feature": "protime",
+        "prediction": 0.297104864167387,
+        "scenario": "p50",
+        "value": 10.6
+      },
+      {
+        "delta_pp": 1.4785390267519682,
+        "feature": "protime",
+        "prediction": 0.31262580438695253,
+        "scenario": "p90",
+        "value": 12.1
+      },
+      {
+        "delta_pp": -0.17543520931078138,
+        "feature": "protime",
+        "prediction": 0.29608606202632504,
+        "scenario": "clinically_normal",
+        "value": 10.5
+      },
+      {
+        "delta_pp": -0.0735549952045833,
+        "feature": "protime",
+        "prediction": 0.297104864167387,
+        "scenario": "cohort_typical",
+        "value": 10.6
+      }
+    ]
+  }
+}

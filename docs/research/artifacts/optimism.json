@@ -1,0 +1,110 @@
+{
+  "F17": {
+    "unweighted": {
+      "auc": {
+        "apparent": 0.9135517612674974,
+        "mean_optimism": 0.024858790955237638,
+        "n_resamples": 500,
+        "optimism_corrected": 0.8886929703122597
+      },
+      "brier": {
+        "apparent": 0.115197957721943,
+        "mean_optimism": -0.018746188686300208,
+        "n_resamples": 500,
+        "optimism_corrected": 0.1339441464082432
+      },
+      "calibration_intercept": {
+        "apparent": 0.016430318891055708,
+        "mean_optimism": 0.10686810105535326,
+        "n_resamples": 500,
+        "optimism_corrected": -0.09043778216429754
+      },
+      "calibration_slope": {
+        "apparent": 1.0415651976340259,
+        "mean_optimism": 0.241431030834436,
+        "n_resamples": 500,
+        "optimism_corrected": 0.8001341667995898
+      }
+    },
+    "weighted": {
+      "auc": {
+        "apparent": 0.915128441778188,
+        "mean_optimism": 0.025075065374557746,
+        "n_resamples": 500,
+        "optimism_corrected": 0.8900533764036302
+      },
+      "brier": {
+        "apparent": 0.11665375804693864,
+        "mean_optimism": -0.018640526080855133,
+        "n_resamples": 500,
+        "optimism_corrected": 0.13529428412779376
+      },
+      "calibration_intercept": {
+        "apparent": -0.39210855285123497,
+        "mean_optimism": 0.01551369550883366,
+        "n_resamples": 500,
+        "optimism_corrected": -0.4076222483600686
+      },
+      "calibration_slope": {
+        "apparent": 1.0217232369534783,
+        "mean_optimism": 0.23848394359648478,
+        "n_resamples": 500,
+        "optimism_corrected": 0.7832392933569936
+      }
+    }
+  },
+  "F5": {
+    "unweighted": {
+      "auc": {
+        "apparent": 0.877326565143824,
+        "mean_optimism": 0.007902784187048158,
+        "n_resamples": 500,
+        "optimism_corrected": 0.8694237809567759
+      },
+      "brier": {
+        "apparent": 0.136522122459397,
+        "mean_optimism": -0.005719158001809923,
+        "n_resamples": 500,
+        "optimism_corrected": 0.1422412804612069
+      },
+      "calibration_intercept": {
+        "apparent": 0.03864794525000255,
+        "mean_optimism": 0.051353854915699396,
+        "n_resamples": 500,
+        "optimism_corrected": -0.012705909665696846
+      },
+      "calibration_slope": {
+        "apparent": 1.0651862562853969,
+        "mean_optimism": 0.08393415697633597,
+        "n_resamples": 500,
+        "optimism_corrected": 0.9812520993090609
+      }
+    },
+    "weighted": {
+      "auc": {
+        "apparent": 0.8794800799876942,
+        "mean_optimism": 0.008216351330564546,
+        "n_resamples": 500,
+        "optimism_corrected": 0.8712637286571296
+      },
+      "brier": {
+        "apparent": 0.13768669951103463,
+        "mean_optimism": -0.005667551980735306,
+        "n_resamples": 500,
+        "optimism_corrected": 0.14335425149176995
+      },
+      "calibration_intercept": {
+        "apparent": -0.3772837807825024,
+        "mean_optimism": 0.019000296379402214,
+        "n_resamples": 500,
+        "optimism_corrected": -0.3962840771619046
+      },
+      "calibration_slope": {
+        "apparent": 1.0347556044008974,
+        "mean_optimism": 0.08080471125381183,
+        "n_resamples": 500,
+        "optimism_corrected": 0.9539508931470856
+      }
+    }
+  }
+}

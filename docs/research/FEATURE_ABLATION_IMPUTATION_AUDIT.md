@@ -143,10 +143,10 @@ albumin 3.5 g/dL, all optional fields blank. Current prediction: `27.4847%`.
 |---|---:|
 | Only five observed inputs, 12 imputed | 27.4847% |
 | `protime = 10.8` added | 27.5358% |
-| Cohort-typical optional values | 19.15% |
-| Clinically normal optional values | 2.14% |
-| All optional values at p10 | 4.84% |
-| All optional values at p90 | 82.96% |
+| Cohort-typical optional values | 27.61% |
+| Clinically normal optional values | 1.94% |
+| All optional values at p10 | 4.91% |
+| All optional values at p90 | 82.74% |
 | `stage = 3` | 26.31% |
 | `age = 60` | 31.44% |
 | `albumin = 3.4` | 30.59% |
@@ -498,6 +498,12 @@ secondary or exploratory.
   70 of those patients have a complete Mayo score, and those 70 contain 33
   events. The held-out split had not been evaluated when this correction was
   made. This is a factual clarification, not an analysis change.
+- **2026-11-02, exploratory-value correction:** regenerated the Patient B
+  optional-value scenarios with the leak-free harness. The earlier table used
+  a different scenario definition. The corrected values are 27.61%
+  (cohort-typical), 1.94% (clinically normal), 4.91% (p10) and 82.74% (p90).
+  Only the 12 genuinely imputed fields are varied; the five observed fields
+  stay fixed. The frozen hypotheses and analysis plan are unchanged.
 
 No other deviations yet. Any post-freeze change must be appended here with a
 date, reason and whether it is exploratory.

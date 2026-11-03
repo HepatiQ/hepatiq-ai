@@ -80,12 +80,14 @@ listed field.
 | `copper = 95` | 27.55% |
 | `alk.phos = 2050` | 27.48% |
 | `chol = 346` | 27.49% |
-| All cohort-typical optional values | 26.37% |
+| All cohort-typical optional values | 27.61% |
 | `age = 60` | 31.44% |
 | `bili = 1.1` | 28.12% |
 | `albumin = 3.4` | 30.59% |
 
-None of these tested variants produced `25.00%`.
+These values are produced by `patient_b_sensitivity`; cohort-typical uses
+medians of the 329 labeled patients. None of these tested variants produced
+`25.00%`.
 
 ## 5. What is needed to reproduce `25.00%`
 

@@ -1,0 +1,20 @@
+{
+  "bounds": {
+    "best_case_event_rate": 0.3157894736842105,
+    "best_case_events": 132,
+    "censored_before_5y": 89,
+    "labeled": 329,
+    "n_total": 418,
+    "primary_event_rate": 0.4012158054711246,
+    "primary_events": 132,
+    "worst_case_event_rate": 0.5287081339712919,
+    "worst_case_events": 221
+  },
+  "death_only": {
+    "death_rate": 0.3685897435897436,
+    "deaths": 115,
+    "dropped_transplant_or_censored": 106,
+    "n_labeled": 312
+  },
+  "note": "best/worst-case bounds include censoring uncertainty; death-only drops transplants"
+}
