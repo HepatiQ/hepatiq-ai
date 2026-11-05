@@ -1,9 +1,11 @@
 # Results: Feature Ablation and Imputation Audit
 
-Status: **draft, primary, robustness, one-time internal held-out, and SHAP
-attribution analyses complete.** No production model, inference path,
-threshold, or deployment was changed. The held-out split has been used once
-and is now sealed by a guard in the CLI.
+Status: **draft. Primary, robustness, one-time internal held-out, sensitivity,
+and SHAP attribution analyses are complete. Two items remain blocked: exact
+reproduction of the 25.00% Patient B payload and the Mayo 5.76% probability
+comparison.** No production model, inference path, threshold, or deployment was
+changed. The held-out split has been used once and is now sealed by a guard in
+the CLI.
 
 Protocol: [FEATURE_ABLATION_IMPUTATION_AUDIT.md](FEATURE_ABLATION_IMPUTATION_AUDIT.md)
 frozen in `1e10a13` and corrected in `a691da3`; hash in
@@ -19,7 +21,7 @@ frozen in `1e10a13` and corrected in `a691da3`; hash in
 | Model version | `bc96bb1d` (`/health`) |
 | Pipeline | `IterativeImputer(max_iter=10, random_state=42)` -> `StandardScaler` -> `LogisticRegression(C=1.0, class_weight="balanced", solver="lbfgs", max_iter=2000, random_state=42)` |
 | Cohort | 329 labeled patients, 132 events, 89 censored/dropped |
-| Validation | 128 passed, 2 skipped with E2E backend disabled; 37 research tests passed; `ruff check .` passed |
+| Validation | 128 passed, 2 skipped with E2E backend disabled (Linux CI); 37 research tests passed; `ruff check .` passed. Windows fresh worktrees can fail external-data SHA checks because of CRLF checkout, which is not a code failure. |
 | Artifacts | [`artifacts/`](artifacts/) |
 
 F17 means the deployed 17 features. F5 is the Mayo-compatible subset
@@ -39,7 +41,7 @@ indicators. Ordinary models are unweighted; "weighted" means
 | Censored/dropped | 89 |
 | Deaths only | 115 |
 | Transplants | 17 |
-| Event rate, labeled | 31.58% |
+| Event rate, labeled (132/329) | 40.12% |
 
 Target: death or transplant within 1825 days = 1; known event-free at 1825 = 0;
 censored before 1825 is dropped. This is a composite endpoint, not
@@ -63,7 +65,11 @@ similar. ECE alone is not sufficient evidence of better calibration.
 
 ## F17 versus F5
 
-Paired bootstrap, 2000 resamples, seed 42. Positive delta favors F17.
+Paired bootstrap, 2000 resamples, seed 42. Deltas are F17 minus F5, so
+direction is metric-dependent. Higher AUC is better, so a positive AUC delta
+favors F17. Lower Brier is better, so a negative Brier delta favors F17.
+Calibration slope is better when closer to 1; all slopes here are below 1, so
+a positive slope delta would favor F17 and the negative slope deltas favor F5.
 
 | Metric | Weighting | Delta | 95% CI | p |
 |---|---|---:|---:|---:|
@@ -76,6 +82,9 @@ Paired bootstrap, 2000 resamples, seed 42. Positive delta favors F17.
 
 Holm correction over AUC and slope: weighted 0.124 and 0.734; unweighted
 0.096 and 0.576. No primary contrast survives multiplicity correction.
+Protocol deviation: the third protocol primary endpoint is a descriptive
+imputation range, not a hypothesis test, so Holm was applied to the two
+testable contrasts rather than to all three endpoints.
 
 The AUC gain is consistently positive but below the pre-specified 0.02
 materiality threshold and its confidence interval includes zero. F17 does not
@@ -119,7 +128,10 @@ delta: unweighted +0.0193, weighted +0.0188, still just below the 0.02
 materiality threshold. Corrected slope gap: unweighted -0.181, weighted
 -0.171. The robustness conclusion is unchanged and slightly stronger:
 F17's apparent discrimination gain is partly optimism, and its calibration
-slope is worse after correction.
+slope is worse after correction. The optimism-corrected deltas are point
+estimates without a paired bootstrap confidence interval; they do not satisfy
+the protocol's lower-bound materiality rule and are reported as a sensitivity
+analysis, not as confirmation.
 
 ## Secondary feature sets
 
@@ -138,18 +150,21 @@ F17+IND is worse than F17 on both AUC and calibration.
 
 ## Imputation sensitivity, Patient B
 
-Patient B is the documented 68-year-old woman with ascites, hepatomegaly,
-spiders, edema, total bilirubin 2.3, albumin 3.2, and platelets 120. Five
-fields are observed: age, bilirubin, albumin, edema, sex. Twelve fields are
-imputed. Only those 12 are varied in optional-value scenarios; observed fields
-stay fixed.
+Patient B is a 55-year-old woman with edema 0, total bilirubin 1.0 mg/dL, and
+albumin 3.5 g/dL. Five fields are observed: age 55, sex (female), edema 0,
+bilirubin 1.0, and albumin 3.5. The other 12 fields are blank and imputed.
 
-Deployed F17 model 5-year prediction: **27.48%**. This is a 5-year composite
+The percentile scenarios (p10/p50/p90) vary the 12 imputed optional fields
+together. The single-field `age`, `albumin`, and `bili` rows are observed-field
+stress tests that perturb observed values; `protime` and `stage` are single
+optional-field scenarios.
+
+Deployed F17 model 5-year prediction: **27.4847%**. This is a 5-year composite
 outcome probability, not a transplant-free survival percentage.
 
 | Scenario | F17 | F5 fitted on the full cohort |
 |---|---:|---:|
-| Only observed values | 27.48% | 29.78% |
+| Only observed values | 27.4847% | 29.78% |
 | Cohort-typical optional values | 27.61% | 29.71% |
 | Clinically normal optional values | 1.94% | 29.61% |
 | All optional values at p10 | 4.91% | 28.90% |
@@ -161,8 +176,9 @@ outcome probability, not a transplant-free survival percentage.
 | `albumin = 3.4` | 30.59% | 33.05% |
 | `bili = 1.1` | 28.12% | 30.65% |
 
-F17 optional-value range: **80.80 percentage points**. F5 range: **4.32
-percentage points**.
+F17 optional-value range: **80.80 percentage points**. F5 optional-value
+range: **2.36 percentage points**. F5's all-scenario range, including the
+observed-field stress tests, is **4.32 percentage points**.
 
 Twenty-draw multiple imputation:
 
@@ -178,7 +194,7 @@ exploratory: the F5 model was fitted on the full cohort for this illustration,
 not deployed.
 
 Interpretation: at Patient B's fixed observed values, F17's optional inputs
-control the risk band. The point estimate of 27.48% is not a robust
+control the risk band. The point estimate of 27.4847% is not a robust
 individual-level estimate.
 
 ## All-patient imputation sensitivity
@@ -196,7 +212,7 @@ draws.
 | Mean per-patient scenario range | 73.65 pp |
 | Maximum per-patient scenario range | 87.92 pp |
 | Mean per-patient MI SD | 18.53 pp |
-| Mean band change, baseline to MI mean | 17.33% |
+| Mean band-change rate, baseline to MI mean | 17.33% of patients |
 | Any-draw band change | 85.11% |
 
 | Scenario | Mean prediction | Mean delta vs plug-in |
@@ -210,10 +226,10 @@ draws.
 
 Randomized versus non-randomized:
 
-| Group | n | Mean scenario range | Mean MI SD | Mean band change | Any-draw change |
+| Group | n | Mean scenario range | Mean MI SD | Mean band-change rate | Any-draw change |
 |---|---:|---:|---:|---:|---:|
-| Randomized | 257 | 72.64 pp | 18.32 pp | 15.18% | 85.99% |
-| Non-randomized | 72 | 77.22 pp | 19.27 pp | 25.00% | 81.94% |
+| Randomized | 257 | 72.64 pp | 18.32 pp | 15.18% of patients | 85.99% |
+| Non-randomized | 72 | 77.22 pp | 19.27 pp | 25.00% of patients | 81.94% |
 
 The instability is not confined to Patient B. Optional-value scenarios move
 the average patient by roughly 74 percentage points, and 85% of patients have
@@ -232,7 +248,7 @@ Patient B:
 
 | Scenario | Prediction | Top feature (impact, log-odds) | Mean absolute SHAP change |
 |---|---:|---|---:|
-| Only observed, plug-in | 27.48% | bilirubin (-0.640) | 0.000 |
+| Only observed, plug-in | 27.4847% | bilirubin (-0.640) | 0.000 |
 | Cohort-typical optional | 27.61% | bilirubin (-0.640) | 0.051 |
 | Clinically normal optional | 1.94% | stage (-1.593) | 0.223 |
 | Optional p10 | 4.91% | stage (-0.821) | 0.155 |
@@ -285,15 +301,16 @@ unstable incremental signal and with the optimism-corrected result.
 
 ## Censoring sensitivity
 
-| Scenario | Labeled | Events | Event rate |
+| Scenario | Denominator (n) | Events | Event rate |
 |---|---:|---:|---:|
-| Primary (censor before 1825 dropped) | 329 | 132 | 31.58% |
-| Best case (all censored survive) | 329 | 132 | 31.58% |
-| Worst case (all censored have events) | 329 | 221 | 52.87% |
-| Death only, transplant treated as non-event | 312 | 115 | 36.86% |
+| Primary (censor before 1825 dropped) | 329 labeled | 132 | 40.12% (132/329) |
+| Best case (all censored survive) | 418 all-cohort | 132 | 31.58% (132/418) |
+| Worst case (all censored have events) | 418 all-cohort | 221 | 52.87% (221/418) |
+| Death only, transplant treated as non-event | 312 labeled | 115 | 36.86% (115/312) |
 
-The event rate is bounded between 31.58% and 52.87% under the primary
-5-year composite definition. The death-only analysis drops 106 records
+The primary labeled-cohort event rate is 40.12% (132/329). Under the
+all-cohort best/worst-case bounds (n=418) it spans 31.58% to 52.87%
+(132/418 to 221/418). The death-only analysis drops 106 records
 (transplants and censored patients), so it answers a different question.
 Results should be reported with the composite-endpoint definition, not as
 transplant-free survival.
@@ -315,11 +332,13 @@ in the repository.
 | p | 0.783 |
 
 There is no evidence that HepatIQ discriminates better than the Mayo score on
-this cohort. An earlier resubstitution estimate of 0.914 for HepatIQ was
-optimistic because the deployed model was scored on its own training cohort;
-it is not a valid comparison and is discarded.
+this cohort; the confidence interval includes both a modest advantage and a
+modest disadvantage. A null result is not evidence of equivalence. An earlier
+resubstitution estimate of 0.914 for HepatIQ was optimistic because the
+deployed model was scored on its own training cohort; it is not a valid
+comparison and is discarded.
 
-Mayo's 5.76% probability remains non-comparable until the exact formula,
+Mayo's 5.76% probability comparison remains blocked until the exact formula,
 baseline survival function, units, and endpoint are verified.
 
 ## Held-out evaluation
@@ -334,12 +353,15 @@ only discrimination and Brier are interpreted; calibration slope is not used.
 | F17 | 257 / 98 | 72 / 34 | 0.8259 (0.7280, 0.9114) | 0.1761 (0.1256, 0.2289) |
 | F5 | 257 / 98 | 72 / 34 | 0.8359 (0.7343, 0.9262) | 0.1647 (0.1184, 0.2147) |
 
-F17 did not outperform F5 on the held-out set: its AUC was lower by about
-0.010 and its Brier score was worse by about 0.011. The confidence intervals
-overlap substantially. This supports the conclusion that the 17-feature
-increment is not material and does not establish held-out superiority.
+F17's point estimates were lower than F5's on AUC (0.8259 vs 0.8359) and
+worse on Brier (0.1761 vs 0.1647). This comparison is inconclusive in one
+internal split: the test set is small (72 patients / 34 events), structural
+missingness differs between the randomized training patients and the
+non-randomized test patients, and no paired delta confidence interval was
+reported. The result does not support a material 17-feature advantage, but it
+also does not establish that F5 is better.
 
-## Reproduction of 25.00% versus 27.48%
+## Reproduction of 25.00% versus 27.4847%
 
 The deployed model reproduces **27.4847%** for Patient B with the documented
 payload. The exact payload that produced **25.00%** is not in the repository
@@ -352,22 +374,27 @@ optional-field blanks, app version, and timestamp are recovered.
 
 ## Interpretation against the hypotheses
 
-- H1 (small discrimination gain, calibration tradeoff): supported. F17 gains
+- H1 (small discrimination gain, calibration tradeoff): supported as a failure
+  to demonstrate a material gain, not as proof of no difference. F17 gains
   0.013-0.015 AUC out-of-fold and 0.019 after optimism correction, below the
   0.02 materiality threshold, while its calibration slope is worse.
 - H2 (F17 calibration is worse): partially supported. Slope is worse and
   weighted CITL is more negative; ECE favors F17 and ICI is similar. The
   out-of-fold slope result is borderline under Holm correction; the
-  optimism-corrected slope gap is larger and consistent.
+  optimism-corrected slope gap is larger but has no confidence interval, so it
+  is supporting evidence rather than a confirmed effect.
 - H3 (imputation sensitivity): strongly supported. F17 optional-value range is
   80.8 percentage points for Patient B, 73.6 points on average across patients,
   and multiple imputation spans 60.1 points for Patient B. SHAP explanations
   are also unstable: clinically normal values change the top contributor in
   90% of patients, and individual MI draws change it in 52.9%.
 - H4 (25.00% reproducibility): blocked. The exact payload is missing.
-- H5 (held-out performance): evaluated once. F17 did not outperform F5 on
-  held-out AUC or Brier; the point estimates favor F5. This does not support a
-  material 17-feature advantage.
+- H5 (held-out performance): evaluated once; inconclusive in one internal
+  split. F5's point estimates were slightly better on held-out AUC and Brier,
+  but the test set is small (72 patients / 34 events), train and test differ in
+  structural missingness, and no paired delta CI was reported. This does not
+  support a material 17-feature advantage and does not establish that F5 is
+  better.
 
 ## What this means
 
@@ -375,21 +402,26 @@ F17 is a modest discrimination gain over F5, not a material one. Its
 individual-level prediction is highly sensitive to plausible imputation of
 optional inputs, and its calibration slope is worse. This is a cohort-wide
 pattern, not a Patient B anomaly. F5 is less discriminative but markedly more
-stable and better calibrated. The deployed 17-feature model
+stable and has a better calibration slope and less negative CITL; ECE and ICI
+do not consistently favor F5. The deployed 17-feature model
 is not defensible as a precise individual-risk calculator on this evidence.
 
-The one-time held-out check points the same way: F5 slightly outperformed F17
-on discrimination and Brier. This does not prove the model is harmful, and it
-does not establish that F5 should replace it in production. It does mean that
-claims of a large incremental benefit from the 17 features, or of a stable
-Patient B risk, are not supported by the audit.
+The one-time held-out check is inconclusive, not a demonstration that F5 is
+better: F5's point estimates were slightly better on discrimination and Brier,
+but the internal split is small (72 patients / 34 events), train and test
+differ in structural missingness, and no paired delta CI was reported. This
+does not prove the model is harmful, and it does not establish that F5 should
+replace it in production. It does mean that claims of a large incremental
+benefit from the 17 features, or of a stable Patient B risk, are not supported
+by the audit.
 
 ## Pending
 
 1. Mayo probability comparison, if the baseline survival function is supplied.
 2. Exact 25.00% payload recovery.
-3. Calibration plot correction; the current plot uses hardcoded arrays and is
-   not evidence.
+3. Calibration plot correction; the current plot in this research branch still
+   uses hardcoded arrays and is not evidence. The correction on
+   `fix/calibration-plot-integrity` is not merged into this research branch.
 4. External validation; the held-out split is internal.
 
 ## Artifact map
