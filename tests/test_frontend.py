@@ -60,7 +60,7 @@ def test_form_submit_renders_scorecard(monkeypatch):
     assert not at.exception, at.exception
 
     assert len(at.metric) == 1
-    assert at.metric[0].label == "Estimated 5-year severe event risk"
+    assert at.metric[0].label == "Estimated 5-Year Risk of Death or Liver Transplantation"
     assert at.metric[0].value.endswith("%")
 
     direct = build_model_frame(
