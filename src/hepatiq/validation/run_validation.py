@@ -60,13 +60,28 @@ METRICS = {
 }
 
 
-def out_of_fold_predictions(features: pd.DataFrame, target: pd.Series):
+def out_of_fold_predictions(
+    features: pd.DataFrame,
+    target: pd.Series,
+) -> tuple[np.ndarray, np.ndarray]:
     """Return (model_oof, prior_oof) probability arrays, one value per patient."""
+    if len(features) != len(target):
+        raise ValueError("features and target must have equal lengths")
+    if not features.index.equals(target.index):
+        raise ValueError("features and target must share the same index")
+    if not target.isin([0, 1]).all():
+        raise ValueError("target must contain only 0 and 1")
+
     cv = StratifiedKFold(n_splits=N_FOLDS, shuffle=True, random_state=SEED)
     model_oof = np.zeros(len(target))
     prior_oof = np.zeros(len(target))
     for train_idx, test_idx in cv.split(features, target):
         pipe = joblib.load(MODEL_PATH)
+        expected_features = getattr(pipe, "feature_names_in_", None)
+        if expected_features is not None and list(features.columns) != list(expected_features):
+            raise ValueError(
+                f"feature columns do not match the deployed model: {list(features.columns)}"
+            )
         pipe.fit(features.iloc[train_idx], target.iloc[train_idx])
         model_oof[test_idx] = pipe.predict_proba(features.iloc[test_idx])[:, 1]
         prior_oof[test_idx] = float(target.iloc[train_idx].mean())

@@ -7,6 +7,7 @@ Statistical validation for the HepatiQ model (owner: Rudra).
 - **`validate.py`** — reusable statistics: `bootstrap_ci` (deterministic percentile bootstrap, seedable) and `compare_to_meld` (model-vs-clinical-score Brier/AUC comparison, used by tests).
 - **`run_validation.py`** — the validation runner: generates 5-fold out-of-fold (OOF) predictions with a fresh pipeline per fold (no leakage), scores ROC-AUC, Brier, precision, recall and F1 with 95% bootstrap CIs, and compares against a class-prior baseline.
 - **`report.md`** — the committed report produced by the runner. Regenerate it with the command below; it is deterministic (folds and bootstrap both seed 42).
+- **`calibration_plot.py`** — OOF reliability diagram computed from genuine 5-fold predictions, using quantile bins and bin counts. Generates `calibration_plot.png`; the generated image is not committed.
 
 ## Running
 
@@ -14,6 +15,7 @@ Statistical validation for the HepatiQ model (owner: Rudra).
 pip install -r requirements.txt   # once, from the repo root
 pip install -e . --no-deps
 python -m hepatiq.validation.run_validation
+python -m hepatiq.validation.calibration_plot
 ```
 
 Latest results (n=329, 132 events): **ROC-AUC 0.8828 [0.8409, 0.9185]** vs. class-prior baseline 0.4924; Brier 0.1364 vs. 0.2403 — the model separates clearly from the baseline on both.
@@ -24,7 +26,7 @@ A clinical-score benchmark (MELD) needs bilirubin, INR and creatinine. The Mayo 
 
 ## Notes for contributors
 
-- Tests for the validation helpers live in `tests/test_validation.py` (run the whole suite with `python -m pytest`).
+- Tests for the validation helpers live in `tests/test_validation.py` and `tests/test_calibration_plot.py` (run the whole suite with `python -m pytest`).
 - Keep the runner deterministic: seed every split and bootstrap, don't read anything time-dependent.
 - Update `report.md` whenever the model or cohort changes, and mention it in the PR.
 
