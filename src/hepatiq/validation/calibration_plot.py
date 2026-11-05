@@ -10,6 +10,10 @@ from hepatiq.paths import CALIBRATION_PLOT_PATH, PROCESSED_DATA
 from hepatiq.validation.run_validation import N_FOLDS, SEED, out_of_fold_predictions
 
 
+def load_data(path: str = str(PROCESSED_DATA)) -> pd.DataFrame:
+    return pd.read_csv(path)
+
+
 def reliability_curve(
     y_true: np.ndarray,
     y_prob: np.ndarray,
@@ -17,8 +21,9 @@ def reliability_curve(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Return (prob_pred, prob_true, counts) using quantile bins.
 
-    Empty bins are dropped from the returned curve but remain visible in the
-    input validation; callers can compare the returned count sum to n.
+    Empty bins are dropped from the returned curve; callers can compare the
+    returned count sum to n. Duplicate quantile edges are collapsed and ties are
+    assigned to the higher bin, matching the research metrics implementation.
     """
     labels = np.asarray(y_true, dtype=float).ravel()
     probabilities = np.asarray(y_prob, dtype=float).ravel()
@@ -27,6 +32,8 @@ def reliability_curve(
         raise ValueError("y_true and y_prob must have equal lengths")
     if labels.size == 0:
         raise ValueError("y_true and y_prob must not be empty")
+    if not isinstance(n_bins, (int, np.integer)):
+        raise ValueError("n_bins must be an integer")
     if n_bins < 2:
         raise ValueError("n_bins must be at least 2")
     if n_bins > labels.size:
@@ -40,8 +47,11 @@ def reliability_curve(
     if np.unique(labels).size < 2:
         raise ValueError("y_true must contain both classes")
 
-    edges = np.percentile(probabilities, np.linspace(0.0, 100.0, n_bins + 1))
-    bin_ids = np.searchsorted(edges[1:-1], probabilities)
+    edges = np.unique(np.quantile(probabilities, np.linspace(0.0, 1.0, n_bins + 1)))
+    if edges.size < 2:
+        bin_ids = np.zeros(probabilities.size, dtype=int)
+    else:
+        bin_ids = np.searchsorted(edges[1:-1], probabilities, side="right")
     bin_total = np.bincount(bin_ids, minlength=n_bins)
     bin_probability = np.bincount(bin_ids, weights=probabilities, minlength=n_bins)
     bin_positive = np.bincount(bin_ids, weights=labels, minlength=n_bins)
@@ -54,7 +64,7 @@ def reliability_curve(
 
 
 def main() -> None:
-    df = pd.read_csv(PROCESSED_DATA)
+    df = load_data()
     features, _ids, target = build_feature_frame(df)
     model_oof, _prior_oof = out_of_fold_predictions(features, target)
     model_oof = np.asarray(model_oof, dtype=float)
