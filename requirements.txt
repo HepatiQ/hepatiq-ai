@@ -24,6 +24,7 @@ plotly==7.0.0
 # Validation 
 scipy==1.18.1
 statsmodels==0.15.0
+matplotlib==3.11.1
 
 # Testing / CI
 pytest==9.1.1
