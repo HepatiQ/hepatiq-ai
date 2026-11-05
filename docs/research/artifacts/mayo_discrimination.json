@@ -1,0 +1,24 @@
+{
+  "delta_auc_hepatiq_minus_mayo": {
+    "lower": -0.034508456761273995,
+    "p_value": 0.783,
+    "point": -0.004712572051721375,
+    "upper": 0.025547043557359473
+  },
+  "events": 131,
+  "hepatiq_auc": {
+    "lower": 0.8420951769595565,
+    "n_valid": 2000,
+    "point": 0.8817183361894376,
+    "upper": 0.9184400296547984
+  },
+  "hepatiq_predictions": "out-of-fold F17 weighted, seed 42",
+  "mayo_auc": {
+    "lower": 0.8458403545252094,
+    "n_valid": 2000,
+    "point": 0.886430908241159,
+    "upper": 0.9219296623105678
+  },
+  "n": 327,
+  "probability_comparison": "blocked: Mayo baseline survival function is not in the repository"
+}

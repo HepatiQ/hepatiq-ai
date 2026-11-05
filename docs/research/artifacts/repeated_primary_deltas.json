@@ -1,0 +1,138 @@
+{
+  "unweighted": {
+    "delta_auc": {
+      "max": 0.022458083371789006,
+      "mean": 0.01603214890016915,
+      "min": 0.007191201353637933,
+      "positive_seeds": 10,
+      "sd": 0.005014079985251248
+    },
+    "delta_calibration_slope": {
+      "max": -0.10769018511044914,
+      "mean": -0.17936384859387414,
+      "min": -0.2654648960687901,
+      "negative_seeds": 10,
+      "sd": 0.04992165781764554
+    },
+    "repeats": [
+      {
+        "delta_auc": 0.015189970773726968,
+        "delta_calibration_slope": -0.20061161834329355,
+        "seed": 42
+      },
+      {
+        "delta_auc": 0.018151053684048457,
+        "delta_calibration_slope": -0.15148869884487448,
+        "seed": 43
+      },
+      {
+        "delta_auc": 0.00992155053068755,
+        "delta_calibration_slope": -0.17625945474298665,
+        "seed": 44
+      },
+      {
+        "delta_auc": 0.014420858329487585,
+        "delta_calibration_slope": -0.14087660156326198,
+        "seed": 45
+      },
+      {
+        "delta_auc": 0.022458083371789006,
+        "delta_calibration_slope": -0.10769018511044914,
+        "seed": 46
+      },
+      {
+        "delta_auc": 0.021035225349946063,
+        "delta_calibration_slope": -0.1414551533225118,
+        "seed": 47
+      },
+      {
+        "delta_auc": 0.017381941239809295,
+        "delta_calibration_slope": -0.20898242367486153,
+        "seed": 48
+      },
+      {
+        "delta_auc": 0.021265959083218045,
+        "delta_calibration_slope": -0.15590821370054353,
+        "seed": 49
+      },
+      {
+        "delta_auc": 0.013305645285340617,
+        "delta_calibration_slope": -0.24490124056716844,
+        "seed": 50
+      },
+      {
+        "delta_auc": 0.007191201353637933,
+        "delta_calibration_slope": -0.2654648960687901,
+        "seed": 51
+      }
+    ]
+  },
+  "weighted": {
+    "delta_auc": {
+      "max": 0.022650361482848824,
+      "mean": 0.01545531456698972,
+      "min": 0.007575757575757569,
+      "positive_seeds": 10,
+      "sd": 0.0050077840552114
+    },
+    "delta_calibration_slope": {
+      "max": -0.08851888413228604,
+      "mean": -0.16533005997875333,
+      "min": -0.25169835633822213,
+      "negative_seeds": 10,
+      "sd": 0.049772857359905776
+    },
+    "repeats": [
+      {
+        "delta_auc": 0.013151822796492962,
+        "delta_calibration_slope": -0.19375639208768458,
+        "seed": 42
+      },
+      {
+        "delta_auc": 0.017343485617597243,
+        "delta_calibration_slope": -0.14288189222550884,
+        "seed": 43
+      },
+      {
+        "delta_auc": 0.008537148131056771,
+        "delta_calibration_slope": -0.16420704706492983,
+        "seed": 44
+      },
+      {
+        "delta_auc": 0.013497923396400435,
+        "delta_calibration_slope": -0.12837032832561146,
+        "seed": 45
+      },
+      {
+        "delta_auc": 0.022650361482848824,
+        "delta_calibration_slope": -0.08851888413228604,
+        "seed": 46
+      },
+      {
+        "delta_auc": 0.02049684663897866,
+        "delta_calibration_slope": -0.12386706296519567,
+        "seed": 47
+      },
+      {
+        "delta_auc": 0.017766497461929043,
+        "delta_calibration_slope": -0.1856157339034289,
+        "seed": 48
+      },
+      {
+        "delta_auc": 0.019689278572527336,
+        "delta_calibration_slope": -0.14737587128543184,
+        "seed": 49
+      },
+      {
+        "delta_auc": 0.013844023996308352,
+        "delta_calibration_slope": -0.22700903145923368,
+        "seed": 50
+      },
+      {
+        "delta_auc": 0.007575757575757569,
+        "delta_calibration_slope": -0.25169835633822213,
+        "seed": 51
+      }
+    ]
+  }
+}
