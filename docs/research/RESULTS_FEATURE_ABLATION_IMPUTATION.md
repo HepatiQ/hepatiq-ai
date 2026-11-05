@@ -16,12 +16,12 @@ frozen in `1e10a13` and corrected in `a691da3`; hash in
 | Item | Value |
 |---|---|
 | Branch | `research/feature-ablation-imputation-audit` |
-| Base | `main` at `db2bf514c37f27bfbae13ab79b559350bdcee970` |
+| Base | `main` at `0e0a209cc157e265e0f16404528d399a3e05b286` (calibration correction merged) |
 | Model | `models/model.pkl`, SHA-256 `BC96BB1D7399391EA103C65515A76E5F40E8A7CFD4ACDCE27D59D935020C31F1` |
 | Model version | `bc96bb1d` (`/health`) |
 | Pipeline | `IterativeImputer(max_iter=10, random_state=42)` -> `StandardScaler` -> `LogisticRegression(C=1.0, class_weight="balanced", solver="lbfgs", max_iter=2000, random_state=42)` |
 | Cohort | 329 labeled patients, 132 events, 89 censored/dropped |
-| Validation | 128 passed, 2 skipped with E2E backend disabled (Linux CI); 37 research tests passed; `ruff check .` passed. Windows fresh worktrees can fail external-data SHA checks because of CRLF checkout, which is not a code failure. |
+| Validation | 160 passed, 2 skipped with E2E backend disabled on the merged branch; 37 research tests passed; `ruff check .` passed. Fresh Windows worktrees can still fail external-data SHA checks because of CRLF checkout, which is not a code failure. |
 | Artifacts | [`artifacts/`](artifacts/) |
 
 F17 means the deployed 17 features. F5 is the Mayo-compatible subset
@@ -419,9 +419,8 @@ by the audit.
 
 1. Mayo probability comparison, if the baseline survival function is supplied.
 2. Exact 25.00% payload recovery.
-3. Calibration plot correction; the current plot in this research branch still
-   uses hardcoded arrays and is not evidence. The correction on
-   `fix/calibration-plot-integrity` is not merged into this research branch.
+3. Calibration plot correction: resolved; the correction from `main` is merged
+   into this branch. The generated plot is not committed.
 4. External validation; the held-out split is internal.
 
 ## Artifact map

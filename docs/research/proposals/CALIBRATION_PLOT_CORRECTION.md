@@ -1,8 +1,8 @@
 # Proposed Correction: Hardcoded Calibration Plot
 
-**Status:** proposal only; not implemented in the research branch  
-**Severity:** P0 integrity issue  
-**Separate branch:** `fix/calibration-plot-integrity`  
+**Status:** implemented on `main` via PR #38; merged into the research branch
+**Severity:** P0 integrity issue
+**Implemented branch:** `fix/calibration-plot-integrity`
 **Do not mix with:** feature-ablation and imputation experiments
 
 ## 1. Current defect
