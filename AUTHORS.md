@@ -1,6 +1,6 @@
 # Authors
 
-## HepatiQ v2 (`v2/clinical-rebuild`)
+## HepatiQ v2 (merged into `main`)
 
 Version 2 — the clinical-rebuild (survival targets, published-score
 benchmarks, landmark follow-up model, multipage app) — is designed, created,

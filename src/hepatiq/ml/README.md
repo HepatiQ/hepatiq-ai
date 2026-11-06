@@ -8,7 +8,7 @@ Model development for HepatiQ AI. Everything here imports path constants from
 
 | File | Purpose |
 | --- | --- |
-| `build_5yr_target.py` | Builds the labeled cohort: `data/raw/pbc.csv` → `data/processed/pbc_5yr_target.csv` |
+| `build_5yr_target.py` | Verifies `data/external/pbc.csv` provenance, then builds `data/processed/pbc_5yr_target.csv` |
 | `impute_pipeline.py` | Standalone IterativeImputer/StandardScaler exploration pipeline → `data/interim/` |
 | `train.py` | 5-fold CV comparison of LR / RF / XGBoost, selection rule, full-cohort refit |
 | `explain.py` | Per-patient SHAP explanation using the deployed model |
@@ -37,7 +37,8 @@ Outputs:
 
 ## Related
 
-- Data: `data/raw`, `data/processed`, `data/interim` (repo root)
+- Data: `data/external` (canonical training source), `data/raw` (archived lineage),
+  `data/processed`, `data/interim` (repo root)
 - Deployed artifact: `models/model.pkl`
 - Validation: `src/hepatiq/validation/`
 - Serving: `src/hepatiq/backend/`

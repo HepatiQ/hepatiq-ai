@@ -2,7 +2,8 @@
 
 - Model version: v1.0
 - Repository: HepatiQ AI
-- Last updated: September 2026
+- Last updated: November 2026
+- Artifact SHA-256: `bc96bb1d7399391ea103c65515a76e5f40e8a7cfd4acdce27d59d935020c31f1`
 
 ## Model Details
 - **Task**: binary classification — predict 5-year severe event risk (death or liver transplant) in patients with Primary Biliary Cholangitis (PBC)
@@ -18,8 +19,9 @@
 - Intended to supplement, not replace, clinician judgment — output is a probability score with SHAP-based explanation, not an automated decision
 
 ## Training Data
-- **Source**: Mayo Clinic Primary Biliary Cholangitis trial dataset (Kaggle variant, 419 patient records)
-- **Cohort construction**: patients censored before the 5-year mark (5-year outcome unknown) were dropped — 90 of 419 — leaving **329 patients**
+- **Source**: canonical `survival::pbc` Mayo Clinic Primary Biliary Cholangitis cohort (418 patient records), exported from CRAN `survival` 3.8-12 and pinned by SHA-256 in `data/external/PROVENANCE.json`
+- **Training input**: `data/external/pbc.csv`; the builder calls `verify_datasets()` before reading. The 419-row `data/raw/pbc.csv` is retained only as archived lineage.
+- **Cohort construction**: patients censored before the 5-year mark (5-year outcome unknown) were dropped — 89 of 418 — leaving **329 patients**
 - **Outcome definition**: `severe_event_5yr = 1` if death or transplant occurred within 1,825 days of baseline; `0` if event-free through 5 years
 - **Class balance**: 197 event-free (59.9%) vs. 132 severe event (40.1%)
 - **Features (17)**: `trt` (treatment arm), `age`, `sex`, `ascites`, `hepato` (hepatomegaly), `spiders` (spider angiomata), `edema`, `bili` (serum bilirubin, mg/dL), `chol` (serum cholesterol, mg/dL), `albumin` (g/dL), `copper` (urine copper, µg/day), `alk.phos` (alkaline phosphatase, U/L), `ast`, `trig` (triglycerides, mg/dL), `platelet`, `protime` (prothrombin time, seconds), `stage` (histologic stage, 1–4)
@@ -32,6 +34,12 @@
 | Logistic Regression | 0.880 [0.837, 0.923] | 0.767 | 0.810 | 0.786 | **0.136** |
 | Random Forest | **0.884** [0.828, 0.946] | 0.723 | 0.825 | 0.769 | 0.142 |
 | XGBoost | 0.870 [0.827, 0.913] | 0.722 | 0.788 | 0.750 | 0.153 |
+
+**Out-of-fold (OOF) validation** uses the same 5-fold stratified split with a fresh pipeline per fold and 1000-resample bootstrap 95% CIs (seed 42). OOF ROC-AUC is **0.8828 [0.8409, 0.9185]** and Brier **0.1364 [0.1136, 0.1632]**, versus a class-prior baseline AUC of **0.4924 [0.4277, 0.5514]**. The OOF intervals broadly agree with the CV-fold t-intervals above (AUC 0.8373–0.9227; Brier 0.1022–0.1703).
+
+**Calibration.** The weighted OOF model has a calibration slope of **0.725**, CITL **-0.498**, ECE **0.062**, and ICI **0.248**. Discrimination is good, but probabilities overpredict on average. Reliability diagrams are in `reports/figures/00_calibration_oof.png` and `reports/figures/01_reliability_f17_vs_f5.png`.
+
+**Held-out clinical benchmark.** On the 70 non-randomized patients with a complete score (33 events), the fixed 1989 Mayo Risk Score reached 5-year AUC **0.851 [0.749, 0.928]** versus **0.816 [0.712, 0.905]** for v1 retrained on the 312 randomized patients. The confidence intervals overlap, so this is not proof that the Mayo score is superior — but v1 has not demonstrated added value over the five-variable score. The full-cohort Mayo AUC (0.886) is apparent because the score was derived on this cohort. Details: `docs/SCORE_BENCHMARK.md`.
 
 ### Model selection
 Selected via a documented rule (`src/hepatiq/ml/train.py::select_winner`), not a bare "highest ROC-AUC" pick. Random Forest achieved the highest mean ROC-AUC (0.8844), but the ROC-AUC confidence intervals overlapped substantially across models and were therefore not statistically separable. Under HepatiQ's documented model-selection policy, calibration (Brier score) is used as the primary tie-break criterion for clinically interpretable risk estimation. Logistic Regression achieved the best calibration (Brier = 0.1363) and was therefore selected as the deployment model.
@@ -46,9 +54,11 @@ Per-patient SHAP attributions via `shap.LinearExplainer` (`src/hepatiq/ml/explai
 ## Limitations
 - **Disease scope**: trained exclusively on PBC patients from a single historical Mayo Clinic trial cohort. Not validated for general cirrhosis, other liver diseases, or populations outside this trial's era and demographics.
 - **Sample size**: 329 patients is small for a 17-feature model. All three candidate models' 95% CIs overlap — they are not statistically distinguishable from each other on ROC-AUC alone. Treat reported performance as indicative, not precise.
-- **Cohort selection bias**: ~21% of the original 419 patients (90) were dropped for being censored before the 5-year mark. If that censoring wasn't random (e.g., related to patients' health or circumstances), the remaining cohort could be biased.
-- **Calibration**: Brier score of 0.136 indicates reasonable but imperfect calibration; a full reliability diagram has not yet been produced.
+- **Cohort selection bias**: 89 of the 418 canonical patients (21.3%) were dropped for being censored before the 5-year mark. If that censoring wasn't random (e.g., related to patients' health or circumstances), the remaining cohort could be biased.
+- **Calibration**: Brier score of 0.1364 [0.1136, 0.1632] and reliability diagrams are now available, but calibration is imperfect: OOF slope 0.725 and CITL -0.498 indicate overprediction on average. These are internal OOF estimates, not external validation.
 - **Historical data**: the Mayo trial predates many modern PBC treatment protocols; learned risk relationships may not reflect outcomes under current standards of care.
+- **No external validation**: every reported metric comes from the same historical Mayo cohort (OOF or a held-out split of it). No independent PBC cohort has confirmed generalization.
+- **No PHI or deployment controls**: the project has no authentication, authorization, encryption at rest, audit logging, or PHI handling. It is a research prototype, not a deployable clinical system.
 - **Not a diagnostic tool**: output is a probability estimate for decision support, not a diagnosis or treatment recommendation.
 - **Integration status**: Backend and frontend are integrated with the full 17-feature workflow. The FastAPI service (`src/hepatiq/backend/main.py`) exposes `/health` and `/predict` against the trained pipeline, with per-feature SHAP contributions built once at startup. The Streamlit frontend (`src/hepatiq/frontend/app.py`) presents all 17 inputs (5 required, 12 optional with server-side imputation) and renders contributions sorted by absolute impact. Model and data paths are resolved through `src/hepatiq/paths.py`, so both services work regardless of the current working directory.
 
@@ -59,8 +69,7 @@ Per-patient SHAP attributions via `shap.LinearExplainer` (`src/hepatiq/ml/explai
 ## Future Work
 
 - External validation using independent PBC cohorts.
-- Benchmarking against Mayo Risk Score, GLOBE Score, and UK-PBC Risk Score.
-- Calibration plots and reliability diagrams.
+- Benchmarking against GLOBE Score and UK-PBC Risk Score (both require post-UDCA or external registry data).
 - Survival analysis extensions (Cox Proportional Hazards, Random Survival Forests).
 - Evaluation on larger international PBC registries.
 
@@ -68,9 +77,10 @@ Per-patient SHAP attributions via `shap.LinearExplainer` (`src/hepatiq/ml/explai
 ```
 pip install -r requirements.txt && pip install -e . --no-deps
 
-python -m hepatiq.ml.build_5yr_target   # data/raw/pbc.csv -> data/processed/pbc_5yr_target.csv
+python -m hepatiq.ml.build_5yr_target   # verifies data/external/pbc.csv provenance -> processed cohort
 python -m hepatiq.ml.train              # trains, cross-validates, and selects the winner
 python -m hepatiq.ml.explain            # SHAP explanation for one patient
+python -m hepatiq.validation.run_validation  # OOF report with bootstrap CIs
 ```
 Full fold-by-fold numbers: `models/candidates/training_metrics.json`.
 

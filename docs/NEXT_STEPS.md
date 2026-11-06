@@ -18,10 +18,12 @@ The application is complete and honest as a **research prototype**:
 
 - Model: Logistic Regression, leakage-controlled 5-fold CV, OOF ROC-AUC
   **0.8828 [0.8409, 0.9185]** vs class-prior baseline 0.4924 (`src/hepatiq/validation/report.md`).
+- Data: canonical 418-row `survival::pbc` (`data/external/pbc.csv`) with pinned
+  SHA-256 provenance; the 419-row raw copy is archived, not used for training.
 - Backend: FastAPI (`src/hepatiq/backend/main.py`) — `/health`, `/predict`, `GET /history`, `DELETE /history`.
 - Frontend: Streamlit (`src/hepatiq/frontend/app.py`) — dark theme, logo, risk-band badge,
   training-range warnings, latency/version caption, history controls.
-- Quality: 91 tests incl. a live form→API→model E2E, ruff clean, CI coverage floor 60.
+- Quality: full pytest suite incl. a live form→API→model E2E, ruff clean, CI coverage floor 60.
 - Docs: `README.md`, `docs/LIMITATIONS.md`, `docs/model_card.md`, `docs/DEMO.md`,
   `docs/ROADMAP.md` (Phases 4 & 5 marked complete).
 
@@ -47,7 +49,9 @@ Options, in order of honesty/value:
     in hand.
 - **Option B — held-out test (bridge, weaker).** Deterministic 80/20 stratified
   hold-out of the existing 329 patients; train a fresh pipeline on 80%, score the
-  untouched 20%. Honest but **must be labeled "held-out," not "external."** ~1 hour.
+  untouched 20%. Honest but **must be labeled "held-out," not "external."**
+  A related 312-derivation / 106-non-randomized bridge has since been executed
+  in the research audit; see `docs/SCORE_BENCHMARK.md`.
 - **Option C — synthetic cross-cohort check.** Do **not** dress this up as
   external validation; it is not.
 
@@ -61,8 +65,6 @@ Options, in order of honesty/value:
   ~half a day incl. tests. Nice-to-have, not a correctness gap.
 - **README screenshot.** A UI screenshot near the top showcases the dark theme to
   reviewers/graders.
-- **`docs/model_card.md`** doesn't repeat the OOF AUC confidence interval that
-  the rest of the docs cite. Minor consistency fix.
 - **Render persistence.** `data/hepatiq.db` lives on ephemeral disk and resets per
   deploy. Documented; only fix if history must survive restarts (attach a disk +
   set `HEPATIQ_DB_PATH`). Blueprint comments in `render.yaml` show how.

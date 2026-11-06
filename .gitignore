@@ -95,6 +95,9 @@ desktop.ini
 # Logs
 *.log
 
+# Generated validation artifact (committed copy lives in reports/figures/)
+src/hepatiq/validation/calibration_plot.png
+
 # Local scratch / large source assets (trimmed logo lives in src/hepatiq/frontend/assets/)
 data/enlarged.png
 scratch/

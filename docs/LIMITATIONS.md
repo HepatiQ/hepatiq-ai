@@ -12,8 +12,10 @@ Numbers cited here come from `src/hepatiq/validation/report.md` and `models/cand
 - **Small sample.** 418 canonical records, 329 after the 5-year outcome filter (89 patients
   censored before 5 years were excluded). With 132 events, every confidence interval is
   wide — out-of-fold ROC-AUC is **0.8828 [0.8409, 0.9185]**, and intervals this wide mean
-  the true value on new patients could plausibly sit anywhere in that band. (`data/raw/pbc.csv`
-  has one extra non-canonical row, id 419; it is dropped by the filter and does not change v1.)
+  the true value on new patients could plausibly sit anywhere in that band. V1 now reads
+  canonical `data/external/pbc.csv` (418 rows) with pinned SHA-256 provenance;
+  `data/raw/pbc.csv` is retained only as archived lineage. Its extra row (id 419) is
+  censored before 5 years and changes no labels.
 - **Censoring handled by exclusion, not modeling.** Dropping patients censored before
   5 years removes exactly those whose outcomes are unknown; if censoring relates to
   prognosis (sicker patients lost to follow-up), the training distribution is biased.
@@ -65,8 +67,12 @@ Numbers cited here come from `src/hepatiq/validation/report.md` and `models/cand
   synthetic.
 - **Additive model.** Logistic Regression is linear in the transformed features — it
   cannot represent interactions (e.g. bilirubin × stage) unless the data happens to
-  support them additively. Calibration is reported (Brier 0.1364 OOF) but no reliability
-  diagram yet, so miscalibration in risk tails is unquantified.
+  support them additively. Calibration is imperfect and now quantified: OOF Brier
+  **0.1364 [0.1136, 0.1632]**, calibration slope **0.725**, CITL **-0.498**, ECE
+  **0.062**, and ICI **0.248**. The weighted model overpredicts on average; reliability
+  diagrams are in `reports/figures/00_calibration_oof.png` and
+  `reports/figures/01_reliability_f17_vs_f5.png`. These are internal OOF estimates,
+  not external validation.
 - **Composite endpoint.** The target is death *or* liver transplant within 5 years;
   the two have different clinical meanings and are pooled here.
 

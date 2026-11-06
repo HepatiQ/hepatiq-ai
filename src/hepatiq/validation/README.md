@@ -18,7 +18,18 @@ python -m hepatiq.validation.run_validation
 python -m hepatiq.validation.calibration_plot
 ```
 
-Latest results (n=329, 132 events): **ROC-AUC 0.8828 [0.8409, 0.9185]** vs. class-prior baseline 0.4924; Brier 0.1364 vs. 0.2403 — the model separates clearly from the baseline on both.
+Latest results (n=329, 132 events): **ROC-AUC 0.8828 [0.8409, 0.9185]** vs.
+class-prior baseline 0.4924 [0.4277, 0.5514]; Brier **0.1364 [0.1136, 0.1632]**
+vs. 0.2403 [0.2307, 0.2516] — the model separates clearly from the baseline on
+both. OOF calibration slope is 0.725, CITL -0.498, ECE 0.062, and ICI 0.248;
+reliability diagrams are in `reports/figures/`.
+
+## Published-score benchmark
+
+The five-variable 1989 Mayo Risk Score is computable from this cohort and is
+benchmarked in [`docs/SCORE_BENCHMARK.md`](../../../docs/SCORE_BENCHMARK.md).
+On held-out non-randomized patients (n=70, 33 events), Mayo AUC 0.851 vs 0.816
+for retrained v1; the CIs overlap, so superiority is not demonstrated.
 
 ## Why there is no MELD benchmark
 
