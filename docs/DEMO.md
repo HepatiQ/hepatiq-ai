@@ -79,8 +79,10 @@ model, not causation.
 - Leakage-controlled OOF ROC-AUC **0.8828 [0.8409, 0.9185]** vs 0.4924 class-prior
   baseline (`src/hepatiq/validation/report.md`) — reproducible:
   `python -m hepatiq.validation.run_validation`.
-- API output is bit-for-bit consistent with direct model inference — enforced by 62
-  tests including a live form→API→model E2E.
+- API output is bit-for-bit consistent with direct model inference — enforced by
+  the test suite, including a live form→API→model E2E.
+- Calibration is imperfect and quantified: OOF slope 0.725, CITL -0.498, ECE 0.062;
+  reliability diagrams are in `reports/figures/`.
 - Honest limits, in writing: `docs/LIMITATIONS.md` (no INR/creatinine → no MELD;
   n=329 → wide CIs; research prototype, not a medical device).
 

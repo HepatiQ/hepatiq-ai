@@ -62,10 +62,18 @@ python scripts/export_r_datasets.py
 
 `data/raw/pbc.csv` has **419** rows; canonical `survival::pbc` has **418**. The
 extra row is `id = 419`, a sparse row with `trt` missing and censoring at
-`time = 985` days. The other 418 rows are identical to this directory's
-`pbc.csv`. Because `id = 419` is censored before 1825 days it is dropped by the
-v1 5-year target filter, so v1 metrics are unaffected — but v2 should use the
-canonical 418-row file with provenance rather than the augmented raw file.
+`time = 985` days. The other 418 rows are identical in labels and features,
+apart from `age` precision: the raw copy rounds `age` to 8 decimal places,
+while this canonical export keeps full precision (about `1e-9` difference).
+Because `id = 419` is censored before 1825 days it is dropped by the v1 5-year
+target filter, so both inputs produce the same **329 labeled patients / 132
+events**.
+
+**v1 now trains from this canonical `pbc.csv`.** `build_5yr_target.py` calls
+`verify_datasets()` before reading, and `data/raw/pbc.csv` is retained only as
+an archived lineage input. Regenerating the processed cohort from the canonical
+file changed no labels and moved frozen-model probabilities by less than
+`5e-11`; the model artifact was not retrained.
 
 ## License and attribution
 

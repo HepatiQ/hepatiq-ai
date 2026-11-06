@@ -1,4 +1,4 @@
-"""Construct the 5-year severe event target from the raw Mayo Clinic PBC dataset.
+"""Construct the 5-year severe event target from the canonical Mayo PBC cohort.
 
 Definition (per README "Scope & Limitations" and "Dataset & Attribution"):
     severe_event_5yr = 1  if the patient had a transplant (status==1) or died
@@ -12,16 +12,17 @@ Definition (per README "Scope & Limitations" and "Dataset & Attribution"):
 Run:
     python -m hepatiq.ml.build_5yr_target
 
-Input:  data/raw/pbc.csv
+Input:  data/external/pbc.csv (canonical survival::pbc, 418 rows)
 Output: data/processed/pbc_5yr_target.csv
 """
 
 import pandas as pd  # pyright: ignore[reportMissingModuleSource]
 
-from hepatiq.paths import PROCESSED_DATA, RAW_DATA
+from hepatiq.data import verify_datasets
+from hepatiq.paths import EXTERNAL_PBC, PROCESSED_DATA
 
 FIVE_YEAR_DAYS = 1825
-INPUT_PATH = str(RAW_DATA)
+INPUT_PATH = str(EXTERNAL_PBC)
 OUTPUT_PATH = str(PROCESSED_DATA)
 
 
@@ -34,7 +35,9 @@ def label_severe_event(row: pd.Series) -> float:
     return None  # censored (status==0) before 5 years: unknown outcome, drop
 
 
-def build_target(input_path: str = INPUT_PATH) -> pd.DataFrame:
+def build_target(input_path: str = INPUT_PATH, *, verify_provenance: bool = True) -> pd.DataFrame:
+    if verify_provenance:
+        verify_datasets()
     df = pd.read_csv(input_path)
 
     required_cols = {"time", "status"}
@@ -63,5 +66,5 @@ def build_target(input_path: str = INPUT_PATH) -> pd.DataFrame:
 
 if __name__ == "__main__":
     labeled_df = build_target()
-    labeled_df.to_csv(OUTPUT_PATH, index=False)
+    labeled_df.to_csv(OUTPUT_PATH, index=False, lineterminator="\n")
     print(f"\nSaved labeled cohort to {OUTPUT_PATH}")

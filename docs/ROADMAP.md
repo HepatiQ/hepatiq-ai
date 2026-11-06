@@ -37,7 +37,7 @@ A 50-day build plan across four workstreams. Each phase lists what's due and who
   - Final polish shipped: risk-band badge, training-range extrapolation warnings, latency +
     model-version display, history limit/Clear controls, dark clinical theme with logo,
     research-prototype disclaimer footer, pinned dependencies, CI coverage floor raised to 60
-    (62 tests, ~63% coverage)
+    (at Phase 5 close: 62 tests, ~63% coverage)
 
 ## Changes from the original plan, and why
 

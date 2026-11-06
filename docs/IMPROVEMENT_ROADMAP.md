@@ -4,11 +4,11 @@ Forward-looking execution plan for the next engineering sessions. This document 
 meant to be used, not just read: pick the first unchecked high-priority item, do
 the work, run the stated verification, then update the status board and evidence.
 
-- **Baseline date:** 2026-11-01
-- **Branch:** `v2/clinical-rebuild`
+- **Baseline date:** 2026-11-06
+- **Branch:** `main`
 - **Product status:** research prototype; not a medical device
 - **Serving model:** v1 17-feature Logistic Regression pipeline at `models/model.pkl`
-- **Assessment baseline:** 91 passed, 2 skipped, 74.88% local full-`src` coverage
+- **Assessment baseline:** 165 passed, 0 skipped, 78.36% local full-`src` coverage
 - **CI gate:** `ruff check .` and pytest with a 60% coverage floor
 - **Incident status:** exposed classic PAT returned HTTP 401; the 115-commit
   history rewrite and 12-branch force-push are reported complete
@@ -67,7 +67,7 @@ the work, run the stated verification, then update the status board and evidence
   Python 3.12.
 - [x] Added regression tests for risk boundaries, agent robustness, and error
   sanitization.
-- [x] Verified `ruff`, 91 passing tests, 2 skipped, and 74.88% coverage.
+- [x] Verified `ruff`, 91 passing tests, 2 skipped, and 74.88% coverage at P0 close.
 
 ### P0 caveats still open
 
@@ -121,7 +121,7 @@ blocked on external input.
 | --- | --- | --- | --- | --- | --- |
 | SEC-01 | Secret history removal and containment | P1 | Partial: rewrite done, containment open | M | GitHub Support |
 | SEC-02 | API authentication, rate limits, CORS/XSRF | P1 | Open | M | None |
-| DATA-01 | Canonical v1 data lineage and provenance | P1 | Open | M | None |
+| DATA-01 | Canonical v1 data lineage and provenance | P1 | Done | M | None |
 | DEP-01 | Complete Docker CI, healthcheck, and image scan | P1 | Open | M | P0 Docker review |
 | SEC-03 | Model artifact integrity and startup validation | P1 | Open | M | DATA-01 recommended |
 | CI-01 | Dependency, action, and supply-chain guardrails | P1 | Open | S | None |
@@ -132,7 +132,7 @@ blocked on external input.
 | PERS-01 | Persistent history storage for Render | P2 | Open | S | None |
 | UI-01 | Accessibility, screenshot, and E2E depth | P2 | Open | M | None |
 | QUAL-01 | Type checking and test-depth improvements | P2 | Open | M | None |
-| DOC-01 | Refresh stale status docs and model card | P2 | Open | S | None |
+| DOC-01 | Refresh stale status docs and model card | P2 | Done | S | None |
 | RES-01 | True external validation | P3 | Blocked: data access | L | Frozen model |
 | RES-02 | Held-out bridge test on existing cohort | P3 | Open | S | None |
 | RES-03 | Time-to-event model for censoring | P3 | Open | L | RES-01/02 |
@@ -238,35 +238,42 @@ requirement appears. Start with a single deployment key and a documented limitat
 
 ### DATA-01 - Make v1 training use the canonical 418-row cohort
 
-**Why:** v1 trains from `data/raw/pbc.csv` (419 rows), while the v2 loader and
+**Why:** v1 trained from `data/raw/pbc.csv` (419 rows), while the v2 loader and
 provenance system use `data/external/pbc.csv` (canonical 418 rows). Row 419 is
-dropped by the 5-year filter, so current metrics should be unchanged, but having
-two data authorities is a correctness trap.
+dropped by the 5-year filter, so metrics were expected to be unchanged, but
+having two data authorities was a correctness trap.
 
 **Steps**
 
-- [ ] Add a regression test proving the canonical 418-row cohort and the current
+- [x] Add a regression test proving the canonical 418-row cohort and the archived
   raw cohort produce identical labeled rows for the 329 retained patients,
   including `severe_event_5yr` and event count 132.
-- [ ] Switch `build_5yr_target.py` to read the canonical external cohort and call
+- [x] Switch `build_5yr_target.py` to read the canonical external cohort and call
   `verify_datasets()` before reading.
-- [ ] Keep `data/raw/pbc.csv` only as an archived input or remove it after the
-  migration is documented.
-- [ ] Regenerate `data/processed/pbc_5yr_target.csv`; confirm the model artifact and
+- [x] Keep `data/raw/pbc.csv` only as an archived input and document that status.
+- [x] Regenerate `data/processed/pbc_5yr_target.csv`; confirm the model artifact and
   predictions do not change. Do not retrain unless the evidence shows a difference.
-- [ ] If the model changes, record the new SHA-256, metrics, and reason in the
-  execution log and `docs/model_card.md`.
-- [ ] Update `data/README.md`, `docs/LIMITATIONS.md`, and path docstrings.
+- [x] If the model changes, record the new SHA-256, metrics, and reason in the
+  execution log and `docs/model_card.md`. (It did not change.)
+- [x] Update `data/README.md`, `data/external/README.md`, `docs/LIMITATIONS.md`,
+  `docs/model_card.md`, and path docstrings.
 
 **Files:** `src/hepatiq/ml/build_5yr_target.py`, `src/hepatiq/paths.py`,
 `src/hepatiq/data/provenance.py`, `data/README.md`, tests.
 
 **Acceptance**
 
-- [ ] There is one documented training source with pinned SHA-256 provenance.
-- [ ] Labeled row count is 329 and event count is 132.
-- [ ] A focused test fails if the canonical file is edited or replaced.
-- [ ] Any model or metric change is explicit, not incidental.
+- [x] There is one documented training source with pinned SHA-256 provenance.
+- [x] Labeled row count is 329 and event count is 132.
+- [x] A focused test fails if the canonical file is edited or replaced.
+- [x] Any model or metric change is explicit, not incidental.
+
+**Result (2026-11-06):** Processed cohort regenerated from the canonical file:
+418 loaded, 89 dropped, 329 retained, 132 events. The frozen model SHA-256 stayed
+`bc96bb1d7399391ea103c65515a76e5f40e8a7cfd4acdce27d59d935020c31f1`; prediction
+sum moved from `147.66190205068372` to `147.66190205043551` (max absolute delta
+`4.768e-11`). The CSV diff is `age` precision only (canonical full precision vs
+raw 8-decimal rounding); labels are identical.
 
 ---
 
@@ -422,14 +429,20 @@ watch for updates. Exact pins are deliberate and must stay.
 
 ### DOC-01 - Documentation truth pass
 
-- [x] Mark `docs/NEXT_STEPS.md` as historical, remove the stale commit pointer and
-  test count, and point readers to this roadmap.
-- [ ] Update `docs/NEXT_STEPS.md` security notes and quality baseline whenever a
-  later task changes them.
-- Add the OOF confidence interval to `docs/model_card.md` so it matches the README
-  and validation report.
-- Ensure limitations remain explicit: single historical cohort, no external
-  validation, no clinical benchmark superiority, no PHI controls.
+- [x] Mark `docs/NEXT_STEPS.md` as historical, remove stale commit pointers and
+  fixed test counts, and point readers to this roadmap.
+- [x] Update the README, model card, limitations, demo, and validation README with
+  canonical data lineage, OOF confidence intervals, calibration evidence, and the
+  held-out Mayo benchmark.
+- [x] Add the OOF confidence interval and calibration metrics to
+  `docs/model_card.md` so they match the README and validation report.
+- [x] Replace the stale "no reliability diagram" limitation with the measured
+  calibration result and figure paths.
+- [x] Update this roadmap's status board, baseline, decision log, and execution log.
+- [x] Add generated `src/hepatiq/validation/calibration_plot.png` to `.gitignore`.
+- [x] Ensure limitations remain explicit: single historical cohort, no external
+  validation, no demonstrated clinical-score superiority, and no PHI/deployment
+  controls.
 
 ## 7. P3 Research Backlog
 
@@ -540,6 +553,7 @@ requires a new manifest entry and an explicit note in the execution log.
 | 2026-11-01 | External validation is the top research priority | One historical cohort cannot establish generalization |
 | 2026-11-01 | Do not change model hyperparameters during P0 | P0 is correctness/security work; model changes require separate evaluation |
 | 2026-11-01 | Rewrite all branch history and force-push | The PAT was public; deleting the file or revoking the token would not remove copies. Backup retained for forensics; 115 commits and 12 branches were rewritten and verified. |
+| 2026-11-06 | Train v1 from canonical `data/external/pbc.csv`; archive the raw copy | Establish one data authority with pinned SHA-256 provenance. Labels and metrics were unchanged; the frozen model was not retrained and predictions moved by less than `5e-11`. |
 
 ## 11. Execution Log
 
@@ -562,6 +576,39 @@ Notes / follow-up: independent full-history scan, tags/PR refs/forks/caches,
 ```
 
 ```text
+Date: 2026-11-06
+Task: DATA-01
+Status: Done
+Change: v1 builder now reads data/external/pbc.csv and calls verify_datasets()
+  before reading. data/raw/pbc.csv is archived lineage only. Added tests for the
+  canonical default path, provenance failure, and raw-vs-canonical label parity;
+  regeneration now writes LF line endings on every platform.
+Files: src/hepatiq/ml/build_5yr_target.py, src/hepatiq/paths.py,
+  tests/test_build_target.py, data/processed/pbc_5yr_target.csv, data/README.md,
+  data/external/README.md, docs/LIMITATIONS.md, docs/model_card.md
+Verification: final focused build-target 3 passed; full suite 165 passed, 78.36%
+  coverage; ruff clean. Cohort: 418 loaded, 89 dropped, 329 kept, 132 events.
+  Model SHA unchanged; prediction max absolute delta 4.768e-11.
+Notes / follow-up: data/processed diff is age precision only; model not retrained.
+```
+
+```text
+Date: 2026-11-06
+Task: DOC-01
+Status: Done
+Change: Synchronized docs with canonical lineage, OOF CIs, calibration metrics and
+  figures, the Mayo held-out benchmark, the current test baseline, and generated
+  artifact ignores.
+Files: README.md, AUTHORS.md, docs/model_card.md, docs/LIMITATIONS.md,
+  docs/NEXT_STEPS.md, docs/README.md, docs/DEMO.md, docs/ROADMAP.md,
+  src/hepatiq/ml/README.md, src/hepatiq/validation/README.md,
+  docs/IMPROVEMENT_ROADMAP.md, .gitignore
+Verification: full pytest 165 passed with 78.36% coverage; ruff clean; report.md
+  restored because regeneration produced a line-ending-only diff.
+Notes / follow-up: GitHub issues intentionally left untouched in this change.
+```
+
+```text
 Date:
 Task:
 Status:
@@ -574,7 +621,7 @@ Notes / follow-up:
 ## 12. Related Documents
 
 - [`ROADMAP.md`](ROADMAP.md) - historical 50-day phase plan and model-selection decisions
-- [`NEXT_STEPS.md`](NEXT_STEPS.md) - earlier handoff notes; partially stale after P0
+- [`NEXT_STEPS.md`](NEXT_STEPS.md) - historical Phase 5 handoff notes; see this roadmap for current status
 - [`LIMITATIONS.md`](LIMITATIONS.md) - evidence and scope boundaries
 - [`model_card.md`](model_card.md) - intended use, metrics, ethics
 - [`SCORE_BENCHMARK.md`](SCORE_BENCHMARK.md) - Mayo Risk Score and UDCA benchmarks

@@ -4,12 +4,12 @@ Explainable Clinical Risk Prediction for Primary Biliary Cholangitis
 
 **HepatiQ** is an explainable clinical decision-support web application that estimates 5-year severe event risk (death or liver transplant) for patients with Primary Biliary Cholangitis (PBC) using routine liver function tests and machine learning with SHAP-based interpretability.
 
-> **Version 2 — clinical rebuild.** The `v2/clinical-rebuild` branch replaces the
-> single 5-year classifier with a censoring-aware survival model, adds
-> published-score benchmarks and a 12-month landmark model, and moves the UI to
-> multipage Streamlit. V2 is designed, created, and maintained solely by
+> **Version 2 — clinical rebuild.** V2 replaces the single 5-year classifier with
+> a censoring-aware survival model, adds published-score benchmarks and a
+> 12-month landmark model, and moves the UI to multipage Streamlit. V2 is now
+> merged into `main`. V2 is designed, created, and maintained solely by
 > **Pranjal Dubey**; v1 was a team project. See [AUTHORS.md](AUTHORS.md). V1
-> remains runnable for comparison until v2 reaches parity.
+> remains runnable for comparison.
 >
 > **Phase 1 benchmark (done).** On the 106 held-out Mayo patients, the fixed
 > 1989 Mayo Risk Score reaches 5-year AUC **0.851**; the v1 pipeline retrained on
@@ -50,7 +50,7 @@ It is not an FDA-approved, CDSCO-approved, or clinically validated medical devic
 
 ## Scope & Limitations
 
-- **Trained on:** Mayo Clinic Primary Biliary Cholangitis (PBC) dataset — 419 initial patient records; 329 after applying 5-year censoring filter
+- **Trained on:** canonical `survival::pbc` Mayo Clinic Primary Biliary Cholangitis dataset — 418 patient records; 329 after applying the 5-year censoring filter
 - **Disease specificity:** PBC is a specific autoimmune liver condition, *not* liver cirrhosis or other hepatic disorders
 - **Clinical role:** decision-support aid, not an autonomous diagnostic device or replacement for histological biopsy
 - **Target users:** general practitioners, clinical diagnostic labs, medical researchers
@@ -82,6 +82,13 @@ Although Random Forest achieved a marginally higher mean ROC-AUC, Logistic Regre
 | Brier Score ↓ | 0.1363 | 0.1419 | 0.1528 |
 
 Note: Lower Brier Score indicates better probability calibration.
+
+**Out-of-fold estimates** (n=329, 132 events, leakage-controlled): ROC-AUC
+**0.8828 [0.8409, 0.9185]** and Brier **0.1364 [0.1136, 0.1632]**. OOF
+calibration slope is 0.725, CITL -0.498, ECE 0.062, and ICI 0.248; the weighted
+model overpredicts on average. Reliability diagrams are in
+[`reports/figures/`](reports/figures/). These are internal OOF estimates, not
+external validation.
 
 ## Tech Stack
 
@@ -167,7 +174,8 @@ src/hepatiq/
   validation/  statistical validation and out-of-fold benchmarking
   paths.py     single source of truth for data/model paths
 data/
-  raw/         original Mayo Clinic PBC dataset
+  external/    canonical survival exports + pinned provenance
+  raw/         archived augmented Mayo input (not used for training)
   processed/   labeled 5-year target cohort
   interim/     imputed / scaled exploration artifacts
 models/
@@ -188,7 +196,7 @@ See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for full setup instructio
 
 ## Dataset & Attribution
 
-**Primary cohort (v2):** canonical `survival::pbc` — **418** Mayo Clinic PBC
+**Primary cohort (v1 and v2):** canonical `survival::pbc` — **418** Mayo Clinic PBC
 patients (1974–1984), 312 of them randomized in the D-penicillamine vs placebo
 trial. `trt` is `1 = D-penicillamine`, `2 = placebo`; the cohort **predates
 UDCA**, so it describes pre-UDCA natural history.
@@ -209,13 +217,16 @@ The score was therefore derived on this data, so its full-cohort AUC (0.886) is
 apparent. The 106 patients are the only held-out set available — but they were
 part of v1's training data, so v1 has no external validation.
 
-> **v1 data note:** `data/raw/pbc.csv` has **419** rows because v1 added a sparse
-> non-canonical row (`id = 419`, no treatment arm, censored at 985 days). The
-> other 418 rows are identical to the canonical file, and the extra row is
-> dropped by v1's 5-year filter, so v1's 329-patient training set and metrics are
-> unchanged. V2 reads the canonical 418-row file instead.
+> **v1 data note:** V1 now trains from canonical `data/external/pbc.csv` (418
+> rows) and verifies pinned SHA-256 provenance before reading. `data/raw/pbc.csv`
+> (419 rows) is retained only as archived lineage: its extra sparse row
+> (`id = 419`, no treatment arm, censored at 985 days) is dropped by the 5-year
+> filter. Canonical `age` keeps full precision while the raw copy rounds it to 8
+> decimals; labels, the 329-patient cohort, and metrics are unchanged.
+> Frozen-model predictions moved by less than `5e-11`, and the model was not
+> retrained.
 
-**v1 5-year filter:** 329 patients (90 censored before 5 years, outcome unknown)
+**v1 5-year filter:** 329 patients (89 censored before 5 years, outcome unknown)
 **Class balance (v1):** 40.1% severe event, 59.9% event-free (`class_weight='balanced'`)
 **License:** `survival` is LGPL (>= 2); datasets are redistributed from published
 sources — cite Dickson 1989, Murtaugh 1994, and Lindor 1994 (see
@@ -249,7 +260,8 @@ This is a **student team project** at Sharda University's Anand School of Engine
 
 ### Model Improvements
 
-* Reliability diagrams and calibration plots
+* ~~Reliability diagrams and calibration plots~~ — implemented in
+  [`reports/figures/`](reports/figures/)
 * Cohort percentile ranking
 * Risk stratification categories
 * Survival analysis extensions:

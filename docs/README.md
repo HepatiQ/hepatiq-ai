@@ -18,7 +18,7 @@ Start here. Docs are grouped by audience and intent.
 ## Planning & status
 
 - [IMPROVEMENT_ROADMAP.md](IMPROVEMENT_ROADMAP.md) — prioritized remaining work and execution plan
-- [NEXT_STEPS.md](NEXT_STEPS.md) — earlier handoff notes (partially stale after P0)
+- [NEXT_STEPS.md](NEXT_STEPS.md) — historical Phase 5 handoff notes; see the roadmap for current status
 - [reports/PROJECT_REPORT.md](reports/PROJECT_REPORT.md) — full project report
 - [reports/WEEK_BY_WEEK_PROGRESS.md](reports/WEEK_BY_WEEK_PROGRESS.md) — weekly progress log
 
@@ -37,7 +37,7 @@ src/hepatiq/
   ml/          training, cohort building, SHAP
   validation/  OOF validation + report
   paths.py     shared path constants
-data/          raw / processed / interim datasets
+data/          external canonical exports, archived raw, processed / interim
 models/        model.pkl + candidates/
 tests/         pytest suite
 ```
