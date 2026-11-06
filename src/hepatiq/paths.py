@@ -22,11 +22,13 @@ def _find_repo_root(start: Path) -> Path:
 REPO_ROOT = Path(os.environ.get("HEPATIQ_ROOT") or _find_repo_root(PACKAGE_DIR))
 
 DATA_DIR = REPO_ROOT / "data"
+# Archived augmented input (419 rows); retained for lineage only, not training.
 RAW_DATA = DATA_DIR / "raw" / "pbc.csv"
 PROCESSED_DATA = DATA_DIR / "processed" / "pbc_5yr_target.csv"
 INTERIM_DIR = DATA_DIR / "interim"
 
 EXTERNAL_DATA_DIR = DATA_DIR / "external"
+# Canonical training source (survival::pbc, 418 rows), pinned in PROVENANCE.json.
 EXTERNAL_PBC = EXTERNAL_DATA_DIR / "pbc.csv"
 EXTERNAL_PBCSEQ = EXTERNAL_DATA_DIR / "pbcseq.csv"
 EXTERNAL_UDCA = EXTERNAL_DATA_DIR / "udca.csv"
