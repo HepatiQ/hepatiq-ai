@@ -43,6 +43,6 @@ jobs:
       - name: Run test suite
         run: >
           python -m pytest -v
-          --cov=hepatiq.backend --cov=hepatiq.ml --cov=hepatiq.validation
+          --cov=hepatiq.backend --cov=hepatiq.ml --cov=hepatiq.validation --cov=hepatiq.model_artifact
           --cov-report=term-missing
           --cov-fail-under=60

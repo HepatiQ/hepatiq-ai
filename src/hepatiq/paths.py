@@ -38,6 +38,7 @@ EXTERNAL_PROVENANCE = EXTERNAL_DATA_DIR / "PROVENANCE.json"
 
 MODELS_DIR = Path(os.environ.get("HEPATIQ_MODELS_DIR") or REPO_ROOT / "models")
 MODEL_PATH = MODELS_DIR / "model.pkl"
+MODEL_MANIFEST_PATH = MODELS_DIR / "model_manifest.json"
 CANDIDATES_DIR = MODELS_DIR / "candidates"
 METRICS_PATH = CANDIDATES_DIR / "training_metrics.json"
 

@@ -8,7 +8,7 @@ the work, run the stated verification, then update the status board and evidence
 - **Branch:** `main`
 - **Product status:** research prototype; not a medical device
 - **Serving model:** v1 17-feature Logistic Regression pipeline at `models/model.pkl`
-- **Assessment baseline:** 171 passed, 2 skipped locally, 80.06% full-`src` coverage
+- **Assessment baseline:** 182 passed, 2 skipped locally, 80.94% CI-scoped coverage
 - **CI gate:** `ruff check .` and pytest with a 60% coverage floor
 - **Incident status:** exposed classic PAT returned HTTP 401; the 115-commit
   history rewrite and 12-branch force-push are reported complete
@@ -123,7 +123,7 @@ blocked on external input.
 | SEC-02 | API authentication, rate limits, CORS/XSRF | P1 | Partial: rate limiter done; auth/CORS open | M | None |
 | DATA-01 | Canonical v1 data lineage and provenance | P1 | Done | M | None |
 | DEP-01 | Complete Docker CI, healthcheck, and image scan | P1 | Open | M | P0 Docker review |
-| SEC-03 | Model artifact integrity and startup validation | P1 | Open | M | DATA-01 recommended |
+| SEC-03 | Model artifact integrity and startup validation | P1 | Partial: hash/feature checks done; safer serialization open | M | DATA-01 recommended |
 | CI-01 | Dependency, action, and supply-chain guardrails | P1 | Open | S | None |
 | OBS-01 | Structured logging, request IDs, readiness, metrics | P2 | Open | M | SEC-02 |
 | API-01 | API versioning and contract hardening | P2 | Open | M | SEC-02 |
@@ -323,27 +323,34 @@ the 17-feature contract.
 
 **Steps**
 
-- [ ] Create `models/model_manifest.json` containing artifact SHA-256, model type,
+- [x] Create `models/model_manifest.json` containing artifact SHA-256, model type,
   feature names, training data hash, metrics, creation date, and Python/sklearn
   versions.
-- [ ] Verify the artifact hash before `joblib.load`; refuse to load on mismatch.
-- [ ] Validate the loaded pipeline exposes the expected feature count and, where
+- [x] Verify the artifact hash before `joblib.load`; refuse to load on mismatch.
+- [x] Validate the loaded pipeline exposes the expected feature count and, where
   available, feature names.
-- [ ] Add a test where a tampered model hash causes `/health` to report unavailable
+- [x] Add a test where a tampered model hash causes `/health` to report unavailable
   and `/predict` to return 503 without leaking the path.
-- [ ] Document that model files must never come from user upload or an untrusted
+- [x] Document that model files must never come from user upload or an untrusted
   URL.
 - [ ] Evaluate `skops.io` or ONNX as a safer serialization path in a separate
   change; do not combine that migration with the hash check.
 
-**Files:** `src/hepatiq/backend/main.py`, `models/`, new manifest, tests,
+**Files:** `src/hepatiq/backend/main.py`, `src/hepatiq/model_artifact.py`,
+`src/hepatiq/paths.py`, `src/hepatiq/ml/train.py`, `models/`, new manifest, tests,
 `docs/model_card.md`.
 
 **Acceptance**
 
-- [ ] Startup fails closed on hash mismatch.
-- [ ] Feature-contract mismatch is detected before serving predictions.
-- [ ] Existing valid artifact still passes the exact-reproducibility test.
+- [x] Startup fails closed on hash mismatch.
+- [x] Feature-contract mismatch is detected before serving predictions.
+- [x] Existing valid artifact still passes the exact-reproducibility test.
+
+**Result (2026-11-07):** A checked-in manifest is verified before `joblib.load()`;
+startup also validates the loaded pipeline's 17-feature contract. Missing,
+malformed, or mismatched manifests leave `/health` at 200 with
+`model_loaded: false` and `/predict` at 503 without exposing paths. The hash check
+is an integrity control, not a signature; safer serialization remains open.
 
 ---
 
@@ -559,6 +566,7 @@ requires a new manifest entry and an explicit note in the execution log.
 | 2026-11-01 | Rewrite all branch history and force-push | The PAT was public; deleting the file or revoking the token would not remove copies. Backup retained for forensics; 115 commits and 12 branches were rewritten and verified. |
 | 2026-11-06 | Train v1 from canonical `data/external/pbc.csv`; archive the raw copy | Establish one data authority with pinned SHA-256 provenance. Labels and metrics were unchanged; the frozen model was not retrained and predictions moved by less than `5e-11`. |
 | 2026-11-07 | Add an in-process rate limiter but defer API-key authentication | The public demo needs basic abuse protection without adding secret provisioning or user identity yet. Per-process state is documented; a shared store is required before multi-instance deployment. |
+| 2026-11-07 | Verify the model artifact before `joblib.load()`; defer safer serialization | Detect accidental or tampered replacement and feature drift immediately, without combining the security fix with a higher-risk skops/ONNX migration. The manifest is an integrity check, not a publisher signature. |
 
 ## 11. Execution Log
 
@@ -630,6 +638,28 @@ Verification: focused 16 passed, 2 skipped; full suite 171 passed, 2 skipped,
 Notes / follow-up: Limiter state is per process. Use a shared store before scaling
   beyond one instance. Keep HEPATIQ_TRUST_PROXY_HEADERS=false when the API is
   directly exposed.
+```
+
+```text
+Date: 2026-11-07
+Task: SEC-03 (model artifact integrity)
+Status: Partial - hash and feature-contract checks done; safer serialization open
+Change: Added models/model_manifest.json and a verifier that checks the artifact
+  SHA-256 and 17-feature contract before joblib.load(). Startup also validates the
+  loaded pipeline feature names/count. Missing, malformed, or mismatched metadata
+  fails closed: /health stays 200 with model_loaded=false and /predict returns 503.
+  train.py now regenerates the manifest after writing model.pkl.
+Files: src/hepatiq/model_artifact.py, src/hepatiq/backend/main.py,
+  src/hepatiq/paths.py, src/hepatiq/ml/train.py, models/model_manifest.json,
+  tests/test_model_artifact.py, models/README.md, README.md, docs/model_card.md,
+  docs/LIMITATIONS.md, docs/NEXT_STEPS.md, docs/IMPROVEMENT_ROADMAP.md,
+  .github/workflows/ci.yml
+Verification: focused 19 passed; full suite 182 passed, 2 skipped, 80.94%
+  CI-scoped coverage; ruff clean. Model SHA unchanged. The 2 skips are live E2E
+  tests with no local backend; CI starts the backend.
+Notes / follow-up: The manifest proves integrity, not authenticity. If an attacker
+  can replace both model.pkl and model_manifest.json, the check passes. Evaluate
+  skops.io or ONNX separately before serving artifacts from less-trusted paths.
 ```
 
 ```text
