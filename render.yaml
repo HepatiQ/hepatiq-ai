@@ -14,6 +14,12 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.12"
+      - key: HEPATIQ_RATE_LIMIT_REQUESTS
+        value: "60"
+      - key: HEPATIQ_RATE_LIMIT_WINDOW_SECONDS
+        value: "60"
+      - key: HEPATIQ_TRUST_PROXY_HEADERS
+        value: "true"
       # History DB lives on the (ephemeral) instance disk; it resets on each
       # deploy/restart. Override only if you attach a persistent disk.
       # - key: HEPATIQ_DB_PATH

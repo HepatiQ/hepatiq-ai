@@ -57,9 +57,10 @@ Options, in order of honesty/value:
 
 ## Deferred (optional, none blocking)
 
-- **API key + rate limiting.** `docs/LIMITATIONS.md` states neither exists. Only
-  matters if the Render URL is shared publicly. ~2 hours. Suggest `X-API-Key` via
-  env + a simple in-memory limiter, with 401/429 tests.
+- **API key.** Rate limiting now exists (in-memory, per process; see `README.md`),
+  but there is still no `X-API-Key` or other authentication. Only matters if the
+  Render URL is shared publicly. Suggest a single deployment key via env with 401
+  tests.
 - **Bulk CSV scoring.** `POST /predict/batch` (≤1000 rows) + upload UI → scored
   table + downloadable CSV. Turns the product from "calculator" to "cohort tool."
   ~half a day incl. tests. Nice-to-have, not a correctness gap.

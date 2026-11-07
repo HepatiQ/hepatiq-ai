@@ -26,6 +26,16 @@ def _resolve_backend_url() -> str:
 
 BACKEND_URL = _resolve_backend_url()
 
+
+def _rate_limit_message(response: requests.Response) -> str:
+    retry_after = (response.headers.get("Retry-After") or "").strip()
+    if retry_after.isdigit():
+        seconds = int(retry_after)
+        unit = "second" if seconds == 1 else "seconds"
+        return f"Too many requests; retry in {seconds} {unit}."
+    return "Too many requests; wait a moment and try again."
+
+
 LOGO_PATH = Path(__file__).resolve().parent / "assets" / "logo.png"
 
 # An identical payload resubmitted inside this window is treated as a rapid
@@ -130,6 +140,12 @@ def fetch_history(limit: int = 10, risk_band: str = None) -> dict:
             return {
                 "items": hr.json().get("items", []),
                 "error": None,
+                "limit": limit,
+            }
+        if hr.status_code == 429:
+            return {
+                "items": None,
+                "error": _rate_limit_message(hr),
                 "limit": limit,
             }
         return {
@@ -239,6 +255,12 @@ if submitted:
                 st.session_state["last_error"] = {
                     "title": "Model unavailable (503) — check backend /health.",
                     "detail": r.json(),
+                }
+            elif r.status_code == 429:
+                st.session_state.pop("last_result", None)
+                st.session_state["last_error"] = {
+                    "title": _rate_limit_message(r),
+                    "detail": None,
                 }
             else:
                 r.raise_for_status()
@@ -436,9 +458,12 @@ with st.expander("Recent predictions (local history)"):
     if st.button("Clear history"):
         try:
             dr = requests.delete(f"{BACKEND_URL}/history", timeout=10)
-            dr.raise_for_status()
-            history = fetch_history(limit=limit, risk_band=risk_filter)
-            st.session_state["history"] = history
+            if dr.status_code == 429:
+                st.caption(_rate_limit_message(dr))
+            else:
+                dr.raise_for_status()
+                history = fetch_history(limit=limit, risk_band=risk_filter)
+                st.session_state["history"] = history
         except requests.exceptions.RequestException:
             st.caption("Could not clear history — backend unavailable.")
     if history["error"] is not None:

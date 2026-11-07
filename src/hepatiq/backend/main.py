@@ -26,7 +26,7 @@ import joblib
 import numpy as np
 import pandas as pd
 import shap
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from hepatiq.backend.db import (
@@ -36,6 +36,7 @@ from hepatiq.backend.db import (
     init_db,
     log_prediction,
 )
+from hepatiq.backend.rate_limit import RateLimitSettings, SlidingWindowLimiter, enforce_rate_limit
 from hepatiq.paths import DEFAULT_DB_PATH, MODEL_PATH, PROCESSED_DATA
 from hepatiq.risk_bands import risk_category
 
@@ -173,6 +174,15 @@ def _build_explainer(model):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    rate_limit_settings = RateLimitSettings.from_env()
+    app.state.rate_limiter = SlidingWindowLimiter(rate_limit_settings)
+    logger.info(
+        "Rate limiting enabled: %s requests per %ss per client (trust_proxy_headers=%s)",
+        rate_limit_settings.requests,
+        rate_limit_settings.window_seconds,
+        rate_limit_settings.trust_proxy_headers,
+    )
+
     try:
         if not MODEL_PATH.exists():
             raise FileNotFoundError(f"model file not found: {MODEL_PATH}")
@@ -210,6 +220,7 @@ async def lifespan(app: FastAPI):
 
     yield
     _state.clear()
+    app.state.rate_limiter = None
 
 
 app = FastAPI(title="HepatiQ API", lifespan=lifespan)
@@ -255,7 +266,7 @@ def _range_warnings(req: PredictRequest) -> List[str]:
     return warnings
 
 
-@app.post("/predict", response_model=PredictResponse)
+@app.post("/predict", response_model=PredictResponse, dependencies=[Depends(enforce_rate_limit)])
 def predict(req: PredictRequest) -> PredictResponse:
     model = _state["model"]
     if model is None:
@@ -346,7 +357,7 @@ class AgentRequest(BaseModel):
     stage: Optional[float] = None
 
 
-@app.post("/agent/reason")
+@app.post("/agent/reason", dependencies=[Depends(enforce_rate_limit)])
 def agent_reason(req: AgentRequest):
     """AI agent loop for clinical reasoning and recommendations."""
     raw = req.model_dump()
@@ -377,7 +388,7 @@ def stats():
         raise HTTPException(status_code=500, detail="Internal server error") from exc
 
 
-@app.get("/history", response_model=HistoryResponse)
+@app.get("/history", response_model=HistoryResponse, dependencies=[Depends(enforce_rate_limit)])
 def history(limit: int = Query(20, ge=1, le=100), risk_band: str = Query(None)) -> HistoryResponse:
     if _state["db_path"] is None:
         raise HTTPException(status_code=503, detail="Prediction history unavailable (database not initialized)")
@@ -389,7 +400,7 @@ def history(limit: int = Query(20, ge=1, le=100), risk_band: str = Query(None)) 
     return HistoryResponse(items=[HistoryItem(**item) for item in items])
 
 
-@app.delete("/history", response_model=HistoryClearResponse)
+@app.delete("/history", response_model=HistoryClearResponse, dependencies=[Depends(enforce_rate_limit)])
 def clear_history() -> HistoryClearResponse:
     if _state["db_path"] is None:
         raise HTTPException(status_code=503, detail="Prediction history unavailable (database not initialized)")

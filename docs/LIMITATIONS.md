@@ -79,9 +79,13 @@ Numbers cited here come from `src/hepatiq/validation/report.md` and `models/cand
 ## Software and deployment
 
 - **No authentication or authorization.** The API and UI are open to anyone who can reach
-  the port: no login, no TLS, no rate limiting. Acceptable for a local demo, not for
-  any deployment handling real patient data (which would also need PHI controls,
-  encryption at rest, and audit logging the project does not implement).
+  the port: no login and no identity checks. An in-process per-client rate limiter covers
+  prediction, agent, and history requests, but its state resets on restart and is not
+  shared across instances. Proxy-header trust must stay off unless a trusted reverse
+  proxy sets `X-Forwarded-For`; otherwise clients can pick their own bucket.
+  Acceptable for a local demo, not for any deployment handling real patient data
+  (which would also need TLS, authentication, PHI controls, encryption at rest, and
+  audit logging the project does not implement).
 - **Local-only history.** Predictions are logged to a gitignored SQLite file on the
   machine running the server; there is no backup, retention policy, or tamper protection.
 - **No monitoring.** Nothing tracks prediction drift, input-range violations in

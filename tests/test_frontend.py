@@ -126,6 +126,14 @@ class _StubPredictResponse:
         return None
 
 
+class _StubRateLimitResponse(_StubPredictResponse):
+    status_code = 429
+    headers = {"Retry-After": "37"}
+
+    def json(self):
+        return {"detail": "Too many requests; retry later."}
+
+
 def _stub_predict_post(monkeypatch) -> dict:
     """Replace requests.post with a stub; returns a shared call counter."""
     calls = {"count": 0}
@@ -136,6 +144,19 @@ def _stub_predict_post(monkeypatch) -> dict:
 
     monkeypatch.setattr(requests, "post", fake_post)
     return calls
+
+
+def test_rate_limit_error_rendered(monkeypatch):
+    """A 429 should show the server's retry window, not a generic failure."""
+    monkeypatch.setattr(requests, "post", lambda *args, **kwargs: _StubRateLimitResponse())
+
+    at = AppTest.from_file(str(FRONTEND), default_timeout=60)
+    at.run()
+    at.button[0].click().run()
+
+    assert not at.exception, at.exception
+    errors = [error.value for error in at.error]
+    assert any("Too many requests" in error and "37 seconds" in error for error in errors)
 
 
 def test_widget_edit_does_not_post(monkeypatch):
