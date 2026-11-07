@@ -4,11 +4,11 @@ Forward-looking execution plan for the next engineering sessions. This document 
 meant to be used, not just read: pick the first unchecked high-priority item, do
 the work, run the stated verification, then update the status board and evidence.
 
-- **Baseline date:** 2026-11-06
+- **Baseline date:** 2026-11-07
 - **Branch:** `main`
 - **Product status:** research prototype; not a medical device
 - **Serving model:** v1 17-feature Logistic Regression pipeline at `models/model.pkl`
-- **Assessment baseline:** 165 passed, 0 skipped, 78.36% local full-`src` coverage
+- **Assessment baseline:** 171 passed, 2 skipped locally, 80.06% full-`src` coverage
 - **CI gate:** `ruff check .` and pytest with a 60% coverage floor
 - **Incident status:** exposed classic PAT returned HTTP 401; the 115-commit
   history rewrite and 12-branch force-push are reported complete
@@ -120,7 +120,7 @@ blocked on external input.
 | ID | Task | Priority | Status | Effort | Depends on |
 | --- | --- | --- | --- | --- | --- |
 | SEC-01 | Secret history removal and containment | P1 | Partial: rewrite done, containment open | M | GitHub Support |
-| SEC-02 | API authentication, rate limits, CORS/XSRF | P1 | Open | M | None |
+| SEC-02 | API authentication, rate limits, CORS/XSRF | P1 | Partial: rate limiter done; auth/CORS open | M | None |
 | DATA-01 | Canonical v1 data lineage and provenance | P1 | Done | M | None |
 | DEP-01 | Complete Docker CI, healthcheck, and image scan | P1 | Open | M | P0 Docker review |
 | SEC-03 | Model artifact integrity and startup validation | P1 | Open | M | DATA-01 recommended |
@@ -198,8 +198,8 @@ live secret.
 ### SEC-02 - API authentication, rate limits, and deployment hardening
 
 **Why:** The API and UI are open to anyone who can reach the port. They have no
-authentication, no rate limit, no restricted CORS policy, and the development
-compose file disables Streamlit CORS and XSRF protection.
+authentication, only a basic in-process rate limit, no restricted CORS policy,
+and the development compose file disables Streamlit CORS and XSRF protection.
 
 **Scope**
 
@@ -208,7 +208,7 @@ compose file disables Streamlit CORS and XSRF protection.
 - [ ] Fail closed when `HEPATIQ_ENV=production` and no API key is configured.
   Local development may run without a key only when the environment is not
   production.
-- [ ] Add an in-memory per-client rate limiter with configurable limits for
+- [x] Add an in-memory per-client rate limiter with configurable limits for
   `/predict`, `/agent/reason`, and history endpoints. Return 429 and
   `Retry-After`. Document that a multi-instance deployment needs shared storage.
 - [ ] Add restrictive CORS allowlisting from `HEPATIQ_ALLOWED_ORIGINS`.
@@ -227,9 +227,13 @@ tests.
 **Acceptance**
 
 - [ ] Protected endpoints require a key in production mode.
-- [ ] Health remains usable for platform checks.
-- [ ] Rate-limit state is per process and documented as such.
-- [ ] No key or client identity is written to prediction history.
+- [x] Health remains usable for platform checks.
+- [x] Rate-limit state is per process and documented as such.
+- [x] No key or client identity is written to prediction history.
+
+**Result (2026-11-07):** Rate limiting is implemented; API-key authentication,
+CORS allowlisting, and security headers remain open. See `README.md` and
+`docs/LIMITATIONS.md` for the per-process limitation.
 
 **Do not:** Implement full OAuth or a user database unless a real multi-user
 requirement appears. Start with a single deployment key and a documented limitation.
@@ -554,6 +558,7 @@ requires a new manifest entry and an explicit note in the execution log.
 | 2026-11-01 | Do not change model hyperparameters during P0 | P0 is correctness/security work; model changes require separate evaluation |
 | 2026-11-01 | Rewrite all branch history and force-push | The PAT was public; deleting the file or revoking the token would not remove copies. Backup retained for forensics; 115 commits and 12 branches were rewritten and verified. |
 | 2026-11-06 | Train v1 from canonical `data/external/pbc.csv`; archive the raw copy | Establish one data authority with pinned SHA-256 provenance. Labels and metrics were unchanged; the frozen model was not retrained and predictions moved by less than `5e-11`. |
+| 2026-11-07 | Add an in-process rate limiter but defer API-key authentication | The public demo needs basic abuse protection without adding secret provisioning or user identity yet. Per-process state is documented; a shared store is required before multi-instance deployment. |
 
 ## 11. Execution Log
 
@@ -606,6 +611,25 @@ Files: README.md, AUTHORS.md, docs/model_card.md, docs/LIMITATIONS.md,
 Verification: full pytest 165 passed with 78.36% coverage; ruff clean; report.md
   restored because regeneration produced a line-ending-only diff.
 Notes / follow-up: GitHub issues intentionally left untouched in this change.
+```
+
+```text
+Date: 2026-11-07
+Task: SEC-02 (rate limiter only)
+Status: Partial - rate limiting done; API-key auth, CORS, and security headers open
+Change: Added a thread-safe in-process sliding-window limiter for /predict,
+  /agent/reason, and GET/DELETE /history. /health and /stats stay exempt. Rejections
+  return 429 with Retry-After, and the frontend shows the retry window. No API key.
+Files: src/hepatiq/backend/rate_limit.py, src/hepatiq/backend/main.py,
+  src/hepatiq/frontend/app.py, tests/test_rate_limit.py, tests/test_frontend.py,
+  .env.example, docker-compose.yml, render.yaml, README.md, docs/LIMITATIONS.md,
+  docs/NEXT_STEPS.md, docs/IMPROVEMENT_ROADMAP.md
+Verification: focused 16 passed, 2 skipped; full suite 171 passed, 2 skipped,
+  80.06% coverage; ruff clean. The 2 skips are live E2E tests with no local backend;
+  CI starts the backend.
+Notes / follow-up: Limiter state is per process. Use a shared store before scaling
+  beyond one instance. Keep HEPATIQ_TRUST_PROXY_HEADERS=false when the API is
+  directly exposed.
 ```
 
 ```text

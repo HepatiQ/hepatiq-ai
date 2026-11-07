@@ -192,6 +192,14 @@ pip install -r requirements.txt
 pip install -e . --no-deps
 ```
 
+**Rate limiting:** the backend applies an in-memory sliding-window limit to
+`/predict`, `/agent/reason`, and the history endpoints. Defaults are 60 requests
+per 60 seconds per client. Configure with `HEPATIQ_RATE_LIMIT_REQUESTS`,
+`HEPATIQ_RATE_LIMIT_WINDOW_SECONDS`, and `HEPATIQ_TRUST_PROXY_HEADERS`. State is
+per process, so a multi-instance deployment needs a shared store such as Redis.
+Enable proxy-header trust only behind a trusted reverse proxy that sets
+`X-Forwarded-For`; clients can otherwise choose their own bucket.
+
 See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for full setup instructions.
 
 ## Dataset & Attribution
