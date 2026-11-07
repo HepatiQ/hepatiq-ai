@@ -88,6 +88,12 @@ Numbers cited here come from `src/hepatiq/validation/report.md` and `models/cand
   audit logging the project does not implement).
 - **Local-only history.** Predictions are logged to a gitignored SQLite file on the
   machine running the server; there is no backup, retention policy, or tamper protection.
+- **Model artifact trust boundary.** Startup verifies `model.pkl` against the
+  SHA-256 and feature contract in `models/model_manifest.json` before loading it.
+  This catches accidental corruption or replacement, but it is not a signature:
+  an attacker who can replace both files bypasses the check, and `joblib`/pickle
+  remains unsafe for untrusted artifacts. Never load a model from a user upload
+  or untrusted URL. A safer serialization format is a separate follow-up.
 - **No monitoring.** Nothing tracks prediction drift, input-range violations in
   production, or model degradation over time; the model is a frozen `.pkl` from one
   training run.

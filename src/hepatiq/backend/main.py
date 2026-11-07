@@ -9,13 +9,14 @@ Contract:
       All other model features are optional; omitted fields become NaN and are
       filled by the pipeline's IterativeImputer at predict time.
     - Unknown fields are rejected (422) so stale clients fail loudly.
-    - If the model cannot be loaded, /predict returns 503 — never a fabricated
-      fallback probability.
+    - Startup verifies the artifact SHA-256 and feature contract in
+      models/model_manifest.json before joblib.load().
+    - If the model cannot be verified or loaded, /predict returns 503 — never a
+      fabricated fallback probability.
     - Response includes per-feature SHAP contributions in log-odds units,
       flagged with whether each value was imputed server-side.
 """
 
-import hashlib
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -37,7 +38,8 @@ from hepatiq.backend.db import (
     log_prediction,
 )
 from hepatiq.backend.rate_limit import RateLimitSettings, SlidingWindowLimiter, enforce_rate_limit
-from hepatiq.paths import DEFAULT_DB_PATH, MODEL_PATH, PROCESSED_DATA
+from hepatiq.model_artifact import validate_loaded_model, verify_model_artifact
+from hepatiq.paths import DEFAULT_DB_PATH, MODEL_MANIFEST_PATH, MODEL_PATH, PROCESSED_DATA
 from hepatiq.risk_bands import risk_category
 
 logger = logging.getLogger(__name__)
@@ -184,12 +186,12 @@ async def lifespan(app: FastAPI):
     )
 
     try:
-        if not MODEL_PATH.exists():
-            raise FileNotFoundError(f"model file not found: {MODEL_PATH}")
+        model_hash = verify_model_artifact(MODEL_PATH, MODEL_MANIFEST_PATH, FEATURE_COLUMNS)
         model = joblib.load(MODEL_PATH)
+        validate_loaded_model(model, FEATURE_COLUMNS)
         _state["model"] = model
         _state["explainer"] = _build_explainer(model)
-        _state["model_version"] = hashlib.sha256(MODEL_PATH.read_bytes()).hexdigest()[:8]
+        _state["model_version"] = model_hash[:8]
         _state["error"] = None
     except Exception as exc:
         _state["model"] = None

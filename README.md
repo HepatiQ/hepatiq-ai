@@ -179,8 +179,9 @@ data/
   processed/   labeled 5-year target cohort
   interim/     imputed / scaled exploration artifacts
 models/
-  model.pkl    deployed pipeline
-  candidates/  losing models + training metrics
+  model.pkl             deployed pipeline
+  model_manifest.json   artifact hash, feature contract, training metrics
+  candidates/           losing models + training metrics
 tests/         pytest suite (API, ML guards, validation, Streamlit)
 docs/          documentation and project planning
 ```
@@ -199,6 +200,13 @@ per 60 seconds per client. Configure with `HEPATIQ_RATE_LIMIT_REQUESTS`,
 per process, so a multi-instance deployment needs a shared store such as Redis.
 Enable proxy-header trust only behind a trusted reverse proxy that sets
 `X-Forwarded-For`; clients can otherwise choose their own bucket.
+
+**Model integrity:** startup verifies `models/model.pkl` against the SHA-256 and
+17-feature contract in `models/model_manifest.json` before `joblib.load()`. A
+missing, malformed, or mismatched manifest/artifact leaves `/health` at 200 with
+`model_loaded: false` and makes `/predict` return 503. The check detects
+accidental or tampered replacement, but it is not a signature; never load a
+pickle from an untrusted upload or URL.
 
 See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for full setup instructions.
 

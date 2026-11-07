@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "artifact": {
+    "path": "models/model.pkl",
+    "sha256": "bc96bb1d7399391ea103c65515a76e5f40e8a7cfd4acdce27d59d935020c31f1",
+    "size_bytes": 267713
+  },
+  "model": {
+    "type": "sklearn.pipeline.Pipeline",
+    "winner": "logistic_regression",
+    "winner_selection_criterion": "ROC-AUC CIs overlap (not statistically separable); tie-broken on calibration (Brier)",
+    "pipeline_steps": [
+      "imputer",
+      "scaler",
+      "clf"
+    ],
+    "feature_names": [
+      "trt",
+      "age",
+      "sex",
+      "ascites",
+      "hepato",
+      "spiders",
+      "edema",
+      "bili",
+      "chol",
+      "albumin",
+      "copper",
+      "alk.phos",
+      "ast",
+      "trig",
+      "platelet",
+      "protime",
+      "stage"
+    ],
+    "n_features": 17
+  },
+  "training_data": {
+    "processed": {
+      "path": "data/processed/pbc_5yr_target.csv",
+      "sha256": "9b5cc9080d9a5f0ef985b109f9dda0beec945e3e599c87812f59252251fc3c88",
+      "rows": 329
+    },
+    "source": {
+      "path": "data/external/pbc.csv",
+      "sha256": "3c52ee2a81f8ffe0d8eb008ee6abf1d90501ebae3f931c439d130e7091d383c9",
+      "rows": 418
+    }
+  },
+  "training": {
+    "cohort_size": 329,
+    "class_balance": {
+      "severe_event=0": 197,
+      "severe_event=1": 132
+    },
+    "cv_folds": 5,
+    "metrics": {
+      "roc_auc": {
+        "fold_scores": [0.8661, 0.85, 0.8567, 0.8933, 0.9339],
+        "mean": 0.88,
+        "std": 0.0344,
+        "ci95_lower": 0.8373,
+        "ci95_upper": 0.9227
+      },
+      "precision": {
+        "fold_scores": [0.7931, 0.6562, 0.6774, 0.8261, 0.8846],
+        "mean": 0.7675,
+        "std": 0.0978,
+        "ci95_lower": 0.646,
+        "ci95_upper": 0.889
+      },
+      "recall": {
+        "fold_scores": [0.8519, 0.7778, 0.8077, 0.7308, 0.8846],
+        "mean": 0.8105,
+        "std": 0.0605,
+        "ci95_lower": 0.7354,
+        "ci95_upper": 0.8857
+      },
+      "f1": {
+        "fold_scores": [0.8214, 0.7119, 0.7368, 0.7755, 0.8846],
+        "mean": 0.7861,
+        "std": 0.0689,
+        "ci95_lower": 0.7005,
+        "ci95_upper": 0.8716
+      },
+      "brier_score": {
+        "fold_scores": [0.1363, 0.1673, 0.1522, 0.1313, 0.0942],
+        "mean": 0.1363,
+        "std": 0.0274,
+        "ci95_lower": 0.1022,
+        "ci95_upper": 0.1703
+      }
+    }
+  },
+  "environment": {
+    "python": "3.12",
+    "scikit_learn": "1.9.0",
+    "joblib": "1.5.3"
+  },
+  "generated_at_utc": "2026-11-07T06:12:06Z"
+}

@@ -36,19 +36,23 @@ Run:
 Input:  data/processed/pbc_5yr_target.csv   (labeled cohort, NOT yet imputed --
                                     this is deliberate, see above)
 Output: models/model.pkl                    (winning pipeline, fit on full cohort)
+        models/model_manifest.json          (hash + feature contract for serving)
         models/candidates/lr_model.pkl
         models/candidates/rf_model.pkl
         models/candidates/xgb_model.pkl
         models/candidates/training_metrics.json
 """
 
-import os
 import json
+import os
+import platform
+from datetime import datetime, timezone
 
+import joblib
 import numpy as np
 import pandas as pd
+import sklearn
 from scipy import stats
-import joblib
 
 from sklearn.experimental import enable_iterative_imputer  # noqa: F401 (required to unlock IterativeImputer)
 from sklearn.impute import IterativeImputer
@@ -71,7 +75,17 @@ except ImportError as exc:  # pragma: no cover
 # from silently drifting apart on how "sex" gets encoded, which columns
 # count as leaky, etc.
 from hepatiq.ml.impute_pipeline import build_feature_frame
-from hepatiq.paths import CANDIDATES_DIR, METRICS_PATH, MODEL_PATH, MODELS_DIR, PROCESSED_DATA
+from hepatiq.model_artifact import MANIFEST_SCHEMA_VERSION, sha256_file
+from hepatiq.paths import (
+    CANDIDATES_DIR,
+    EXTERNAL_PBC,
+    METRICS_PATH,
+    MODEL_MANIFEST_PATH,
+    MODEL_PATH,
+    MODELS_DIR,
+    PROCESSED_DATA,
+    REPO_ROOT,
+)
 
 INPUT_PATH = str(PROCESSED_DATA)
 
@@ -264,6 +278,61 @@ def print_report(all_results: dict) -> None:
     print("(brier score: lower is better; all other metrics: higher is better)")
 
 
+def _relative_path(path):
+    try:
+        return path.resolve().relative_to(REPO_ROOT.resolve()).as_posix()
+    except ValueError:
+        return path.name
+
+
+def write_model_manifest(*, winner_name, winner_reason, feature_names, metrics_out, pipeline):
+    """Write the manifest the backend uses to verify the deployed artifact."""
+    manifest = {
+        "schema_version": MANIFEST_SCHEMA_VERSION,
+        "artifact": {
+            "path": _relative_path(MODEL_PATH),
+            "sha256": sha256_file(MODEL_PATH),
+            "size_bytes": MODEL_PATH.stat().st_size,
+        },
+        "model": {
+            "type": f"{type(pipeline).__module__}.{type(pipeline).__name__}",
+            "winner": winner_name,
+            "winner_selection_criterion": winner_reason,
+            "pipeline_steps": list(pipeline.named_steps),
+            "feature_names": list(feature_names),
+            "n_features": len(feature_names),
+        },
+        "training_data": {
+            "processed": {
+                "path": _relative_path(PROCESSED_DATA),
+                "sha256": sha256_file(PROCESSED_DATA),
+                "rows": metrics_out["cohort_size"],
+            },
+            "source": {
+                "path": _relative_path(EXTERNAL_PBC),
+                "sha256": sha256_file(EXTERNAL_PBC),
+                "rows": int(len(pd.read_csv(EXTERNAL_PBC))),
+            },
+        },
+        "training": {
+            "cohort_size": metrics_out["cohort_size"],
+            "class_balance": metrics_out["class_balance"],
+            "cv_folds": metrics_out["cv_folds"],
+            "metrics": metrics_out["results"][winner_name],
+        },
+        "environment": {
+            "python": platform.python_version(),
+            "scikit_learn": sklearn.__version__,
+            "joblib": joblib.__version__,
+        },
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+    }
+    with open(MODEL_MANIFEST_PATH, "w", encoding="utf-8") as handle:
+        json.dump(manifest, handle, indent=2)
+        handle.write("\n")
+    print(f"Saved model manifest -> {MODEL_MANIFEST_PATH}")
+
+
 def main():
     df = pd.read_csv(INPUT_PATH)
     features, ids, target = build_feature_frame(df)
@@ -314,6 +383,14 @@ def main():
     with open(METRICS_PATH, "w", encoding="utf-8") as f:
         json.dump(metrics_out, f, indent=2)
     print(f"Saved metrics summary -> {METRICS_PATH}")
+
+    write_model_manifest(
+        winner_name=winner_name,
+        winner_reason=winner_reason,
+        feature_names=list(features.columns),
+        metrics_out=metrics_out,
+        pipeline=fitted[winner_name],
+    )
 
 
 if __name__ == "__main__":

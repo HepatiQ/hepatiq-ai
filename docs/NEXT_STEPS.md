@@ -89,6 +89,10 @@ Options, in order of honesty/value:
   `>=` floor.
 - **`data/hepatiq.db`** is gitignored and disposable; the E2E clear-history test
   wipes it. Never commit prediction logs.
+- **The model is a pickle.** Startup now verifies its SHA-256 and feature contract
+  against `models/model_manifest.json`, which catches corruption or replacement.
+  The manifest is not a signature, so pickle is still unsafe for artifacts from an
+  untrusted source. Never load user-uploaded models.
 - **Not a medical device.** Not FDA/CDSCO-approved, not clinically validated. Keep
   the disclaimer footer and `docs/LIMITATIONS.md` accurate.
 
