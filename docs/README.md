@@ -38,7 +38,7 @@ src/hepatiq/
   validation/  OOF validation + report
   paths.py     shared path constants
 data/          external canonical exports, archived raw, processed / interim
-models/        model.pkl + candidates/
+models/        model.skops + candidates/
 tests/         pytest suite
 ```
 

@@ -23,7 +23,7 @@ python -m hepatiq.ml.explain
 
 Outputs:
 
-- `models/model.pkl` — winning pipeline refit on the full 329-patient cohort
+- `models/model.skops` — winning pipeline refit on the full 329-patient cohort
 - `models/candidates/{lr,rf,xgb}_model.pkl` — benchmark candidates
 - `models/candidates/training_metrics.json` — fold-by-fold metrics
 
@@ -39,6 +39,6 @@ Outputs:
 
 - Data: `data/external` (canonical training source), `data/raw` (archived lineage),
   `data/processed`, `data/interim` (repo root)
-- Deployed artifact: `models/model.pkl`
+- Deployed artifact: `models/model.skops`
 - Validation: `src/hepatiq/validation/`
 - Serving: `src/hepatiq/backend/`

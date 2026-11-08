@@ -1,11 +1,11 @@
 """Shared fixtures for the HepatiQ test suite."""
 
-import joblib
 import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
 from hepatiq.backend.main import FEATURE_COLUMNS, MODEL_PATH, app
+from hepatiq.model_artifact import load_model
 
 REQUIRED_ONLY = {"age": 58.0, "sex": "f", "edema": 0.0, "bili": 1.2, "albumin": 3.6}
 
@@ -23,7 +23,7 @@ OLD_5FEATURE = {
 
 
 def build_model_frame(payload: dict) -> pd.DataFrame:
-    """Replicate exactly what backend.main builds, for joblib parity checks."""
+    """Replicate exactly what backend.main builds, for direct-model parity checks."""
     row = {}
     for feature in FEATURE_COLUMNS:
         if feature == "sex":
@@ -44,4 +44,4 @@ def client(tmp_path, monkeypatch):
 
 @pytest.fixture(scope="session")
 def model():
-    return joblib.load(MODEL_PATH)
+    return load_model(MODEL_PATH)

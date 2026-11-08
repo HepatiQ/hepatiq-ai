@@ -28,14 +28,14 @@ Model selection: models are first compared by mean ROC-AUC.
 If ROC-AUC confidence intervals overlap, calibration (Brier score),
 recall, precision, and recall stability are used as documented
 tie-breakers. The selected model is then refit on the full cohort and
-saved as models/model.pkl.
+saved as models/model.skops.
 
 Run:
     python -m hepatiq.ml.train
 
 Input:  data/processed/pbc_5yr_target.csv   (labeled cohort, NOT yet imputed --
                                     this is deliberate, see above)
-Output: models/model.pkl                    (winning pipeline, fit on full cohort)
+Output: models/model.skops                  (winning pipeline, fit on full cohort)
         models/model_manifest.json          (hash + feature contract for serving)
         models/candidates/lr_model.pkl
         models/candidates/rf_model.pkl
@@ -52,6 +52,7 @@ import joblib
 import numpy as np
 import pandas as pd
 import sklearn
+import skops
 from scipy import stats
 
 from sklearn.experimental import enable_iterative_imputer  # noqa: F401 (required to unlock IterativeImputer)
@@ -75,7 +76,7 @@ except ImportError as exc:  # pragma: no cover
 # from silently drifting apart on how "sex" gets encoded, which columns
 # count as leaky, etc.
 from hepatiq.ml.impute_pipeline import build_feature_frame
-from hepatiq.model_artifact import MANIFEST_SCHEMA_VERSION, sha256_file
+from hepatiq.model_artifact import MANIFEST_SCHEMA_VERSION, dump_model, sha256_file
 from hepatiq.paths import (
     CANDIDATES_DIR,
     EXTERNAL_PBC,
@@ -323,6 +324,7 @@ def write_model_manifest(*, winner_name, winner_reason, feature_names, metrics_o
         "environment": {
             "python": platform.python_version(),
             "scikit_learn": sklearn.__version__,
+            "skops": skops.__version__,
             "joblib": joblib.__version__,
         },
         "generated_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
@@ -368,7 +370,7 @@ def main():
         joblib.dump(pipe, out_path)
         print(f"Saved {name} -> {out_path}")
 
-    joblib.dump(fitted[winner_name], MODEL_PATH)
+    dump_model(fitted[winner_name], MODEL_PATH)
     print(f"Saved winning model ({winner_name}) -> {MODEL_PATH}  (this is what the backend loads)")
 
     metrics_out = {

@@ -8,6 +8,7 @@ numpy==2.5.1
 scikit-learn==1.9.0
 xgboost==3.4.1
 shap==0.52.0
+skops==0.16.0
 
 # Backend API 
 fastapi==0.141.1

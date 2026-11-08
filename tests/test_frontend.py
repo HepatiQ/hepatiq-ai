@@ -66,11 +66,10 @@ def test_form_submit_renders_scorecard(monkeypatch):
     direct = build_model_frame(
         {"age": 61.0, "sex": "f", "edema": 0.0, "bili": 3.4, "albumin": 3.5}
     )
-    import joblib
-
     from hepatiq.backend.main import MODEL_PATH
+    from hepatiq.model_artifact import load_model
 
-    expected = float(joblib.load(MODEL_PATH).predict_proba(direct)[0, 1])
+    expected = float(load_model(MODEL_PATH).predict_proba(direct)[0, 1])
     assert at.metric[0].value == f"{expected:.1%}"
 
     assert len(at.get("plotly_chart")) == 1  # SHAP contributions chart

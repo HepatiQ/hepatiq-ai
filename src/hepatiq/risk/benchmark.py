@@ -45,12 +45,11 @@ def five_year_outcome(time: np.ndarray, event: np.ndarray, horizon: int = HORIZO
 
 def v1_probabilities(frame: pd.DataFrame) -> np.ndarray:
     """Score the canonical cohort with the deployed v1 logistic-regression pipeline."""
-    import joblib
-
     from hepatiq.backend.main import FEATURE_COLUMNS
+    from hepatiq.model_artifact import load_model
     from hepatiq.paths import MODEL_PATH
 
-    model = joblib.load(MODEL_PATH)
+    model = load_model(MODEL_PATH)
     features = frame[FEATURE_COLUMNS].copy()
     features["sex"] = features["sex"].astype(str).str.lower().map({"f": 0.0, "m": 1.0})
     return model.predict_proba(features)[:, 1]

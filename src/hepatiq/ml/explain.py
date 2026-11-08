@@ -1,6 +1,6 @@
 """Explain a single patient's predicted risk using SHAP.
 
-Loads the winning pipeline from models/model.pkl and shows which features
+Loads the winning pipeline from models/model.skops and shows which features
 pushed one patient's predicted 5-year severe-event risk up or down.
 
 Uses build_feature_frame() from impute_pipeline.py -- the same function
@@ -9,7 +9,7 @@ match what the model was actually trained on, rather than a hand-copied
 re-implementation that could quietly drift out of sync later.
 
 Note on explainer choice: shap.LinearExplainer only works because the
-current winner (models/model.pkl) is Logistic Regression, which exposes
+current winner (models/model.skops) is Logistic Regression, which exposes
 linear coefficients. If train.py is re-run and a tree-based model (Random
 Forest / XGBoost) wins instead, this script needs shap.TreeExplainer
 instead -- LinearExplainer will raise an error on a non-linear model. The
@@ -21,12 +21,12 @@ Run:
 
 import sys
 
-import joblib
 import pandas as pd
 import shap
 from sklearn.linear_model import LogisticRegression
 
 from hepatiq.ml.impute_pipeline import build_feature_frame
+from hepatiq.model_artifact import load_model
 from hepatiq.paths import MODEL_PATH, PROCESSED_DATA
 
 DATA_PATH = str(PROCESSED_DATA)
@@ -35,7 +35,7 @@ RANDOM_STATE = 42
 
 
 def main(patient_idx: int = 0):
-    pipeline = joblib.load(MODEL_PATH)
+    pipeline = load_model(MODEL_PATH)
     df = pd.read_csv(DATA_PATH)
     features, ids, target = build_feature_frame(df)
 
@@ -47,7 +47,7 @@ def main(patient_idx: int = 0):
 
     if not isinstance(classifier, LogisticRegression):
         sys.exit(
-            f"models/model.pkl's classifier is {type(classifier).__name__}, not "
+            f"models/model.skops's classifier is {type(classifier).__name__}, not "
             "LogisticRegression. shap.LinearExplainer won't work on a "
             "non-linear model -- switch to shap.TreeExplainer(classifier) "
             "for Random Forest / XGBoost instead."

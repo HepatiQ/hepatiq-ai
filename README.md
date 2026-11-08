@@ -98,7 +98,7 @@ external validation.
 | **Database** | SQLite (Python stdlib sqlite3) |
 | **Frontend** | Streamlit (custom-themed UI) |
 | **Backend** | FastAPI & Uvicorn (modular inference API) |
-| **ML & Data** | Scikit-learn (IterativeImputer, StandardScaler), Pandas, NumPy, XGBoost |
+| **ML & Data** | Scikit-learn (IterativeImputer, StandardScaler), skops, Pandas, NumPy, XGBoost |
 | **Explainability** | SHAP |
 | **Version Control** | Git & GitHub |
 
@@ -107,7 +107,7 @@ external validation.
 | Member | Role | Tools |
 | --- | --- | --- |
 | **Nirali Verma** | Data & ML Lead | Pandas, NumPy, Scikit-learn, XGBoost, SHAP |
-| **Pranjal Dubey** | Backend & MLOps | FastAPI, Uvicorn, Joblib, GitHub |
+| **Pranjal Dubey** | Backend & MLOps | FastAPI, Uvicorn, skops, GitHub |
 | **Subbannagari Deekshitha** | Frontend UI | Streamlit, Requests, Plotly |
 | **Rudra Singh Tomar** | Clinical Validation | SciPy, Statsmodels, Scikit-learn |
 
@@ -179,7 +179,7 @@ data/
   processed/   labeled 5-year target cohort
   interim/     imputed / scaled exploration artifacts
 models/
-  model.pkl             deployed pipeline
+  model.skops           deployed pipeline (skops, fixed extra trusted types)
   model_manifest.json   artifact hash, feature contract, training metrics
   candidates/           losing models + training metrics
 tests/         pytest suite (API, ML guards, validation, Streamlit)
@@ -201,12 +201,14 @@ per process, so a multi-instance deployment needs a shared store such as Redis.
 Enable proxy-header trust only behind a trusted reverse proxy that sets
 `X-Forwarded-For`; clients can otherwise choose their own bucket.
 
-**Model integrity:** startup verifies `models/model.pkl` against the SHA-256 and
-17-feature contract in `models/model_manifest.json` before `joblib.load()`. A
-missing, malformed, or mismatched manifest/artifact leaves `/health` at 200 with
-`model_loaded: false` and makes `/predict` return 503. The check detects
-accidental or tampered replacement, but it is not a signature; never load a
-pickle from an untrusted upload or URL.
+**Model integrity:** startup verifies `models/model.skops` against the SHA-256 and
+17-feature contract in `models/model_manifest.json`, then deserializes it through
+skops with a hard-coded extra trusted-type allowlist (skops' library-controlled
+defaults also apply). Verification and loading use the
+same byte snapshot. A missing, malformed, mismatched, or unexpectedly typed
+artifact leaves `/health` at 200 with `model_loaded: false` and makes `/predict`
+return 503. The manifest detects accidental or tampered replacement but is not a
+signature; never load a model from an untrusted upload or URL.
 
 See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for full setup instructions.
 

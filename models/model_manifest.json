@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "artifact": {
-    "path": "models/model.pkl",
-    "sha256": "bc96bb1d7399391ea103c65515a76e5f40e8a7cfd4acdce27d59d935020c31f1",
-    "size_bytes": 267713
+    "path": "models/model.skops",
+    "sha256": "75fd4eb0093ca660da3a0072123bd5fb571d413c50b423b81064b2b409fbb16e",
+    "size_bytes": 324347
   },
   "model": {
     "type": "sklearn.pipeline.Pipeline",
@@ -93,9 +93,10 @@
     }
   },
   "environment": {
-    "python": "3.12",
+    "python": "3.12.13",
     "scikit_learn": "1.9.0",
+    "skops": "0.16.0",
     "joblib": "1.5.3"
   },
-  "generated_at_utc": "2026-11-07T06:12:06Z"
+  "generated_at_utc": "2026-11-08T06:49:21Z"
 }

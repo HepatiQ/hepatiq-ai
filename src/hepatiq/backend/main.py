@@ -1,6 +1,6 @@
 """HepatiQ FastAPI service — 17-feature 5-year severe-event risk model.
 
-Loads models/model.pkl (an sklearn Pipeline: IterativeImputer -> StandardScaler
+Loads models/model.skops (an sklearn Pipeline: IterativeImputer -> StandardScaler
 -> LogisticRegression, trained on 17 PBC features) at startup, builds a SHAP
 LinearExplainer once, and serves /health and /predict.
 
@@ -10,7 +10,8 @@ Contract:
       filled by the pipeline's IterativeImputer at predict time.
     - Unknown fields are rejected (422) so stale clients fail loudly.
     - Startup verifies the artifact SHA-256 and feature contract in
-      models/model_manifest.json before joblib.load().
+      models/model_manifest.json, then loads it through skops with a fixed
+      trusted-type allowlist.
     - If the model cannot be verified or loaded, /predict returns 503 — never a
       fabricated fallback probability.
     - Response includes per-feature SHAP contributions in log-odds units,
@@ -23,7 +24,6 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import List, Literal, Optional
 
-import joblib
 import numpy as np
 import pandas as pd
 import shap
@@ -38,7 +38,7 @@ from hepatiq.backend.db import (
     log_prediction,
 )
 from hepatiq.backend.rate_limit import RateLimitSettings, SlidingWindowLimiter, enforce_rate_limit
-from hepatiq.model_artifact import validate_loaded_model, verify_model_artifact
+from hepatiq.model_artifact import load_verified_model
 from hepatiq.paths import DEFAULT_DB_PATH, MODEL_MANIFEST_PATH, MODEL_PATH, PROCESSED_DATA
 from hepatiq.risk_bands import risk_category
 
@@ -186,9 +186,9 @@ async def lifespan(app: FastAPI):
     )
 
     try:
-        model_hash = verify_model_artifact(MODEL_PATH, MODEL_MANIFEST_PATH, FEATURE_COLUMNS)
-        model = joblib.load(MODEL_PATH)
-        validate_loaded_model(model, FEATURE_COLUMNS)
+        model, model_hash = load_verified_model(
+            MODEL_PATH, MODEL_MANIFEST_PATH, FEATURE_COLUMNS
+        )
         _state["model"] = model
         _state["explainer"] = _build_explainer(model)
         _state["model_version"] = model_hash[:8]

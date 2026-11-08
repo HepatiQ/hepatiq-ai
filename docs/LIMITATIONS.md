@@ -88,15 +88,18 @@ Numbers cited here come from `src/hepatiq/validation/report.md` and `models/cand
   audit logging the project does not implement).
 - **Local-only history.** Predictions are logged to a gitignored SQLite file on the
   machine running the server; there is no backup, retention policy, or tamper protection.
-- **Model artifact trust boundary.** Startup verifies `model.pkl` against the
-  SHA-256 and feature contract in `models/model_manifest.json` before loading it.
-  This catches accidental corruption or replacement, but it is not a signature:
-  an attacker who can replace both files bypasses the check, and `joblib`/pickle
-  remains unsafe for untrusted artifacts. Never load a model from a user upload
-  or untrusted URL. A safer serialization format is a separate follow-up.
+- **Model artifact trust boundary.** Startup verifies `model.skops` against the
+  SHA-256 and feature contract in `models/model_manifest.json`, then deserializes
+  it with skops using a hard-coded extra trusted-type allowlist; skops' own
+  library-controlled trusted defaults also apply. This catches accidental
+  corruption or replacement and retires the arbitrary-pickle execution risk, but
+  the manifest is not a signature: an attacker who can replace both files still
+  bypasses the integrity check. Do not load a model from a user upload or
+  untrusted URL; use a signed manifest or read-only artifact mount for a stronger
+  authenticity boundary.
 - **No monitoring.** Nothing tracks prediction drift, input-range violations in
-  production, or model degradation over time; the model is a frozen `.pkl` from one
-  training run.
+  production, or model degradation over time; the model is a frozen `.skops`
+  artifact from one training run.
 - **Research prototype status.** Not FDA-approved, CDSCO-approved, or clinically
   validated; not a substitute for physician judgment (see the README disclaimer).
 
@@ -105,6 +108,6 @@ Numbers cited here come from `src/hepatiq/validation/report.md` and `models/cand
 On this cohort, with this pipeline (leakage-controlled 5-fold CV, seed 42), the deployed
 Logistic Regression discriminates 5-year severe events substantially better than a
 constant baseline, with calibration better than the baseline, and the API's numerical
-output is exactly reproducible against direct `joblib` inference (asserted in the test
+output is exactly reproducible against direct model inference (asserted in the test
 suite). It does **not** outperform the 1989 Mayo Risk Score on held-out patients, and no
 external cohort has confirmed either model. That is the claim; nothing beyond it is.

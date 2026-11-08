@@ -1,5 +1,9 @@
 # Results: Feature Ablation and Imputation Audit
 
+> Historical note (2026-11-08): the serving artifact moved from
+> `models/model.pkl` to `models/model.skops`. References to the pickle and its
+> SHA-256 below describe the frozen pre-migration artifact.
+
 Status: **draft. Primary, robustness, one-time internal held-out, sensitivity,
 and SHAP attribution analyses are complete. Two items remain blocked: exact
 reproduction of the 25.00% Patient B payload and the Mayo 5.76% probability
