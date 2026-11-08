@@ -3,14 +3,14 @@
 - Model version: v1.0
 - Repository: HepatiQ AI
 - Last updated: November 2026
-- Artifact SHA-256: `bc96bb1d7399391ea103c65515a76e5f40e8a7cfd4acdce27d59d935020c31f1`
+- Artifact SHA-256: `75fd4eb0093ca660da3a0072123bd5fb571d413c50b423b81064b2b409fbb16e`
 
 ## Model Details
 - **Task**: binary classification — predict 5-year severe event risk (death or liver transplant) in patients with Primary Biliary Cholangitis (PBC)
 - **Model type**: Logistic Regression (L2-regularized, `class_weight='balanced'`), selected from a three-way comparison against Random Forest and XGBoost
 - **Preprocessing**: `IterativeImputer` (multivariate imputation) + `StandardScaler`, both fit fresh inside each cross-validation fold — never on the full dataset upfront — to avoid leaking held-out patients into preprocessing
-- **Framework**: scikit-learn (`LogisticRegression`, `IterativeImputer`, `StandardScaler`, `Pipeline`), serialized with `joblib`
-- **Artifact verification**: startup checks the artifact SHA-256 and 17-feature contract against `models/model_manifest.json` before `joblib.load()`; mismatch leaves the model unavailable rather than serving a different artifact
+- **Framework**: scikit-learn (`LogisticRegression`, `IterativeImputer`, `StandardScaler`, `Pipeline`), serialized with `skops==0.16.0`
+- **Artifact verification**: startup checks `models/model.skops` SHA-256 and 17-feature contract against `models/model_manifest.json`, then loads it through skops with a hard-coded extra trusted-type allowlist (skops' library-controlled defaults also apply); verification and loading use the same byte snapshot. Mismatch leaves the model unavailable rather than serving a different artifact.
 - **Trained**: September 2026
 - **Team**: HepatiQ (Pranjal — backend/MLOps/lead, Nirali Verma — ML, Subbannagari Deekshitha — frontend, Rudra Singh Tomar — clinical validation), guided by Prof. Parag Gajbhiye, Anand School of Engineering and Technology, Sharda University
 
@@ -60,7 +60,7 @@ Per-patient SHAP attributions via `shap.LinearExplainer` (`src/hepatiq/ml/explai
 - **Historical data**: the Mayo trial predates many modern PBC treatment protocols; learned risk relationships may not reflect outcomes under current standards of care.
 - **No external validation**: every reported metric comes from the same historical Mayo cohort (OOF or a held-out split of it). No independent PBC cohort has confirmed generalization.
 - **No PHI or deployment controls**: the project has no authentication, authorization, encryption at rest, audit logging, or PHI handling. It is a research prototype, not a deployable clinical system.
-- **Artifact trust boundary**: the startup hash check detects accidental or tampered replacement, but it is not a signature. If an attacker can replace both `model.pkl` and `model_manifest.json`, the check passes. `joblib`/pickle remains unsafe for artifacts from untrusted sources; do not load user-uploaded or remotely fetched models.
+- **Artifact trust boundary**: the startup hash check detects accidental or tampered replacement, but it is not a signature. If an attacker can replace both `model.skops` and `model_manifest.json`, the check passes. skops with a fixed allowlist prevents arbitrary pickle code execution, but it is not an authenticity control and does not replace a read-only artifact mount or signed manifest. Do not load user-uploaded or remotely fetched models.
 - **Not a diagnostic tool**: output is a probability estimate for decision support, not a diagnosis or treatment recommendation.
 - **Integration status**: Backend and frontend are integrated with the full 17-feature workflow. The FastAPI service (`src/hepatiq/backend/main.py`) exposes `/health` and `/predict` against the trained pipeline, with per-feature SHAP contributions built once at startup. The Streamlit frontend (`src/hepatiq/frontend/app.py`) presents all 17 inputs (5 required, 12 optional with server-side imputation) and renders contributions sorted by absolute impact. Model and data paths are resolved through `src/hepatiq/paths.py`, so both services work regardless of the current working directory.
 

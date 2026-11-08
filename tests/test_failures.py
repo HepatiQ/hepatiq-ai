@@ -7,17 +7,17 @@ from tests.conftest import REQUIRED_ONLY
 
 
 def test_predict_returns_503_when_model_file_is_missing(tmp_path, monkeypatch):
-    monkeypatch.setattr(main_module, "MODEL_PATH", tmp_path / "missing.pkl")
+    monkeypatch.setattr(main_module, "MODEL_PATH", tmp_path / "missing.skops")
     with TestClient(main_module.app) as c:
         h = c.get("/health")
         assert h.status_code == 200
         assert h.json()["model_loaded"] is False
         assert h.json()["error"] == "model unavailable"
-        assert "missing.pkl" not in h.text
+        assert "missing.skops" not in h.text
         r = c.post("/predict", json=REQUIRED_ONLY)
         assert r.status_code == 503
         assert r.json()["detail"] == "Model not loaded"
-        assert "missing.pkl" not in r.text
+        assert "missing.skops" not in r.text
 
 
 def test_history_returns_503_and_recovers_when_db_unavailable(client):

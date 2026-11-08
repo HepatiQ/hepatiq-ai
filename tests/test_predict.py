@@ -1,4 +1,4 @@
-"""POST /predict contract: schema, validation bounds, and joblib parity."""
+"""POST /predict contract: schema, validation bounds, and direct-model parity."""
 
 import pytest
 
@@ -71,15 +71,15 @@ def test_out_of_bounds_values_rejected(client, field, value):
     assert client.post("/predict", json=payload).status_code == 422
 
 
-def test_full_payload_probability_matches_direct_joblib(client, model):
+def test_full_payload_probability_matches_direct_model(client, model):
     r = client.post("/predict", json=SAMPLE_FULL)
     assert r.status_code == 200
     direct = float(model.predict_proba(build_model_frame(SAMPLE_FULL))[0, 1])
     assert abs(r.json()["probability"] - direct) < 1e-9
 
 
-def test_required_5_probability_matches_direct_joblib(client, model):
-    """Omitted optionals -> NaN -> IterativeImputer; API and joblib must agree exactly."""
+def test_required_5_probability_matches_direct_model(client, model):
+    """Omitted optionals -> NaN -> IterativeImputer; API and model must agree exactly."""
     r = client.post("/predict", json=REQUIRED_ONLY)
     assert r.status_code == 200
     direct = float(model.predict_proba(build_model_frame(REQUIRED_ONLY))[0, 1])

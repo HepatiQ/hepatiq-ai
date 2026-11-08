@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import joblib
 import numpy as np
 import pandas as pd
 from sklearn.experimental import enable_iterative_imputer  # noqa: F401
 from sklearn.impute import IterativeImputer
 from sklearn.pipeline import FeatureUnion
 
+from hepatiq.model_artifact import load_model as _load_model
 from hepatiq.paths import MODEL_PATH
 from hepatiq.research.config import (
     ALL_FEATURES,
@@ -24,7 +24,7 @@ from hepatiq.research.config import (
 
 
 def load_model(path: str | Path = MODEL_PATH):
-    return joblib.load(path)
+    return _load_model(Path(path))
 
 
 def model_feature_names(model) -> tuple[str, ...]:

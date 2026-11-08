@@ -1,5 +1,9 @@
 # Reproduction Record: 25.00% versus 27.48%
 
+> Historical note (2026-11-08): the serving artifact moved from
+> `models/model.pkl` to `models/model.skops`. References to the pickle below
+> describe the frozen pre-migration artifact.
+
 **Status:** awaiting exact `25.00%` payload; baseline `27.4847%` verified  
 **Date opened:** 2026-11-02  
 **Protocol:** `docs/research/FEATURE_ABLATION_IMPUTATION_AUDIT.md`

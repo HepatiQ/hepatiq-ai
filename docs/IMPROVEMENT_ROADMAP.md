@@ -4,11 +4,11 @@ Forward-looking execution plan for the next engineering sessions. This document 
 meant to be used, not just read: pick the first unchecked high-priority item, do
 the work, run the stated verification, then update the status board and evidence.
 
-- **Baseline date:** 2026-11-07
+- **Baseline date:** 2026-11-08
 - **Branch:** `main`
 - **Product status:** research prototype; not a medical device
-- **Serving model:** v1 17-feature Logistic Regression pipeline at `models/model.pkl`
-- **Assessment baseline:** 182 passed, 2 skipped locally, 80.94% CI-scoped coverage
+- **Serving model:** v1 17-feature Logistic Regression pipeline at `models/model.skops`
+- **Assessment baseline:** 201 passed, 2 skipped locally, 82.04% CI-scoped coverage
 - **CI gate:** `ruff check .` and pytest with a 60% coverage floor
 - **Incident status:** exposed classic PAT returned HTTP 401; the 115-commit
   history rewrite and 12-branch force-push are reported complete
@@ -43,7 +43,7 @@ the work, run the stated verification, then update the status board and evidence
 
 ### What is already true
 
-- The backend serves the v1 Logistic Regression pipeline from `models/model.pkl`
+- The backend serves the v1 Logistic Regression pipeline from `models/model.skops`
   through FastAPI (`/health`, `/predict`, `/history`, `/agent/reason`).
 - The v2 data and benchmark layer exists under `src/hepatiq/data` and
   `src/hepatiq/risk`, but it is not the serving path.
@@ -319,22 +319,29 @@ and CI layer cache. Do not weaken pins to make the build faster.
 
 **Why:** `joblib.load()` deserializes a pickle, which can execute code if the
 artifact is replaced or tampered with. Startup also assumes the artifact matches
-the 17-feature contract.
+the 17-feature contract. skops removes arbitrary pickle execution but still needs
+a verifier and a fixed allowlist.
 
 **Steps**
 
 - [x] Create `models/model_manifest.json` containing artifact SHA-256, model type,
   feature names, training data hash, metrics, creation date, and Python/sklearn
   versions.
-- [x] Verify the artifact hash before `joblib.load`; refuse to load on mismatch.
-- [x] Validate the loaded pipeline exposes the expected feature count and, where
-  available, feature names.
+- [x] Verify the artifact hash before loading; refuse to load on mismatch.
+- [x] Validate the loaded pipeline exposes the expected feature count and feature
+  names.
 - [x] Add a test where a tampered model hash causes `/health` to report unavailable
   and `/predict` to return 503 without leaking the path.
 - [x] Document that model files must never come from user upload or an untrusted
   URL.
-- [ ] Evaluate `skops.io` or ONNX as a safer serialization path in a separate
-  change; do not combine that migration with the hash check.
+- [x] Evaluate `skops.io` and ONNX as safer serialization paths. Adopt skops;
+  ONNX cannot convert the `IterativeImputer` on the released toolchain.
+- [x] Replace the served pickle with `models/model.skops` and load it with a
+  hard-coded extra trusted-type allowlist on top of skops' library defaults.
+- [x] Verify and deserialize from one byte snapshot so the checked bytes are the
+  loaded bytes.
+- [x] Reject legacy pickle artifacts and require the loaded pipeline to expose
+  feature names.
 
 **Files:** `src/hepatiq/backend/main.py`, `src/hepatiq/model_artifact.py`,
 `src/hepatiq/paths.py`, `src/hepatiq/ml/train.py`, `models/`, new manifest, tests,
@@ -345,12 +352,19 @@ the 17-feature contract.
 - [x] Startup fails closed on hash mismatch.
 - [x] Feature-contract mismatch is detected before serving predictions.
 - [x] Existing valid artifact still passes the exact-reproducibility test.
+- [x] skops refuses the current artifact without the project's extra allowlist; a
+  type outside skops' default trusted set fails closed.
+- [x] The skops artifact reproduces the frozen model's probabilities exactly.
 
-**Result (2026-11-07):** A checked-in manifest is verified before `joblib.load()`;
-startup also validates the loaded pipeline's 17-feature contract. Missing,
-malformed, or mismatched manifests leave `/health` at 200 with
-`model_loaded: false` and `/predict` at 503 without exposing paths. The hash check
-is an integrity control, not a signature; safer serialization remains open.
+**Result (2026-11-08):** The served artifact is now `models/model.skops`, loaded
+through skops 0.16.0 with the fixed extra allowlist `numpy.dtype`,
+`sklearn.impute._iterative.IterativeImputer`, and
+`sklearn.impute._iterative._ImputerTriplet`. The verifier hashes and loads the same
+byte snapshot, rejects legacy pickles, and requires feature names on the loaded
+pipeline. Predictions and SHAP inputs remain bit-identical to the frozen model.
+The leftover `models/model.pkl` was removed. The manifest remains an integrity
+control, not a signature; signed manifests or read-only artifact mounts are
+deployment hardening, not part of this task.
 
 ---
 
@@ -460,7 +474,7 @@ watch for updates. Exact pins are deliberate and must stay.
 ### RES-01 - True external validation
 
 **Blocked on data access.** The highest-value research step. Freeze
-`models/model.pkl`, score a cohort it has never seen with the same features and
+`models/model.skops` pipeline, score a cohort it has never seen with the same features and
 outcome definition, and report ROC-AUC, Brier score, calibration, and 95%
 bootstrap CIs against a class-prior baseline.
 
@@ -550,7 +564,7 @@ credential into an issue, chat, or commit.
 **Model reproducibility**
 
 After any data or dependency change, compare predictions from the frozen model
-against the test fixture or the direct `joblib` inference test. A changed artifact
+against the test fixture or the direct model-inference parity test. A changed artifact
 requires a new manifest entry and an explicit note in the execution log.
 
 ## 10. Decision Log
@@ -567,6 +581,7 @@ requires a new manifest entry and an explicit note in the execution log.
 | 2026-11-06 | Train v1 from canonical `data/external/pbc.csv`; archive the raw copy | Establish one data authority with pinned SHA-256 provenance. Labels and metrics were unchanged; the frozen model was not retrained and predictions moved by less than `5e-11`. |
 | 2026-11-07 | Add an in-process rate limiter but defer API-key authentication | The public demo needs basic abuse protection without adding secret provisioning or user identity yet. Per-process state is documented; a shared store is required before multi-instance deployment. |
 | 2026-11-07 | Verify the model artifact before `joblib.load()`; defer safer serialization | Detect accidental or tampered replacement and feature drift immediately, without combining the security fix with a higher-risk skops/ONNX migration. The manifest is an integrity check, not a publisher signature. |
+| 2026-11-08 | Migrate serving to skops and remove the pickle artifact | Retire arbitrary pickle execution with a fixed extra trusted-type allowlist. ONNX was rejected because the released `skl2onnx` stack cannot convert `IterativeImputer`. Predictions were bit-identical after migration. |
 
 ## 11. Execution Log
 
@@ -660,6 +675,32 @@ Verification: focused 19 passed; full suite 182 passed, 2 skipped, 80.94%
 Notes / follow-up: The manifest proves integrity, not authenticity. If an attacker
   can replace both model.pkl and model_manifest.json, the check passes. Evaluate
   skops.io or ONNX separately before serving artifacts from less-trusted paths.
+```
+
+```text
+Date: 2026-11-08
+Task: SEC-03 (safer serialization follow-up)
+Status: Done - hash/feature checks plus skops allowlist
+Change: Replaced models/model.pkl with models/model.skops, serialized with
+  skops 0.16.0 (DEFLATE 9). Added a hard-coded extra trusted-type allowlist
+  (numpy.dtype, sklearn.impute._iterative.IterativeImputer,
+  sklearn.impute._iterative._ImputerTriplet) on top of skops' library defaults.
+  The backend hashes and loads the same byte snapshot; legacy pickle artifacts
+  and types outside skops' trusted defaults fail closed. Manifest model type and
+  pipeline steps are checked against the loaded object. All model consumers now
+  use the shared safe loader, and train.py writes the new artifact and manifest.
+Files: src/hepatiq/model_artifact.py, src/hepatiq/backend/main.py,
+  src/hepatiq/paths.py, src/hepatiq/ml/train.py, src/hepatiq/ml/explain.py,
+  src/hepatiq/validation/run_validation.py, src/hepatiq/risk/benchmark.py,
+  src/hepatiq/research/imputation.py, models/model.skops,
+  models/model_manifest.json, requirements.txt, tests, docs, README.md
+Verification: full suite 201 passed, 2 skipped, 82.04% CI-scoped coverage; ruff
+  clean. Required-input probability 0.2801766578461799 and full-input probability
+  0.10090583019835869 are bit-identical to the frozen pickle. skops without the
+  project's extra allowlist raises UntrustedTypesFoundException.
+Notes / follow-up: The manifest is still unsigned. An attacker who can replace
+  both artifact and manifest bypasses integrity checks; use a signed manifest or
+  read-only artifact mount for a stronger authenticity boundary.
 ```
 
 ```text

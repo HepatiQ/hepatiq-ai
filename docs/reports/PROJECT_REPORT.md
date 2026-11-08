@@ -79,7 +79,7 @@ Frontend (Streamlit) --> Backend (FastAPI) --> ML Pipeline (sklearn)
 
 ### ML Pipeline
 - Training scripts in `src/hepatiq/ml/`: data prep, training, evaluation
-- Artifacts in `models/`: `model.pkl`, `candidates/training_metrics.json`
+- Artifacts in `models/`: `model.skops`, `candidates/training_metrics.json`
 - Validation in `src/hepatiq/validation/`: calibration plots, reports
 
 ## Features

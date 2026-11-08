@@ -37,7 +37,7 @@ dataset" into evidence of generalization.
 Options, in order of honesty/value:
 
 - **Option A — true external validation (best).** Score the frozen
-  `models/model.pkl` on a dataset it has *never* seen with the same features and
+  `models/model.skops` pipeline on a dataset it has *never* seen with the same features and
   an outcome column. Candidate cohorts: UK-PBC, GLOBAL PBC / GLOBE, or the
   Mayo/VA cohorts (the latter also carry creatinine + INR, which would finally
   enable a real MELD benchmark — see `docs/LIMITATIONS.md`).

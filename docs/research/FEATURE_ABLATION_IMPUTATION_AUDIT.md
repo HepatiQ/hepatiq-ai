@@ -1,5 +1,9 @@
 # Feature Ablation and Imputation Audit
 
+> Historical note (2026-11-08): the serving artifact moved from
+> `models/model.pkl` to `models/model.skops`. The frozen base model SHA-256 below
+> identifies the pre-migration pickle used by this audit.
+
 **Protocol version:** 1.0  
 **Status:** frozen; no experiments run yet  
 **Frozen at:** the commit that introduces this file  

@@ -30,7 +30,6 @@ Output:  src/hepatiq/validation/report.md   (committed deliverable)
          summary printed to stdout
 """
 
-import joblib
 import numpy as np
 import pandas as pd
 from sklearn.metrics import (
@@ -43,6 +42,7 @@ from sklearn.metrics import (
 from sklearn.model_selection import StratifiedKFold
 
 from hepatiq.ml.impute_pipeline import build_feature_frame
+from hepatiq.model_artifact import load_model
 from hepatiq.paths import MODEL_PATH, PROCESSED_DATA, VALIDATION_REPORT_PATH
 from hepatiq.validation.validate import bootstrap_ci
 
@@ -76,7 +76,7 @@ def out_of_fold_predictions(
     model_oof = np.zeros(len(target))
     prior_oof = np.zeros(len(target))
     for train_idx, test_idx in cv.split(features, target):
-        pipe = joblib.load(MODEL_PATH)
+        pipe = load_model(MODEL_PATH)
         expected_features = getattr(pipe, "feature_names_in_", None)
         if expected_features is not None and list(features.columns) != list(expected_features):
             raise ValueError(

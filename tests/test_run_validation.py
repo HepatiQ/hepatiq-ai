@@ -85,7 +85,7 @@ def test_out_of_fold_predictions_are_aligned_and_leakage_free(monkeypatch):
         pipes.append(pipe)
         return pipe
 
-    monkeypatch.setattr(run_validation.joblib, "load", fake_load)
+    monkeypatch.setattr(run_validation, "load_model", fake_load)
 
     model_oof, prior_oof = run_validation.out_of_fold_predictions(features, target)
 
@@ -117,7 +117,7 @@ def test_out_of_fold_predictions_are_deterministic(monkeypatch):
             pipes.append(pipe)
             return pipe
 
-        monkeypatch.setattr(run_validation.joblib, "load", fake_load)
+        monkeypatch.setattr(run_validation, "load_model", fake_load)
         model_oof, prior_oof = run_validation.out_of_fold_predictions(features, target)
         return model_oof, prior_oof, [pipe.train_index for pipe in pipes]
 
@@ -149,8 +149,8 @@ def test_out_of_fold_predictions_reject_misaligned_inputs():
 def test_out_of_fold_predictions_accept_matching_feature_columns(monkeypatch):
     features, target = _oof_fixture(n=20)
     monkeypatch.setattr(
-        run_validation.joblib,
-        "load",
+        run_validation,
+        "load_model",
         lambda _path: _RecordingPipeline(feature_names=["x"]),
     )
 
@@ -164,8 +164,8 @@ def test_out_of_fold_predictions_reject_unexpected_feature_columns(monkeypatch):
     features, target = _oof_fixture(n=20)
     features = features.assign(extra=1.0)
     monkeypatch.setattr(
-        run_validation.joblib,
-        "load",
+        run_validation,
+        "load_model",
         lambda _path: _RecordingPipeline(feature_names=["x"]),
     )
 
@@ -177,8 +177,8 @@ def test_out_of_fold_predictions_reject_reordered_feature_columns(monkeypatch):
     features, target = _oof_fixture(n=20)
     features = features.assign(y=0.0)[["y", "x"]]
     monkeypatch.setattr(
-        run_validation.joblib,
-        "load",
+        run_validation,
+        "load_model",
         lambda _path: _RecordingPipeline(feature_names=["x", "y"]),
     )
 

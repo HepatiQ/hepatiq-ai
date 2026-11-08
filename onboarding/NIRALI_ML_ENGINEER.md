@@ -115,7 +115,7 @@ code .
 - Pandas & NumPy - Data loading and cleaning
 - Scikit-learn - Model training, imputation, scaling
 - SHAP - Model explainability
-- Joblib - Model serialization
+- Joblib (candidate models) and skops (served artifact) - Model serialization
 
 **YOUR KEY TASKS:**
 1. Load and clean Mayo Clinic PBC dataset

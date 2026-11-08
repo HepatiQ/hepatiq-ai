@@ -70,12 +70,12 @@ Each team member owns one folder. Keep your code there and coordinate with teamm
 | Folder | Owner | Responsibility |
 |---|---|---|
 | `src/hepatiq/ml/` | Nirali | Data ingestion, cohort filtering, preprocessing (IterativeImputer, StandardScaler), model training (Logistic Regression + XGBoost), cross-validation, SHAP generation |
-| `src/hepatiq/backend/` | Pranjal | FastAPI application, `/predict` endpoint, Pydantic validation, model loading (joblib), SHAP integration |
+| `src/hepatiq/backend/` | Pranjal | FastAPI application, `/predict` endpoint, Pydantic validation, model loading (skops), SHAP integration |
 | `src/hepatiq/frontend/` | Deekshitha | Streamlit UI, input forms, risk scorecard rendering, SHAP visualization charts (Plotly) |
 | `src/hepatiq/validation/` | Rudra | Bootstrap confidence intervals, out-of-fold validation runner (`run_validation.py`), class-prior baseline comparison, Brier score, clinical limitations documentation |
 | `src/hepatiq/paths.py` | Everyone | Path constants shared by every module; change these instead of hardcoding paths |
 | `data/raw\|processed\|interim/` | Nirali | Raw dataset, labeled cohort, and imputed exploratory artifacts |
-| `models/` | Nirali & Pranjal | `model.pkl` (deployed) and `candidates/` (benchmark models + metrics) |
+| `models/` | Nirali & Pranjal | `model.skops` (deployed) and `candidates/` (benchmark models + metrics) |
 | `docs/` | Everyone | Team documentation, roadmap, workflow guides |
 
 ## Running the Project Locally
