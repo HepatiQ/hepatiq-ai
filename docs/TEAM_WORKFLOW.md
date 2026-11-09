@@ -188,6 +188,40 @@ This workflow exists to serve the project, not to create friction. Remember:
 
 If something feels off (workflow too slow, process too heavy, unclear responsibilities), bring it up in the team chat. We can iterate and improve.
 
+## Dependency and GitHub Actions Updates
+
+Dependabot proposes updates weekly for Python packages, GitHub Actions, and the
+Docker base image. Minor and patch updates are grouped by ecosystem; major
+updates stay as individual PRs. **Dependabot never merges automatically.**
+
+Before merging any dependency PR:
+
+1. Install the proposed pins in a clean environment:
+   ```bash
+   pip install -r requirements.txt
+   pip install -e . --no-deps
+   ```
+2. Run the HIGH/CRITICAL dependency gate:
+   ```bash
+   python scripts/dependency_audit.py --requirements requirements.txt
+   ```
+3. Run lint and the full test suite:
+   ```bash
+   ruff check .
+   python -m pytest -v --cov=hepatiq.backend --cov=hepatiq.ml --cov=hepatiq.validation --cov=hepatiq.model_artifact --cov-report=term-missing --cov-fail-under=60
+   ```
+4. If the update touches `scikit-learn`, `skops`, `joblib`, `numpy`, or the
+   serialization stack, run `tests/test_model_artifact.py` and confirm the
+   artifact hash in `models/model_manifest.json` still matches. Regenerate the
+   manifest only when the artifact itself changes; record the reason in the PR.
+5. Keep `requirements.txt` exactly pinned. If an advisory cannot be fixed yet,
+   document a specific, time-limited exception in the PR and in a comment next
+   to the pin instead of silently ignoring it.
+
+GitHub Actions are pinned by full commit SHA with a version comment. Review the
+SHA change, not only the tag comment. Do not auto-merge dependency or action
+updates; CI must pass on the PR first.
+
 ## Workflow at a Glance
 
 ```

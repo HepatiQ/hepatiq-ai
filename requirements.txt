@@ -18,9 +18,12 @@ pydantic==2.13.5
 httpx==0.28.1
 
 # Frontend
-streamlit==1.62.0
+# Streamlit >=1.66.1 is required to allow Pillow 13, which fixes the
+# HIGH/CRITICAL image-decoder advisories reported by pip-audit.
+streamlit==1.66.1
 requests==2.34.2
 plotly==7.0.0
+pillow==13.0.0
 
 # Validation 
 scipy==1.18.1
@@ -31,8 +34,9 @@ matplotlib==3.11.1
 pytest==9.1.1
 pytest-cov==7.1.0
 ruff==0.17.1
+pip-audit==2.10.1
 
 # Reports
-fpdf2==2.8.2
+fpdf2==2.8.8
 
 -e .

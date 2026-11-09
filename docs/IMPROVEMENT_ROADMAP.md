@@ -4,12 +4,13 @@ Forward-looking execution plan for the next engineering sessions. This document 
 meant to be used, not just read: pick the first unchecked high-priority item, do
 the work, run the stated verification, then update the status board and evidence.
 
-- **Baseline date:** 2026-11-08
+- **Baseline date:** 2026-11-09
 - **Branch:** `main`
 - **Product status:** research prototype; not a medical device
 - **Serving model:** v1 17-feature Logistic Regression pipeline at `models/model.skops`
-- **Assessment baseline:** 201 passed, 2 skipped locally, 82.04% CI-scoped coverage
-- **CI gate:** `ruff check .` and pytest with a 60% coverage floor
+- **Assessment baseline:** 209 passed, 2 skipped; 82.49% CI-scoped coverage on
+  Python 3.12 (82.04% on local Python 3.14)
+- **CI gate:** dependency audit, `ruff check .`, and pytest with a 60% coverage floor
 - **Incident status:** exposed classic PAT returned HTTP 401; the 115-commit
   history rewrite and 12-branch force-push are reported complete
 - **Open security action:** verify post-rewrite containment, enable GitHub secret
@@ -123,8 +124,8 @@ blocked on external input.
 | SEC-02 | API authentication, rate limits, CORS/XSRF | P1 | Partial: rate limiter done; auth/CORS open | M | None |
 | DATA-01 | Canonical v1 data lineage and provenance | P1 | Done | M | None |
 | DEP-01 | Complete Docker CI, healthcheck, and image scan | P1 | Open | M | P0 Docker review |
-| SEC-03 | Model artifact integrity and startup validation | P1 | Partial: hash/feature checks done; safer serialization open | M | DATA-01 recommended |
-| CI-01 | Dependency, action, and supply-chain guardrails | P1 | Open | S | None |
+| SEC-03 | Model artifact integrity and startup validation | P1 | Done | M | DATA-01 recommended |
+| CI-01 | Dependency, action, and supply-chain guardrails | P1 | Done | S | None |
 | OBS-01 | Structured logging, request IDs, readiness, metrics | P2 | Open | M | SEC-02 |
 | API-01 | API versioning and contract hardening | P2 | Open | M | SEC-02 |
 | PROD-01 | Bulk CSV scoring workflow | P2 | Open | M | SEC-02 |
@@ -375,21 +376,36 @@ watch for updates. Exact pins are deliberate and must stay.
 
 **Steps**
 
-- [ ] Add `pip-audit -r requirements.txt` with a documented severity threshold.
-- [ ] Pin `actions/checkout` and `actions/setup-python` to full commit SHAs.
-- [ ] Add Dependabot or Renovate for pip, GitHub Actions, and Docker base images.
-- [ ] Keep updates grouped so one dependency bump is reviewable on its own.
-- [ ] Add a CI timeout and pip cache; make failures actionable.
-- [ ] Document the update procedure: bump, run full tests, verify model
+- [x] Add `pip-audit -r requirements.txt` with a documented severity threshold.
+- [x] Pin `actions/checkout` and `actions/setup-python` to full commit SHAs.
+- [x] Add Dependabot or Renovate for pip, GitHub Actions, and Docker base images.
+- [x] Keep updates grouped so one dependency bump is reviewable on its own.
+- [x] Add a CI timeout and pip cache; make failures actionable.
+- [x] Document the update procedure: bump, run full tests, verify model
   reproducibility, update the manifest if the artifact changes.
 
 **Acceptance**
 
-- [ ] CI fails on a known HIGH/CRITICAL dependency advisory.
-- [ ] Actions are pinned by SHA.
-- [ ] Dependency updates are proposed automatically but never merged untested.
-- [ ] `requirements.txt` remains exact-pinned unless a specific exception is
+- [x] CI fails on a known HIGH/CRITICAL dependency advisory.
+- [x] Actions are pinned by SHA.
+- [x] Dependency updates are proposed automatically but never merged untested.
+- [x] `requirements.txt` remains exact-pinned unless a specific exception is
   documented.
+
+**Result (2026-11-09):** `scripts/dependency_audit.py` runs `pip-audit` against
+OSV and fails on HIGH/CRITICAL advisories or unknown severity; LOW/MEDIUM
+advisories are reported without failing. Requirements now pin
+`streamlit==1.66.1`, `pillow==13.0.0` (Streamlit 1.66.1 allows `pillow<14`),
+and `fpdf2==2.8.8`, clearing the reported advisories. `pip-audit==2.10.1` is
+pinned for reproducible CI behavior. The workflow pins `actions/checkout` and
+`actions/setup-python` by SHA, sets `contents: read`, caches pip, and has a
+20-minute timeout. Dependabot proposes grouped weekly minor/patch updates for
+pip, GitHub Actions, and Docker. The update procedure is documented in
+`docs/TEAM_WORKFLOW.md`. A manual negative test using the old Pillow 12.3.0
+advisory returned exit 1; current requirements return "No known vulnerabilities
+found." A clean Python 3.12.13 environment installed from the new pins and
+passed 209 tests with 2 skipped and 82.49% coverage, matching the CI runtime.
+The model artifact was not changed.
 
 ## 6. P2 Backlog
 
@@ -701,6 +717,30 @@ Verification: full suite 201 passed, 2 skipped, 82.04% CI-scoped coverage; ruff
 Notes / follow-up: The manifest is still unsigned. An attacker who can replace
   both artifact and manifest bypasses integrity checks; use a signed manifest or
   read-only artifact mount for a stronger authenticity boundary.
+```
+
+```text
+Date: 2026-11-09
+Task: CI-01
+Status: Done
+Change: Added scripts/dependency_audit.py, which runs pip-audit against OSV and
+  fails on HIGH/CRITICAL or unknown severity while reporting LOW/MEDIUM. Pinned
+  pip-audit 2.10.1. Bumped streamlit to 1.66.1 (needed for pillow<14), pillow to
+  13.0.0, and fpdf2 to 2.8.8 to clear the reported advisories. Pinned checkout
+  and setup-python Actions by SHA, added contents: read, a 20-minute timeout, and
+  explicit pip cache dependency path. Added weekly Dependabot groups for pip,
+  GitHub Actions, and Docker. Documented the update/reproducibility procedure.
+Files: scripts/dependency_audit.py, tests/test_dependency_audit.py,
+  requirements.txt, .github/workflows/ci.yml, .github/dependabot.yml,
+  docs/TEAM_WORKFLOW.md, docs/IMPROVEMENT_ROADMAP.md
+Verification: current requirements audit -> "No known vulnerabilities found";
+  negative gate test with pillow 12.3.0 / CVE-2026-96778 -> HIGH, exit 1.
+  Clean Python 3.12.13 env from the new pins: 209 passed, 2 skipped, 82.49%
+  CI-scoped coverage. Local Python 3.14: 209 passed, 2 skipped, 82.04%; ruff
+  clean.
+Notes / follow-up: Dependabot is a repository setting; confirm it is enabled in
+  GitHub after this config lands. The manifest remains unsigned. CI secret
+  scanning and push protection remain separate SEC-01 follow-ups.
 ```
 
 ```text
