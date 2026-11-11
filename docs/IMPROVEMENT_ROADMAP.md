@@ -4,12 +4,13 @@ Forward-looking execution plan for the next engineering sessions. This document 
 meant to be used, not just read: pick the first unchecked high-priority item, do
 the work, run the stated verification, then update the status board and evidence.
 
-- **Baseline date:** 2026-11-09
+- **Baseline date:** 2026-11-10
 - **Branch:** `main`
 - **Product status:** research prototype; not a medical device
 - **Serving model:** v1 17-feature Logistic Regression pipeline at `models/model.skops`
-- **Assessment baseline:** 209 passed, 2 skipped; 82.49% CI-scoped coverage on
-  Python 3.12 (82.04% on local Python 3.14)
+- **Assessment baseline:** CI: 211 passed, 0 skipped, 82.49% coverage; local
+  Python 3.14: 209 passed, 2 skipped, 82.04% (the 2 skips are frontend E2E
+  tests that need a running backend)
 - **CI gate:** dependency audit, `ruff check .`, and pytest with a 60% coverage floor
 - **Incident status:** exposed classic PAT returned HTTP 401; the 115-commit
   history rewrite and 12-branch force-push are reported complete
@@ -392,20 +393,22 @@ watch for updates. Exact pins are deliberate and must stay.
 - [x] `requirements.txt` remains exact-pinned unless a specific exception is
   documented.
 
-**Result (2026-11-09):** `scripts/dependency_audit.py` runs `pip-audit` against
+**Result (2026-11-10):** `scripts/dependency_audit.py` runs `pip-audit` against
 OSV and fails on HIGH/CRITICAL advisories or unknown severity; LOW/MEDIUM
-advisories are reported without failing. Requirements now pin
-`streamlit==1.66.1`, `pillow==13.0.0` (Streamlit 1.66.1 allows `pillow<14`),
-and `fpdf2==2.8.8`, clearing the reported advisories. `pip-audit==2.10.1` is
-pinned for reproducible CI behavior. The workflow pins `actions/checkout` and
-`actions/setup-python` by SHA, sets `contents: read`, caches pip, and has a
-20-minute timeout. Dependabot proposes grouped weekly minor/patch updates for
-pip, GitHub Actions, and Docker. The update procedure is documented in
-`docs/TEAM_WORKFLOW.md`. A manual negative test using the old Pillow 12.3.0
-advisory returned exit 1; current requirements return "No known vulnerabilities
-found." A clean Python 3.12.13 environment installed from the new pins and
-passed 209 tests with 2 skipped and 82.49% coverage, matching the CI runtime.
-The model artifact was not changed.
+advisories are reported without failing. At CI-01 merge, requirements pinned
+`streamlit==1.66.1`, `pillow==13.0.0`, and `fpdf2==2.8.8`, clearing the reported
+advisories; `pip-audit==2.10.1` remains pinned for reproducible CI behavior. The
+workflow pins `actions/checkout` v7.0.1 and `actions/setup-python` v7.1.0 by
+SHA, sets `contents: read`, caches pip, and has a 20-minute timeout. Dependabot
+proposes grouped weekly minor/patch updates for pip, GitHub Actions, and Docker;
+the merged updates (#46-#48) advanced the current pins to `streamlit==1.67.0`
+and `fpdf2==2.9.0` while keeping `pillow==13.0.0` and `pip-audit==2.10.1`. The
+update procedure is documented in `docs/TEAM_WORKFLOW.md`. A manual negative
+test using the old Pillow 12.3.0 advisory returned exit 1; current requirements
+return "No known vulnerabilities found." Current `main` CI passes 211 tests with
+0 skipped and 82.49% coverage; the local baseline before the Dependabot batch
+was 209 passed, 2 skipped, 82.04%, with the 2 skips being frontend E2E tests
+that need a running backend. The model artifact was not changed.
 
 ## 6. P2 Backlog
 
@@ -741,6 +744,20 @@ Verification: current requirements audit -> "No known vulnerabilities found";
 Notes / follow-up: Dependabot is a repository setting; confirm it is enabled in
   GitHub after this config lands. The manifest remains unsigned. CI secret
   scanning and push protection remain separate SEC-01 follow-ups.
+```
+
+```text
+Date: 2026-11-10
+Task: CI-01 documentation follow-up
+Status: Done
+Change: Reconciled the roadmap with the merged Dependabot updates (#46-#48).
+  No code or dependency changes in this docs-only pass.
+Files: docs/IMPROVEMENT_ROADMAP.md
+Verification: main CI run 42803894517: 211 passed, 0 skipped, 82.49% coverage.
+  Current pins: streamlit 1.67.0, pillow 13.0.0, fpdf2 2.9.0, pip-audit 2.10.1;
+  Actions checkout v7.0.1 and setup-python v7.1.0.
+Notes / follow-up: The local 209-passed baseline is retained for environments
+  without a running backend; the two local skips are frontend E2E tests.
 ```
 
 ```text
