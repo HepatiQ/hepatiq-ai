@@ -56,6 +56,7 @@ Per-patient SHAP attributions via `shap.LinearExplainer` (`src/hepatiq/ml/explai
 - **Disease scope**: trained exclusively on PBC patients from a single historical Mayo Clinic trial cohort. Not validated for general cirrhosis, other liver diseases, or populations outside this trial's era and demographics.
 - **Sample size**: 329 patients is small for a 17-feature model. All three candidate models' 95% CIs overlap — they are not statistically distinguishable from each other on ROC-AUC alone. Treat reported performance as indicative, not precise.
 - **Cohort selection bias**: 89 of the 418 canonical patients (21.3%) were dropped for being censored before the 5-year mark. If that censoring wasn't random (e.g., related to patients' health or circumstances), the remaining cohort could be biased.
+- **V2 survival is research-only**: a Cox baseline using all 418 patients preserved censoring but did not clear the predeclared serving bar (OOF C-index 0.809 vs v1 0.800; delta +0.009 vs required +0.02). It improved calibration/Brier but v1 remains serving. A 254-patient 12-month landmark cohort exists, but no landmark model is implemented.
 - **Calibration**: Brier score of 0.1364 [0.1136, 0.1632] and reliability diagrams are now available, but calibration is imperfect: OOF slope 0.725 and CITL -0.498 indicate overprediction on average. These are internal OOF estimates, not external validation.
 - **Historical data**: the Mayo trial predates many modern PBC treatment protocols; learned risk relationships may not reflect outcomes under current standards of care.
 - **No external validation**: every reported metric comes from the same historical Mayo cohort (OOF or a held-out split of it). No independent PBC cohort has confirmed generalization.
@@ -72,7 +73,8 @@ Per-patient SHAP attributions via `shap.LinearExplainer` (`src/hepatiq/ml/explai
 
 - External validation using independent PBC cohorts.
 - Benchmarking against GLOBE Score and UK-PBC Risk Score (both require post-UDCA or external registry data).
-- Survival analysis extensions (Cox Proportional Hazards, Random Survival Forests).
+- Survival analysis: a research-only Cox baseline is implemented; Random Survival Forests and competing-risk extensions remain future work.
+- Landmark follow-up model on the existing 254-patient cohort; not yet implemented.
 - Evaluation on larger international PBC registries.
 
 ## Reproducing These Results

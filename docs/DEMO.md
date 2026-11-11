@@ -39,8 +39,8 @@ albumin −0.51, age −0.22 (SHAP, log-odds). The chart bars point left/blue.
 Use the form defaults unchanged (age 55, f, edema 0, bilirubin 1.0, albumin 3.5).
 
 **Talking point:** an unremarkable panel still lands near 1 in 4 — this cohort's event
-rate is 40%, so a "middle" patient is genuinely uncertain. Good moment to show that the
-output is a calibrated probability, not a verdict.
+rate is 40%, so a "middle" patient is genuinely uncertain. The output is a probability
+estimate, not a verdict; calibration is imperfect (OOF slope 0.725, CITL -0.498).
 
 ### Patient C — concerning (expect ≈ 99.4%)
 

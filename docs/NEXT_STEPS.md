@@ -12,6 +12,13 @@ Last updated at Phase 5 delivery. This file is retained as historical handoff
 context; [`IMPROVEMENT_ROADMAP.md`](IMPROVEMENT_ROADMAP.md) is now the canonical
 status and task tracker.
 
+> **Current update (2026-11-11).** V1 remains the serving model. The v2 survival
+> cohort and research-only Cox baseline are on `docs/v2-research-status`, not in
+> the serving path. The Cox model did not clear its promotion bar (OOF C-index
+> 0.809 vs v1 0.800; delta +0.009 vs required +0.02). The 254-patient landmark
+> cohort exists, but no landmark model is implemented. There is no external
+> validation; synthetic data is not external validation.
+
 ## Where the project stands
 
 The application is complete and honest as a **research prototype**:
@@ -89,10 +96,10 @@ Options, in order of honesty/value:
   `>=` floor.
 - **`data/hepatiq.db`** is gitignored and disposable; the E2E clear-history test
   wipes it. Never commit prediction logs.
-- **The model is a pickle.** Startup now verifies its SHA-256 and feature contract
-  against `models/model_manifest.json`, which catches corruption or replacement.
-  The manifest is not a signature, so pickle is still unsafe for artifacts from an
-  untrusted source. Never load user-uploaded models.
+- **The model is a skops artifact.** Startup verifies its SHA-256 and feature contract
+  against `models/model_manifest.json`, then loads it through skops with a fixed
+  trusted-type allowlist. The manifest is not a signature; never load user-uploaded
+  or remotely fetched models.
 - **Not a medical device.** Not FDA/CDSCO-approved, not clinically validated. Keep
   the disclaimer footer and `docs/LIMITATIONS.md` accurate.
 
