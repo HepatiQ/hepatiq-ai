@@ -16,12 +16,26 @@ from hepatiq.data.build_tables import (
     load_udca1,
     load_udca2,
 )
+from hepatiq.data.cohorts import (
+    DEFAULT_LANDMARK_FEATURES,
+    LANDMARK_CHOL_COLUMN,
+    LANDMARK_DAY,
+    build_landmark_cohort,
+    build_survival_cohort,
+    cohort_manifest,
+)
 from hepatiq.data.provenance import DataIntegrityError, load_provenance, verify_datasets
 
 __all__ = [
     "STATUS_LABELS",
     "TRT_LABELS",
+    "DEFAULT_LANDMARK_FEATURES",
     "DataIntegrityError",
+    "LANDMARK_CHOL_COLUMN",
+    "LANDMARK_DAY",
+    "build_landmark_cohort",
+    "build_survival_cohort",
+    "cohort_manifest",
     "dataset_summary",
     "load_all",
     "load_pbc",

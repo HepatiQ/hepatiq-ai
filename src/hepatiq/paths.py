@@ -25,6 +25,9 @@ DATA_DIR = REPO_ROOT / "data"
 # Archived augmented input (419 rows); retained for lineage only, not training.
 RAW_DATA = DATA_DIR / "raw" / "pbc.csv"
 PROCESSED_DATA = DATA_DIR / "processed" / "pbc_5yr_target.csv"
+V2_SURVIVAL_COHORT = DATA_DIR / "processed" / "v2_survival_cohort.csv"
+V2_LANDMARK_COHORT = DATA_DIR / "processed" / "v2_landmark_cohort.csv"
+V2_COHORT_MANIFEST = DATA_DIR / "processed" / "v2_cohort_manifest.json"
 INTERIM_DIR = DATA_DIR / "interim"
 
 EXTERNAL_DATA_DIR = DATA_DIR / "external"
@@ -41,6 +44,8 @@ MODEL_PATH = MODELS_DIR / "model.skops"
 MODEL_MANIFEST_PATH = MODELS_DIR / "model_manifest.json"
 CANDIDATES_DIR = MODELS_DIR / "candidates"
 METRICS_PATH = CANDIDATES_DIR / "training_metrics.json"
+SURVIVAL_MODEL_PATH = CANDIDATES_DIR / "survival_cox.json"
+SURVIVAL_METRICS_PATH = CANDIDATES_DIR / "survival_metrics.json"
 
 DEFAULT_DB_PATH = Path(os.environ.get("HEPATIQ_DB_PATH") or DATA_DIR / "hepatiq.db")
 

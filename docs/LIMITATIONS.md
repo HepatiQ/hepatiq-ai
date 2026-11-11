@@ -16,10 +16,15 @@ Numbers cited here come from `src/hepatiq/validation/report.md` and `models/cand
   canonical `data/external/pbc.csv` (418 rows) with pinned SHA-256 provenance;
   `data/raw/pbc.csv` is retained only as archived lineage. Its extra row (id 419) is
   censored before 5 years and changes no labels.
-- **Censoring handled by exclusion, not modeling.** Dropping patients censored before
+- **Serving model handles censoring by exclusion.** Dropping patients censored before
   5 years removes exactly those whose outcomes are unknown; if censoring relates to
   prognosis (sicker patients lost to follow-up), the training distribution is biased.
-  A time-to-event model (Cox, survival forests) would handle this properly.
+  A research-only v2 Cox baseline now models censoring on all 418 patients, but it did
+  not clear the predeclared promotion bar (OOF C-index 0.809 vs v1 0.800; delta +0.009
+  vs required +0.02), so v1 remains the serving model.
+- **Landmark cohort shrinks the cohort.** The 12-month landmark cohort contains 254
+  randomized patients (110 events); the 106 non-randomized patients lack `pbcseq`
+  follow-up. No landmark model is implemented or served.
 - **PBC-specific.** Primary biliary cholangitis is one autoimmune condition. The model is
   not a general liver-disease or cirrhosis risk score — the inputs, the learned weights,
   and the validation all assume PBC.

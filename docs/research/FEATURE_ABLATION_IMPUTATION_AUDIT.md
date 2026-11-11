@@ -29,7 +29,8 @@ Approved scope:
    protocol is frozen, and never for model selection or calibration fitting.
 6. Mayo's `5.76%` probability is treated as non-comparable until its exact
    formula, baseline survival, units and endpoint are verified.
-7. Survival analysis remains a separate future research protocol.
+7. Survival analysis remains a separate research protocol; a research-only Cox
+   baseline now exists outside this audit.
 8. Production model artifacts, deployed inference code and risk thresholds
    are not modified.
 9. Calibration is co-primary with feature ablation.
@@ -170,10 +171,12 @@ Mayo's 5.76%.
   `src/hepatiq/validation/report.md` reports OOF results (AUC 0.8828). This is
   a methodological difference, not necessarily stale data, and must be
   explained rather than silently reconciled.
-- `README.md:7-12` and `AUTHORS.md:3-7` describe v2 survival and landmark
-  models that are not present in this codebase.
-- `README.md:40` and `docs/DEMO.md:41-43` describe the output as strongly or
-  fully calibrated; the measured calibration slope is 0.725.
+- At audit time, `README.md:7-12` and `AUTHORS.md:3-7` described v2 survival and
+  landmark models that were not present in this codebase. The current docs now
+  separate v1 serving from v2 research status.
+- At audit time, `README.md:40` and `docs/DEMO.md:41-43` described the output as
+  strongly or fully calibrated; the measured calibration slope is 0.725. The
+  current docs call calibration imperfect.
 - `pyproject.toml` version is `2.0.0`; `src/hepatiq/__init__.py` is `0.1.0`.
 - Local SQLite prediction history is empty, so the `25.00%` run cannot be
   recovered locally.

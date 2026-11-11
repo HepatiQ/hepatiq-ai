@@ -4,10 +4,12 @@ Explainable Clinical Risk Prediction for Primary Biliary Cholangitis
 
 **HepatiQ** is an explainable clinical decision-support web application that estimates 5-year severe event risk (death or liver transplant) for patients with Primary Biliary Cholangitis (PBC) using routine liver function tests and machine learning with SHAP-based interpretability.
 
-> **Version 2 — clinical rebuild.** V2 replaces the single 5-year classifier with
-> a censoring-aware survival model, adds published-score benchmarks and a
-> 12-month landmark model, and moves the UI to multipage Streamlit. V2 is now
-> merged into `main`. V2 is designed, created, and maintained solely by
+> **Status — v1 serving, v2 research.** The deployed model remains the v1
+> 17-feature Logistic Regression pipeline at `models/model.skops`. V2 research
+> adds a data/benchmark layer, a research-only censoring-aware Cox baseline, and a
+> 12-month landmark cohort. The Cox model did not clear its predeclared
+> promotion bar and is not serving; no landmark model is implemented yet.
+> V2 research work is designed, created, and maintained solely by
 > **Pranjal Dubey**; v1 was a team project. See [AUTHORS.md](AUTHORS.md). V1
 > remains runnable for comparison.
 >
@@ -37,7 +39,7 @@ It is not an FDA-approved, CDSCO-approved, or clinically validated medical devic
 
 - **5-year severe event risk scoring** using 17 routinely collected clinical and biochemical variables from the Mayo Clinic PBC cohort, enabling risk estimation from standard patient and laboratory data.
 - **Interpretable predictions** via SHAP, showing per-patient feature contributions
-- **Three-model benchmarking framework**: Logistic Regression, Random Forest, and shallow regularized XGBoost evaluated via 5-fold stratified cross-validation using ROC-AUC, precision, recall, F1 score, and Brier score. Logistic Regression was selected as the final deployment model due to its strong calibration, competitive discrimination performance, and clinical interpretability.
+- **Three-model benchmarking framework**: Logistic Regression, Random Forest, and shallow regularized XGBoost evaluated via 5-fold stratified cross-validation using ROC-AUC, precision, recall, F1 score, and Brier score. Logistic Regression was selected as the final deployment model due to its competitive discrimination, best calibration among the three candidates, and clinical interpretability; calibration remains imperfect (OOF slope 0.725, CITL -0.498).
 - **Statistical rigor**: confidence intervals (not point estimates), class-balanced training, IterativeImputer + StandardScaler fit inside each CV fold (not upfront) to avoid leaking held-out patients into preprocessing
 - **Local diagnostic history**: SQLite logging of patient evaluations and risk scorecards
 - **Clean separation** between data pipeline, model serving (FastAPI), and UI (Streamlit)
@@ -282,10 +284,10 @@ This is a **student team project** at Sharda University's Anand School of Engine
   [`reports/figures/`](reports/figures/)
 * Cohort percentile ranking
 * Risk stratification categories
-* Survival analysis extensions:
-* Cox Proportional Hazards
-* Random Survival Forests
-* Time-to-event prediction
+* Survival analysis: a research-only Cox baseline now exists; it did not clear
+  the promotion bar and is not serving.
+* Random Survival Forests / competing-risk extensions.
+* Time-to-event prediction beyond the current research baseline.
 
 
 

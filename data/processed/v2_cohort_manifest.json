@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "sources": {
+    "pbc": {
+      "file": "pbc.csv",
+      "sha256": "3c52ee2a81f8ffe0d8eb008ee6abf1d90501ebae3f931c439d130e7091d383c9",
+      "rows": 418
+    },
+    "pbcseq": {
+      "file": "pbcseq.csv",
+      "sha256": "181105fcf0aee4e614fcd9df2e235e65051034a41e0e9346014cb3bb6a3efb6f",
+      "rows": 1945
+    }
+  },
+  "survival": {
+    "definition": "time to death or transplant; censoring preserved",
+    "rows": 418,
+    "events": 186,
+    "censored": 232,
+    "randomized": 312,
+    "features": [
+      "trt",
+      "age",
+      "sex",
+      "ascites",
+      "hepato",
+      "spiders",
+      "edema",
+      "bili",
+      "chol",
+      "albumin",
+      "copper",
+      "alk.phos",
+      "ast",
+      "trig",
+      "platelet",
+      "protime",
+      "stage"
+    ]
+  },
+  "landmark": {
+    "definition": "12-month landmark; features at or before day 365",
+    "landmark_day": 365,
+    "rows": 254,
+    "events": 110,
+    "censored": 144,
+    "chol_missing": 195,
+    "default_features": [
+      "trt",
+      "age",
+      "sex",
+      "ascites",
+      "hepato",
+      "spiders",
+      "edema",
+      "bili",
+      "albumin",
+      "alk.phos",
+      "ast",
+      "platelet",
+      "protime",
+      "stage"
+    ],
+    "optional_features": [
+      "chol_pre_landmark"
+    ]
+  }
+}

@@ -4,12 +4,13 @@ Forward-looking execution plan for the next engineering sessions. This document 
 meant to be used, not just read: pick the first unchecked high-priority item, do
 the work, run the stated verification, then update the status board and evidence.
 
-- **Baseline date:** 2026-11-09
-- **Branch:** `main`
+- **Baseline date:** 2026-11-11
+- **Branch:** `docs/v2-research-status` (v2 research); serving remains `main`
 - **Product status:** research prototype; not a medical device
 - **Serving model:** v1 17-feature Logistic Regression pipeline at `models/model.skops`
-- **Assessment baseline:** 209 passed, 2 skipped; 82.49% CI-scoped coverage on
-  Python 3.12 (82.04% on local Python 3.14)
+- **Assessment baseline:** local full suite: 223 passed, 2 skipped; targeted
+  survival suite: 6 passed; CI pending for this PR. The 2 skips are frontend
+  E2E tests that need a running backend.
 - **CI gate:** dependency audit, `ruff check .`, and pytest with a 60% coverage floor
 - **Incident status:** exposed classic PAT returned HTTP 401; the 115-commit
   history rewrite and 12-branch force-push are reported complete
@@ -136,7 +137,7 @@ blocked on external input.
 | DOC-01 | Refresh stale status docs and model card | P2 | Done | S | None |
 | RES-01 | True external validation | P3 | Blocked: data access | L | Frozen model |
 | RES-02 | Held-out bridge test on existing cohort | P3 | Open | S | None |
-| RES-03 | Time-to-event model for censoring | P3 | Open | L | RES-01/02 |
+| RES-03 | Time-to-event model for censoring | P3 | Partial: research baseline complete; not promoted | L | RES-01/02 |
 | RES-04 | Parsimony and clinical-score comparison | P3 | Open | M | None |
 
 ## 5. P1 Task Cards
@@ -392,20 +393,22 @@ watch for updates. Exact pins are deliberate and must stay.
 - [x] `requirements.txt` remains exact-pinned unless a specific exception is
   documented.
 
-**Result (2026-11-09):** `scripts/dependency_audit.py` runs `pip-audit` against
+**Result (2026-11-10):** `scripts/dependency_audit.py` runs `pip-audit` against
 OSV and fails on HIGH/CRITICAL advisories or unknown severity; LOW/MEDIUM
-advisories are reported without failing. Requirements now pin
-`streamlit==1.66.1`, `pillow==13.0.0` (Streamlit 1.66.1 allows `pillow<14`),
-and `fpdf2==2.8.8`, clearing the reported advisories. `pip-audit==2.10.1` is
-pinned for reproducible CI behavior. The workflow pins `actions/checkout` and
-`actions/setup-python` by SHA, sets `contents: read`, caches pip, and has a
-20-minute timeout. Dependabot proposes grouped weekly minor/patch updates for
-pip, GitHub Actions, and Docker. The update procedure is documented in
-`docs/TEAM_WORKFLOW.md`. A manual negative test using the old Pillow 12.3.0
-advisory returned exit 1; current requirements return "No known vulnerabilities
-found." A clean Python 3.12.13 environment installed from the new pins and
-passed 209 tests with 2 skipped and 82.49% coverage, matching the CI runtime.
-The model artifact was not changed.
+advisories are reported without failing. At CI-01 merge, requirements pinned
+`streamlit==1.66.1`, `pillow==13.0.0`, and `fpdf2==2.8.8`, clearing the reported
+advisories; `pip-audit==2.10.1` remains pinned for reproducible CI behavior. The
+workflow pins `actions/checkout` v7.0.1 and `actions/setup-python` v7.1.0 by
+SHA, sets `contents: read`, caches pip, and has a 20-minute timeout. Dependabot
+proposes grouped weekly minor/patch updates for pip, GitHub Actions, and Docker;
+the merged updates (#46-#48) advanced the current pins to `streamlit==1.67.0`
+and `fpdf2==2.9.0` while keeping `pillow==13.0.0` and `pip-audit==2.10.1`. The
+update procedure is documented in `docs/TEAM_WORKFLOW.md`. A manual negative
+test using the old Pillow 12.3.0 advisory returned exit 1; current requirements
+return "No known vulnerabilities found." Current `main` CI passes 211 tests with
+0 skipped and 82.49% coverage; the local baseline before the Dependabot batch
+was 209 passed, 2 skipped, 82.04%, with the 2 skips being frontend E2E tests
+that need a running backend. The model artifact was not changed.
 
 ## 6. P2 Backlog
 
@@ -509,6 +512,10 @@ confidence intervals and baseline.
 
 ### RES-03 - Time-to-event modeling
 
+**Status:** Partial. A research-only XGBoost Cox baseline on all 418 patients was
+evaluated; it improved calibration/Brier but missed the predeclared promotion bar
+and is not serving.
+
 The current target drops patients censored before five years. That can bias the
 training distribution. Compare a Cox model or survival forest against the current
 binary classifier on time-to-event metrics, with censoring handled explicitly.
@@ -598,6 +605,8 @@ requires a new manifest entry and an explicit note in the execution log.
 | 2026-11-07 | Add an in-process rate limiter but defer API-key authentication | The public demo needs basic abuse protection without adding secret provisioning or user identity yet. Per-process state is documented; a shared store is required before multi-instance deployment. |
 | 2026-11-07 | Verify the model artifact before `joblib.load()`; defer safer serialization | Detect accidental or tampered replacement and feature drift immediately, without combining the security fix with a higher-risk skops/ONNX migration. The manifest is an integrity check, not a publisher signature. |
 | 2026-11-08 | Migrate serving to skops and remove the pickle artifact | Retire arbitrary pickle execution with a fixed extra trusted-type allowlist. ONNX was rejected because the released `skl2onnx` stack cannot convert `IterativeImputer`. Predictions were bit-identical after migration. |
+| 2026-11-11 | Keep v1 serving after v2 Cox research baseline | The Cox model improved calibration/Brier but missed the predeclared promotion bar (C-index 0.809 vs 0.800; delta +0.009 vs +0.02). |
+| 2026-11-11 | Do not use synthetic cohorts as external validation | Synthea/synthetic data is useful for QA but cannot establish clinical generalization. |
 
 ## 11. Execution Log
 
@@ -744,13 +753,69 @@ Notes / follow-up: Dependabot is a repository setting; confirm it is enabled in
 ```
 
 ```text
-Date:
-Task:
-Status:
-Change:
-Files:
-Verification:
-Notes / follow-up:
+Date: 2026-11-10
+Task: CI-01 documentation follow-up
+Status: Done
+Change: Reconciled the roadmap with the merged Dependabot updates (#46-#48).
+  No code or dependency changes in this docs-only pass.
+Files: docs/IMPROVEMENT_ROADMAP.md
+Verification: main CI run 42803894517: 211 passed, 0 skipped, 82.49% coverage.
+  Current pins: streamlit 1.67.0, pillow 13.0.0, fpdf2 2.9.0, pip-audit 2.10.1;
+  Actions checkout v7.0.1 and setup-python v7.1.0.
+Notes / follow-up: The local 209-passed baseline is retained for environments
+  without a running backend; the two local skips are frontend E2E tests.
+```
+
+```text
+Date: 2026-11-11
+Task: RES-03 (v2 data slice)
+Status: Done
+Change: Added the censoring-aware survival cohort (418 patients / 186 events /
+  232 censored) and the 12-month landmark cohort (254 / 110 / 144), with pinned
+  provenance, a manifest, a CLI, tests, and data documentation. Generated v2 CSVs
+  were committed.
+Files: src/hepatiq/data/cohorts.py, src/hepatiq/data/build_cohorts.py,
+  tests/test_v2_cohorts.py, data/processed/v2_survival_cohort.csv,
+  data/processed/v2_landmark_cohort.csv, data/processed/v2_cohort_manifest.json,
+  data/README.md
+Verification: cohort tests passed; full suite 217 passed, 2 skipped at data-slice
+  close; ruff clean.
+Notes / follow-up: the landmark model is not implemented; chol_pre_landmark is
+  excluded from the default feature contract.
+```
+
+```text
+Date: 2026-11-11
+Task: RES-03 (v2 survival baseline)
+Status: Partial - research baseline complete; not promoted
+Change: Added an XGBoost Cox baseline on all 418 patients, leakage-controlled
+  out-of-fold evaluation against v1, Breslow absolute risk, candidate artifacts,
+  and contract/serialization tests.
+Files: src/hepatiq/survival/model.py, src/hepatiq/survival/evaluation.py,
+  src/hepatiq/survival/train_survival.py, src/hepatiq/survival/__init__.py,
+  tests/test_survival_model.py, src/hepatiq/paths.py,
+  models/candidates/survival_cox.json, models/candidates/survival_metrics.json
+Verification: OOF C-index 0.809 [0.777, 0.840] vs v1 0.800 [0.769, 0.829];
+  delta +0.009; 5-year AUC 0.882 vs 0.873; Brier 0.1376 vs 0.1419; calibration
+  slope 0.884 vs 0.635. Targeted 6 passed; full suite 223 passed, 2 skipped;
+  ruff clean.
+Notes / follow-up: the +0.02 promotion bar was not met; the serving model is
+  unchanged. The landmark model remains unimplemented.
+```
+
+```text
+Date: 2026-11-11
+Task: DOC-01 (v2 status correction)
+Status: Done
+Change: Corrected README, AUTHORS, and status docs to state that v1 remains the
+  serving model, the v2 Cox baseline is research-only and missed its promotion
+  bar, the landmark model is not implemented, and synthetic data is not external
+  validation.
+Files: README.md, AUTHORS.md, docs/model_card.md, docs/LIMITATIONS.md,
+  docs/NEXT_STEPS.md, docs/DEMO.md, docs/IMPROVEMENT_ROADMAP.md,
+  docs/research/FEATURE_ABLATION_IMPUTATION_AUDIT.md
+Verification: docs-only change; pytest 223 passed, 2 skipped; ruff clean.
+Notes / follow-up: no code, model, data, dependency, or serving changes.
 ```
 
 ## 12. Related Documents
