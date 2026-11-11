@@ -1,0 +1,280 @@
+{
+  "artifact": {
+    "path": "models/candidates/survival_cox.json",
+    "sha256": "2454d97cec2cfa2ebbde6eaf54cca47689eab88fa6f891a5672d9d29d1fcba90",
+    "size_bytes": 146759
+  },
+  "baseline": {
+    "c_index": {
+      "lower": 0.7687715827258196,
+      "n_boot": 2000,
+      "point": 0.7999037806198132,
+      "upper": 0.82930086649546
+    },
+    "five_year": {
+      "auc": {
+        "lower": 0.8318716963125241,
+        "n_valid": 2000,
+        "point": 0.8731349023227195,
+        "upper": 0.910253414050302
+      },
+      "brier": {
+        "lower": 0.11808965145497276,
+        "n_valid": 2000,
+        "point": 0.1419135778187584,
+        "upper": 0.16768491383807596
+      },
+      "calibration_in_the_large": -0.44800799886284604,
+      "calibration_intercept": -0.4462285119359937,
+      "calibration_slope": 0.6352726666706735,
+      "ece": 0.06772428303321977,
+      "events": 132,
+      "mean_predicted": 0.4548810508071444,
+      "n": 329,
+      "observed": 0.4012158054711246
+    },
+    "fold_auc_5y": [
+      0.8902439024390244,
+      0.8317073170731707,
+      0.8673469387755102,
+      0.9153439153439153,
+      0.8972972972972972
+    ],
+    "fold_brier_5y": [
+      0.1356933747938093,
+      0.17216165622764076,
+      0.14604368751299746,
+      0.11852110351212668,
+      0.13104009069895398
+    ],
+    "fold_c_index": [
+      0.8029650884744142,
+      0.767277856135402,
+      0.8249272550921436,
+      0.7916666666666666,
+      0.8307610431080362
+    ],
+    "model": "HepatiQ v1 logistic"
+  },
+  "cohort": {
+    "censored": 232,
+    "events": 186,
+    "rows": 418
+  },
+  "comparison": {
+    "criterion": "pooled out-of-fold Harrell C-index must improve by at least 0.02 over v1 and the survival 95% bootstrap lower bound must exceed the v1 point estimate",
+    "delta_c_index": 0.008729904181533965,
+    "min_meaningful_delta_c": 0.02,
+    "promote_to_serving": false
+  },
+  "cv": {
+    "folds": 5,
+    "horizon_days": 1825,
+    "seed": 42,
+    "stratified_by": "event"
+  },
+  "generated_at_utc": "2026-11-11T14:15:49+00:00",
+  "model": {
+    "features": [
+      "age",
+      "sex",
+      "ascites",
+      "hepato",
+      "spiders",
+      "edema",
+      "bili",
+      "chol",
+      "albumin",
+      "copper",
+      "alk.phos",
+      "ast",
+      "trig",
+      "platelet",
+      "protime",
+      "stage"
+    ],
+    "objective": "survival:cox",
+    "params": {
+      "colsample_bytree": 0.8,
+      "learning_rate": 0.05,
+      "max_depth": 2,
+      "min_child_weight": 5,
+      "n_estimators": 200,
+      "n_jobs": 1,
+      "objective": "survival:cox",
+      "reg_alpha": 0.5,
+      "reg_lambda": 2.0,
+      "subsample": 0.8,
+      "verbosity": 0
+    },
+    "type": "xgboost.XGBRegressor"
+  },
+  "sources": {
+    "pbc": {
+      "columns": [
+        "id",
+        "time",
+        "status",
+        "trt",
+        "age",
+        "sex",
+        "ascites",
+        "hepato",
+        "spiders",
+        "edema",
+        "bili",
+        "chol",
+        "albumin",
+        "copper",
+        "alk.phos",
+        "ast",
+        "trig",
+        "platelet",
+        "protime",
+        "stage"
+      ],
+      "file": "pbc.csv",
+      "object": "pbc",
+      "rows": 418,
+      "sha256": "3c52ee2a81f8ffe0d8eb008ee6abf1d90501ebae3f931c439d130e7091d383c9",
+      "source_member": "survival/data/pbc.rda"
+    },
+    "pbcseq": {
+      "columns": [
+        "id",
+        "futime",
+        "status",
+        "trt",
+        "age",
+        "sex",
+        "day",
+        "ascites",
+        "hepato",
+        "spiders",
+        "edema",
+        "bili",
+        "chol",
+        "albumin",
+        "alk.phos",
+        "ast",
+        "platelet",
+        "protime",
+        "stage"
+      ],
+      "file": "pbcseq.csv",
+      "object": "pbcseq",
+      "rows": 1945,
+      "sha256": "181105fcf0aee4e614fcd9df2e235e65051034a41e0e9346014cb3bb6a3efb6f",
+      "source_member": "survival/data/pbc.rda"
+    },
+    "udca": {
+      "columns": [
+        "id",
+        "trt",
+        "entry.dt",
+        "last.dt",
+        "stage",
+        "bili",
+        "riskscore",
+        "death.dt",
+        "tx.dt",
+        "hprogress.dt",
+        "varices.dt",
+        "ascites.dt",
+        "enceph.dt",
+        "double.dt",
+        "worsen.dt"
+      ],
+      "file": "udca.csv",
+      "object": "udca",
+      "rows": 170,
+      "sha256": "7aee17688782c98202890531f557c91544b5f1c96148f97fc4128bf765df3cd4",
+      "source_member": "survival/data/udca.rda"
+    },
+    "udca1": {
+      "columns": [
+        "id",
+        "trt",
+        "stage",
+        "bili",
+        "riskscore",
+        "futime",
+        "status"
+      ],
+      "file": "udca1.csv",
+      "object": "udca1",
+      "rows": 170,
+      "sha256": "4749c30dd76875b9132dc3d77f7fa1054c4d25f7fcab82a3b5c9f013a4bb38b6",
+      "source_member": "survival/data/udca.rda"
+    },
+    "udca2": {
+      "columns": [
+        "id",
+        "trt",
+        "stage",
+        "bili",
+        "riskscore",
+        "futime",
+        "status",
+        "endpoint"
+      ],
+      "file": "udca2.csv",
+      "object": "udca2",
+      "rows": 1360,
+      "sha256": "9c2eadf0f10af496467d50445b80f4dc2169d5dac8fcc74d686eec43193814a5",
+      "source_member": "survival/data/udca.rda"
+    }
+  },
+  "survival": {
+    "c_index": {
+      "lower": 0.7771914554788448,
+      "n_boot": 2000,
+      "point": 0.8086336848013471,
+      "upper": 0.83959842584884
+    },
+    "five_year": {
+      "auc": {
+        "lower": 0.8436118271617622,
+        "n_valid": 2000,
+        "point": 0.8820950622981081,
+        "upper": 0.9162072289368783
+      },
+      "brier": {
+        "lower": 0.11253307933787778,
+        "n_valid": 2000,
+        "point": 0.13764513306789972,
+        "upper": 0.16356644560801883
+      },
+      "calibration_in_the_large": 0.08839975830670964,
+      "calibration_intercept": 0.016105436057149047,
+      "calibration_slope": 0.8836437586629501,
+      "ece": 0.04884364703096595,
+      "events": 132,
+      "mean_predicted": 0.3902698805237846,
+      "n": 329,
+      "observed": 0.4012158054711246
+    },
+    "fold_auc_5y": [
+      0.882404181184669,
+      0.8918699186991871,
+      0.8860544217687074,
+      0.9007936507936507,
+      0.8497297297297297
+    ],
+    "fold_brier_5y": [
+      0.13852687945758854,
+      0.12571940176603832,
+      0.13978331943619868,
+      0.12976998616456434,
+      0.15514669353971938
+    ],
+    "fold_c_index": [
+      0.7728359636537542,
+      0.8251057827926658,
+      0.8283220174587779,
+      0.7984154929577465,
+      0.8110697179350719
+    ],
+    "model": "XGBoost Cox"
+  }
+}

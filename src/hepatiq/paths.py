@@ -44,6 +44,8 @@ MODEL_PATH = MODELS_DIR / "model.skops"
 MODEL_MANIFEST_PATH = MODELS_DIR / "model_manifest.json"
 CANDIDATES_DIR = MODELS_DIR / "candidates"
 METRICS_PATH = CANDIDATES_DIR / "training_metrics.json"
+SURVIVAL_MODEL_PATH = CANDIDATES_DIR / "survival_cox.json"
+SURVIVAL_METRICS_PATH = CANDIDATES_DIR / "survival_metrics.json"
 
 DEFAULT_DB_PATH = Path(os.environ.get("HEPATIQ_DB_PATH") or DATA_DIR / "hepatiq.db")
 
