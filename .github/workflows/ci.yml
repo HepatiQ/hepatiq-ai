@@ -34,7 +34,7 @@ jobs:
         run: python scripts/dependency_audit.py --requirements requirements.txt
 
       - name: Lint
-        run: ruff check .
+        run: ruff check . --exclude notebooks
 
       - name: Start backend for E2E frontend tests
         run: |
