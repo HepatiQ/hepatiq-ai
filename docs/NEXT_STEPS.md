@@ -68,9 +68,9 @@ Options, in order of honesty/value:
   but there is still no `X-API-Key` or other authentication. Only matters if the
   Render URL is shared publicly. Suggest a single deployment key via env with 401
   tests.
-- **Bulk CSV scoring.** `POST /predict/batch` (≤1000 rows) + upload UI → scored
-  table + downloadable CSV. Turns the product from "calculator" to "cohort tool."
-  ~half a day incl. tests. Nice-to-have, not a correctness gap.
+- **Bulk CSV scoring.** Implemented: `POST /predict/batch` (≤1000 rows) + sidebar-linked
+  upload UI → scored table + downloadable CSV. Turns the product from "calculator" to
+  "cohort tool." No correctness impact on single-patient scoring.
 - **README screenshot.** A UI screenshot near the top showcases the dark theme to
   reviewers/graders.
 - **Render persistence.** `data/hepatiq.db` lives on ephemeral disk and resets per

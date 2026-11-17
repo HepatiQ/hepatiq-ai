@@ -119,6 +119,23 @@ class PredictResponse(BaseModel):
     imputed_features: List[str] = Field(default_factory=list)
 
 
+class BatchPredictRequest(BaseModel):
+    rows: List[dict] = Field(..., min_length=1, max_length=1000)
+
+
+class BatchRowResult(BaseModel):
+    row: int
+    prediction: Optional[PredictResponse] = None
+    error: Optional[str] = None
+
+
+class BatchPredictResponse(BaseModel):
+    total: int
+    succeeded: int
+    failed: int
+    results: List[BatchRowResult]
+
+
 class HealthResponse(BaseModel):
     status: str
     model_loaded: bool
@@ -269,13 +286,16 @@ def _range_warnings(req: PredictRequest) -> List[str]:
     return warnings
 
 
-@app.post("/predict", response_model=PredictResponse, dependencies=[Depends(enforce_rate_limit)])
-def predict(req: PredictRequest) -> PredictResponse:
+def _require_model():
     model = _state["model"]
     if model is None:
         logger.warning("Prediction requested before model loaded: %s", _state["error"])
         raise HTTPException(status_code=503, detail="Model not loaded")
+    return model
 
+
+def _predict_response(req: PredictRequest) -> PredictResponse:
+    model = _require_model()
     raw = req.model_dump()
 
     row = {}
@@ -314,7 +334,7 @@ def predict(req: PredictRequest) -> PredictResponse:
         for feature in FEATURE_COLUMNS
     ]
 
-    response = PredictResponse(
+    return PredictResponse(
         probability=probability,
         risk_band=risk_category(probability),
         contributions=contributions,
@@ -324,6 +344,12 @@ def predict(req: PredictRequest) -> PredictResponse:
         imputed_features=[feature for feature in FEATURE_COLUMNS if imputed[feature]],
     )
 
+
+@app.post("/predict", response_model=PredictResponse, dependencies=[Depends(enforce_rate_limit)])
+def predict(req: PredictRequest) -> PredictResponse:
+    response = _predict_response(req)
+    raw = req.model_dump()
+
     # History must never break a prediction: a logging failure is swallowed
     # here and surfaced only through /health-style ops checks, not as a 500.
     if _state["db_path"] is not None:
@@ -331,14 +357,41 @@ def predict(req: PredictRequest) -> PredictResponse:
             log_prediction(
                 _state["db_path"],
                 request=raw,
-                probability=probability,
-                contributions=[c.model_dump() for c in contributions],
+                probability=response.probability,
+                contributions=[c.model_dump() for c in response.contributions],
                 model_version=_state.get("model_version"),
             )
         except Exception:
             logger.exception("Failed to persist prediction history")
 
     return response
+
+
+@app.post(
+    "/predict/batch",
+    response_model=BatchPredictResponse,
+    dependencies=[Depends(enforce_rate_limit)],
+)
+def predict_batch(batch: BatchPredictRequest) -> BatchPredictResponse:
+    _require_model()
+    results: List[BatchRowResult] = []
+    for index, raw in enumerate(batch.rows):
+        try:
+            req = PredictRequest.model_validate(raw)
+            results.append(BatchRowResult(row=index, prediction=_predict_response(req)))
+        except HTTPException:
+            raise
+        except Exception as exc:
+            logger.warning("Batch row %s rejected: %s", index, exc)
+            results.append(BatchRowResult(row=index, error=str(exc)[:500]))
+
+    succeeded = sum(result.prediction is not None for result in results)
+    return BatchPredictResponse(
+        total=len(results),
+        succeeded=succeeded,
+        failed=len(results) - succeeded,
+        results=results,
+    )
 
 
 class AgentRequest(BaseModel):

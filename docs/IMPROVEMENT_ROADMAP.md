@@ -129,7 +129,7 @@ blocked on external input.
 | CI-01 | Dependency, action, and supply-chain guardrails | P1 | Done | S | None |
 | OBS-01 | Structured logging, request IDs, readiness, metrics | P2 | Open | M | SEC-02 |
 | API-01 | API versioning and contract hardening | P2 | Open | M | SEC-02 |
-| PROD-01 | Bulk CSV scoring workflow | P2 | Open | M | SEC-02 |
+| PROD-01 | Bulk CSV scoring workflow | P2 | Done | M | SEC-02 |
 | DEP-02 | Split runtime and development dependencies | P2 | Open | M | DEP-01 |
 | PERS-01 | Persistent history storage for Render | P2 | Open | S | None |
 | UI-01 | Accessibility, screenshot, and E2E depth | P2 | Open | M | None |
@@ -434,11 +434,12 @@ that need a running backend. The model artifact was not changed.
 
 ### PROD-01 - Bulk CSV scoring
 
-- Add `POST /predict/batch` with a row limit, schema validation, per-row errors,
-  and a downloadable CSV response.
-- Do not log uploaded rows. Reject files containing unexpected columns.
-- Add tests for partial failures, row caps, and rate limits.
-- This is a product feature, not a correctness fix; do it after SEC-02.
+- Implemented `POST /predict/batch` with a 1,000-row limit, schema validation,
+  per-row errors, and the existing rate limiter.
+- Added a Streamlit bulk upload page linked from the main sidebar; results are
+  rendered as a table and downloadable as CSV.
+- Batch rows are not logged to history, and unexpected CSV columns are rejected.
+- Covered with tests for partial failures, row caps, rate limits, and the upload UI.
 
 ### DEP-02 - Split runtime and development dependencies
 

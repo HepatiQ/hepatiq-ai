@@ -39,6 +39,21 @@ def test_frontend_form_has_required_inputs():
     assert any("Sex" == label for label in labels)
 
 
+def test_sidebar_has_bulk_upload_page_link(monkeypatch):
+    calls = []
+    real_page_link = st.page_link
+
+    def tracking_page_link(*args, **kwargs):
+        calls.append((args, kwargs))
+        return real_page_link(*args, **kwargs)
+
+    monkeypatch.setattr(st, "page_link", tracking_page_link)
+    at = AppTest.from_file(str(FRONTEND), default_timeout=60)
+    at.run()
+    assert not at.exception, at.exception
+    assert any("pages/2_Bulk_Predict.py" in str(call[0]) for call in calls)
+
+
 def _backend_reachable() -> bool:
     try:
         return requests.get(f"{E2E_BACKEND_URL}/health", timeout=3).status_code == 200

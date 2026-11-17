@@ -136,3 +136,32 @@ def test_out_of_training_range_yields_warning(client):
     assert any(w.startswith("age=") for w in warnings)
     assert any("outside the training range" in w for w in warnings)
     assert any("extrapolating" in w for w in warnings)
+
+
+def test_batch_scores_rows_without_logging_history(client):
+    before = client.get("/stats").json()["total"]
+    r = client.post("/predict/batch", json={"rows": [REQUIRED_ONLY, SAMPLE_FULL]})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["total"] == 2
+    assert body["succeeded"] == 2
+    assert body["failed"] == 0
+    assert [item["row"] for item in body["results"]] == [0, 1]
+    assert all(item["prediction"]["model_loaded"] for item in body["results"])
+    assert client.get("/stats").json()["total"] == before
+
+
+def test_batch_reports_validation_errors_per_row(client):
+    bad = dict(REQUIRED_ONLY, age=-1)
+    r = client.post("/predict/batch", json={"rows": [REQUIRED_ONLY, bad, SAMPLE_FULL]})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["succeeded"] == 2
+    assert body["failed"] == 1
+    assert body["results"][1]["prediction"] is None
+    assert "age" in body["results"][1]["error"]
+
+
+def test_batch_rejects_empty_and_oversized_requests(client):
+    assert client.post("/predict/batch", json={"rows": []}).status_code == 422
+    assert client.post("/predict/batch", json={"rows": [REQUIRED_ONLY] * 1001}).status_code == 422

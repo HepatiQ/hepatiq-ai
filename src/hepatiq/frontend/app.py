@@ -63,6 +63,12 @@ with st.sidebar:
     except requests.exceptions.RequestException:
         st.error("Backend: Unreachable")
     st.caption("API: " + BACKEND_URL)
+    st.page_link("pages/2_Bulk_Predict.py", label="Bulk CSV upload", icon=":material/upload:")
+    st.link_button(
+        "Render API docs",
+        "https://hepatiq-ai.onrender.com/docs",
+        use_container_width=True,
+    )
     st.divider()
 
 st.markdown(

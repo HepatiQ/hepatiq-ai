@@ -47,6 +47,13 @@ def test_health_remains_available_after_limit(limited_client):
     assert limited_client.get("/health").status_code == 200
 
 
+def test_batch_shares_rate_limit(limited_client):
+    batch = {"rows": [REQUIRED_ONLY]}
+    assert limited_client.post("/predict/batch", json=batch).status_code == 200
+    assert limited_client.post("/predict/batch", json=batch).status_code == 200
+    assert limited_client.post("/predict/batch", json=batch).status_code == 429
+
+
 def test_identities_have_separate_windows():
     limiter = SlidingWindowLimiter(RateLimitSettings(requests=1, window_seconds=60))
 
