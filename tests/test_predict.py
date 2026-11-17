@@ -20,6 +20,17 @@ def test_required_5_returns_17_contributions_with_12_imputed(client):
     assert all(c["imputed"] == (c["value"] is None) for c in contributions)
 
 
+def test_response_lists_imputed_features_explicitly(client):
+    body = client.post("/predict", json=REQUIRED_ONLY).json()
+    assert len(body["imputed_features"]) == 12
+    assert set(body["imputed_features"]) == {
+        c["feature"] for c in body["contributions"] if c["imputed"]
+    }
+
+    full = client.post("/predict", json=SAMPLE_FULL).json()
+    assert full["imputed_features"] == []
+
+
 def test_full_17_returns_200_with_all_impacts(client):
     r = client.post("/predict", json=SAMPLE_FULL)
     assert r.status_code == 200, r.text

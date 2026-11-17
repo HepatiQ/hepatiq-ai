@@ -116,6 +116,7 @@ class PredictResponse(BaseModel):
     model_loaded: bool
     model_version: Optional[str] = None
     warnings: List[str] = Field(default_factory=list)
+    imputed_features: List[str] = Field(default_factory=list)
 
 
 class HealthResponse(BaseModel):
@@ -320,6 +321,7 @@ def predict(req: PredictRequest) -> PredictResponse:
         model_loaded=True,
         model_version=_state.get("model_version"),
         warnings=_range_warnings(req),
+        imputed_features=[feature for feature in FEATURE_COLUMNS if imputed[feature]],
     )
 
     # History must never break a prediction: a logging failure is swallowed
