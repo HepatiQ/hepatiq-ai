@@ -21,7 +21,7 @@ Explainable Clinical Risk Prediction for Primary Biliary Cholangitis
 
 ## 🚀 Live Demo
 
-- **Web App (Streamlit):** [https://hepatiq-ai.streamlit.app](https://hepatiq-ai.streamlit.app)
+- **Web App (Streamlit):** [https://hepatiq-ai.streamlit.app](https://hepatiq-ai.streamlit.app) — click **Bulk CSV upload** in the sidebar for cohort scoring
 - **Backend API (Render):** [https://hepatiq-ai.onrender.com](https://hepatiq-ai.onrender.com)
 - **API Docs (Swagger):** [https://hepatiq-ai.onrender.com/docs](https://hepatiq-ai.onrender.com/docs)
 
@@ -38,6 +38,7 @@ It is not an FDA-approved, CDSCO-approved, or clinically validated medical devic
 **HepatiQ** addresses this by combining regularized machine learning classifiers with SHAP-based Explainable AI (XAI) to predict a patient's probability of a severe event within a 5-year window and show clinicians exactly which biomarkers drove that specific prediction.
 
 - **5-year severe event risk scoring** using 17 routinely collected clinical and biochemical variables from the Mayo Clinic PBC cohort, enabling risk estimation from standard patient and laboratory data.
+- **Bulk CSV scoring** for up to 1,000 rows through the Streamlit sidebar or `POST /predict/batch`, with a downloadable results CSV.
 - **Interpretable predictions** via SHAP, showing per-patient feature contributions
 - **Three-model benchmarking framework**: Logistic Regression, Random Forest, and shallow regularized XGBoost evaluated via 5-fold stratified cross-validation using ROC-AUC, precision, recall, F1 score, and Brier score. Logistic Regression was selected as the final deployment model due to its competitive discrimination, best calibration among the three candidates, and clinical interpretability; calibration remains imperfect (OOF slope 0.725, CITL -0.498).
 - **Statistical rigor**: confidence intervals (not point estimates), class-balanced training, IterativeImputer + StandardScaler fit inside each CV fold (not upfront) to avoid leaking held-out patients into preprocessing
@@ -126,18 +127,19 @@ biochemical variables)  3. Generate SHAP values        • Clinical interpretati
        │                4. Log to SQLite               • Diagnostic history
        │                                                              
        └──────────────────────────┬────────────────────────────┘
-                              REST API (/predict)
+                        REST API (/predict or /predict/batch)
 ```
 
-1. Clinician enters patient demographics and LFT biomarkers in Streamlit
-2. Streamlit sends POST request to FastAPI backend
+1. Clinician enters patient demographics and LFT biomarkers in Streamlit, or uploads a CSV from the sidebar
+2. Streamlit sends a POST request to the FastAPI backend
 3. Backend applies preprocessing (imputation, standardization) and loads regularized model
 4. Model predicts 5-year severe event probability
 5. SHAP computes per-feature attributions for that patient
-6. Streamlit renders risk scorecard + explainability visualization
-7. Prediction logged to local SQLite for diagnostic history
+6. Streamlit renders a risk scorecard + explainability visualization, or a downloadable batch table
+7. Single-patient predictions are logged to local SQLite for diagnostic history; batch rows are not logged
 
 ## Repository Workflow
+
 
 This repository follows a simple branch-based workflow so the team can stay organized without making things heavy.
 
@@ -196,12 +198,26 @@ pip install -e . --no-deps
 ```
 
 **Rate limiting:** the backend applies an in-memory sliding-window limit to
-`/predict`, `/agent/reason`, and the history endpoints. Defaults are 60 requests
-per 60 seconds per client. Configure with `HEPATIQ_RATE_LIMIT_REQUESTS`,
+`/predict`, `/predict/batch`, `/agent/reason`, and the history endpoints.
+Defaults are 60 requests per 60 seconds per client. Configure with
+`HEPATIQ_RATE_LIMIT_REQUESTS`,
 `HEPATIQ_RATE_LIMIT_WINDOW_SECONDS`, and `HEPATIQ_TRUST_PROXY_HEADERS`. State is
 per process, so a multi-instance deployment needs a shared store such as Redis.
 Enable proxy-header trust only behind a trusted reverse proxy that sets
 `X-Forwarded-For`; clients can otherwise choose their own bucket.
+
+### Bulk CSV scoring
+
+Use the **Bulk CSV upload** button in the Streamlit sidebar to score a cohort.
+The CSV must contain `age`, `sex`, `edema`, `bili`, and `albumin`; the optional
+columns are `trt`, `ascites`, `hepato`, `spiders`, `chol`, `copper`, `alk_phos`
+(or `alk.phos`), `ast`, `trig`, `platelet`, `protime`, and `stage`. Unknown columns
+are rejected. The limit is 1,000 rows per request.
+
+The UI calls `POST /predict/batch` with `{"rows": [...]}`. Each result reports
+`row`, `prediction`, and `error`, so one invalid row does not block the others.
+Batch rows are not written to local prediction history. The UI shows a scored
+table and offers `hepatiq_batch_results.csv` for download.
 
 **Model integrity:** startup verifies `models/model.skops` against the SHA-256 and
 17-feature contract in `models/model_manifest.json`, then deserializes it through
@@ -293,7 +309,8 @@ This is a **student team project** at Sharda University's Anand School of Engine
 
 ### Platform Development
 
-* Exportable risk scorecards
+* ~~Exportable risk scorecards~~ — single-patient PDF reports and batch CSV results are implemented
+* API authentication for public deployments (currently rate-limited only)
 
 ## License
 

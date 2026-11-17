@@ -27,7 +27,7 @@ The application is complete and honest as a **research prototype**:
   **0.8828 [0.8409, 0.9185]** vs class-prior baseline 0.4924 (`src/hepatiq/validation/report.md`).
 - Data: canonical 418-row `survival::pbc` (`data/external/pbc.csv`) with pinned
   SHA-256 provenance; the 419-row raw copy is archived, not used for training.
-- Backend: FastAPI (`src/hepatiq/backend/main.py`) — `/health`, `/predict`, `GET /history`, `DELETE /history`.
+- Backend: FastAPI (`src/hepatiq/backend/main.py`) — `/health`, `/predict`, `/predict/batch`, `GET /history`, `DELETE /history`.
 - Frontend: Streamlit (`src/hepatiq/frontend/app.py`) — dark theme, logo, risk-band badge,
   training-range warnings, latency/version caption, history controls.
 - Quality: full pytest suite incl. a live form→API→model E2E, ruff clean, CI coverage floor 60.
@@ -68,9 +68,9 @@ Options, in order of honesty/value:
   but there is still no `X-API-Key` or other authentication. Only matters if the
   Render URL is shared publicly. Suggest a single deployment key via env with 401
   tests.
-- **Bulk CSV scoring.** `POST /predict/batch` (≤1000 rows) + upload UI → scored
-  table + downloadable CSV. Turns the product from "calculator" to "cohort tool."
-  ~half a day incl. tests. Nice-to-have, not a correctness gap.
+- **Bulk CSV scoring.** Implemented: `POST /predict/batch` (≤1000 rows) + sidebar button
+  that opens the in-app upload view → scored table + downloadable CSV. Turns the product
+  from "calculator" to "cohort tool." No correctness impact on single-patient scoring.
 - **README screenshot.** A UI screenshot near the top showcases the dark theme to
   reviewers/graders.
 - **Render persistence.** `data/hepatiq.db` lives on ephemeral disk and resets per
