@@ -73,6 +73,9 @@ model, not causation.
    `GET /history`. Use the **Show** selector (10/25/50) to change the window and
    **Clear history** to wipe the log (`DELETE /history`).
 3. Optional CLI proof of the same data: `curl http://localhost:8000/history?limit=5`.
+4. Click **Bulk CSV upload** in the sidebar, upload a CSV with the three demo
+   patients' values and the required columns, press **Score batch**, and show the
+   downloadable results CSV. Batch rows are not added to local history.
 
 ## 4. Closing claims (safe to make)
 

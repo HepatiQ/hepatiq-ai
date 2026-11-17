@@ -70,7 +70,7 @@ Each team member owns one folder. Keep your code there and coordinate with teamm
 | Folder | Owner | Responsibility |
 |---|---|---|
 | `src/hepatiq/ml/` | Nirali | Data ingestion, cohort filtering, preprocessing (IterativeImputer, StandardScaler), model training (Logistic Regression + XGBoost), cross-validation, SHAP generation |
-| `src/hepatiq/backend/` | Pranjal | FastAPI application, `/predict` endpoint, Pydantic validation, model loading (skops), SHAP integration |
+| `src/hepatiq/backend/` | Pranjal | FastAPI application, `/predict` and `/predict/batch` endpoints, Pydantic validation, model loading (skops), SHAP integration |
 | `src/hepatiq/frontend/` | Deekshitha | Streamlit UI, input forms, risk scorecard rendering, SHAP visualization charts (Plotly) |
 | `src/hepatiq/validation/` | Rudra | Bootstrap confidence intervals, out-of-fold validation runner (`run_validation.py`), class-prior baseline comparison, Brier score, clinical limitations documentation |
 | `src/hepatiq/paths.py` | Everyone | Path constants shared by every module; change these instead of hardcoding paths |
@@ -93,6 +93,11 @@ streamlit run src/hepatiq/frontend/app.py
 ```
 
 The frontend will run at `http://localhost:8501`. Open it in your browser.
+
+To score a cohort, click **Bulk CSV upload** in the frontend sidebar and upload a
+CSV with `age`, `sex`, `edema`, `bili`, and `albumin`. Optional `/predict` field
+names are accepted; unknown columns and files over 1,000 rows are rejected. Results
+can be downloaded as `hepatiq_batch_results.csv`.
 
 **No API keys or `.env` file required** — the entire stack runs locally on open-source libraries.
 

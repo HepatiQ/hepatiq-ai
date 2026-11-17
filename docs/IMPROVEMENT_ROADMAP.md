@@ -46,7 +46,7 @@ the work, run the stated verification, then update the status board and evidence
 ### What is already true
 
 - The backend serves the v1 Logistic Regression pipeline from `models/model.skops`
-  through FastAPI (`/health`, `/predict`, `/history`, `/agent/reason`).
+  through FastAPI (`/health`, `/predict`, `/predict/batch`, `/history`, `/agent/reason`).
 - The v2 data and benchmark layer exists under `src/hepatiq/data` and
   `src/hepatiq/risk`, but it is not the serving path.
 - OOF validation on the Mayo cohort reports ROC-AUC 0.8828
@@ -436,7 +436,7 @@ that need a running backend. The model artifact was not changed.
 
 - Implemented `POST /predict/batch` with a 1,000-row limit, schema validation,
   per-row errors, and the existing rate limiter.
-- Added a Streamlit bulk upload page linked from the main sidebar; results are
+- Added a Streamlit bulk upload view opened from a main-sidebar button; results are
   rendered as a table and downloadable as CSV.
 - Batch rows are not logged to history, and unexpected CSV columns are rejected.
 - Covered with tests for partial failures, row caps, rate limits, and the upload UI.

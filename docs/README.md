@@ -32,8 +32,8 @@ Start here. Docs are grouped by audience and intent.
 
 ```text
 src/hepatiq/
-  backend/     FastAPI service
-  frontend/    Streamlit UI
+  backend/     FastAPI service (/predict, /predict/batch)
+  frontend/    Streamlit UI, bulk CSV view, pages/
   ml/          training, cohort building, SHAP
   validation/  OOF validation + report
   paths.py     shared path constants
