@@ -149,6 +149,7 @@ def _summary_charts(data: dict, display_names: dict) -> dict[str, io.BytesIO]:
 
     matplotlib.use("Agg", force=True)
     import matplotlib.pyplot as plt
+    from matplotlib.patches import Patch
 
     contributions = data.get("contributions") or []
     imputed = set(_imputed_features(data))
@@ -175,8 +176,8 @@ def _summary_charts(data: dict, display_names: dict) -> dict[str, io.BytesIO]:
     fig.tight_layout()
     risk_chart = _chart_bytes()
 
-    fig, ax = plt.subplots(figsize=(7.2, 1.6))
-    ax.barh(0, provided, color="#1f7a8c", label="Provided")
+    fig, ax = plt.subplots(figsize=(7.2, 2.2))
+    ax.barh(0, provided, color="#1f7a8c")
     if imputed:
         ax.barh(
             0,
@@ -185,17 +186,32 @@ def _summary_charts(data: dict, display_names: dict) -> dict[str, io.BytesIO]:
             color="#e0a458",
             hatch="//",
             edgecolor="#7a5200",
-            label="Imputed by model",
         )
     ax.set_xlim(0, max(total, 1))
     ax.set_yticks([])
     ax.set_xticks([0, total])
     ax.set_xlabel("Model inputs")
     ax.set_title(f"Input completeness: {provided} provided, {len(imputed)} imputed")
-    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.35), ncol=2, frameon=False)
+    legend_handles = [
+        Patch(facecolor="#1f7a8c", label="Provided"),
+        Patch(facecolor="#e0a458", edgecolor="#7a5200", hatch="//", label="Imputed"),
+    ]
+    if not imputed:
+        legend_handles = legend_handles[:1]
     for spine in ax.spines.values():
         spine.set_visible(False)
-    fig.tight_layout()
+    fig.tight_layout(rect=(0, 0.38, 1, 1))
+    ax.legend(
+        legend_handles,
+        [handle.get_label() for handle in legend_handles],
+        loc="lower center",
+        bbox_to_anchor=(0.5, 0.02),
+        ncol=len(legend_handles),
+        frameon=False,
+        handlelength=1.4,
+        handletextpad=0.6,
+        columnspacing=1.8,
+    )
     completeness_chart = _chart_bytes()
 
     top = sorted(
@@ -271,10 +287,12 @@ def _build_risk_pdf(data: dict, payload: dict, display_names: dict) -> bytes:
     pdf.cell(0, 6, _pdf_text(f"  Model: {data.get('model_version') or '-'}"), ln=True)
     pdf.ln(2)
 
-    for key in ("risk", "completeness"):
-        if charts.get(key) is not None:
-            pdf.image(charts[key], w=170)
-            pdf.ln(2)
+    if charts.get("risk") is not None:
+        pdf.image(charts["risk"], w=170)
+        pdf.ln(3)
+    if charts.get("completeness") is not None:
+        pdf.image(charts["completeness"], w=170)
+        pdf.ln(7)
     if not charts:
         pdf.set_font("Helvetica", "I", 9)
         pdf.cell(0, 5, "Charts unavailable in this environment.", ln=True)
@@ -306,11 +324,15 @@ def _build_risk_pdf(data: dict, payload: dict, display_names: dict) -> bytes:
         pdf.multi_cell(0, 5, _pdf_text("  " + ", ".join(names) + "."))
     else:
         pdf.cell(0, 5, "  None - all inputs were provided.", ln=True)
-    pdf.cell(
+    pdf.ln(2)
+    pdf.set_font("Helvetica", "I", 8)
+    pdf.multi_cell(
         0,
-        5,
-        "  * = missing input filled by IterativeImputer before scoring (modeled, not measured).",
-        ln=True,
+        4,
+        _pdf_text(
+            "* = missing input filled by IterativeImputer before scoring "
+            "(modeled, not measured)."
+        ),
     )
 
     warnings = data.get("warnings") or []
