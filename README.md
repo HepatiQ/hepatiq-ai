@@ -24,6 +24,18 @@ Explainable Clinical Risk Prediction for Primary Biliary Cholangitis
 - **Web App (Streamlit):** [https://hepatiq-ai.streamlit.app](https://hepatiq-ai.streamlit.app) — click **Bulk CSV upload** in the sidebar for cohort scoring
 - **Backend API (Render):** [https://hepatiq-ai.onrender.com](https://hepatiq-ai.onrender.com)
 - **API Docs (Swagger):** [https://hepatiq-ai.onrender.com/docs](https://hepatiq-ai.onrender.com/docs)
+- **Recorded demo:** [video_demo.mp4](video_demo.mp4)
+
+![HepatiQ research snapshot](docs/assets/hepatiq_research_snapshot.gif)
+
+## Outreach & Research Materials
+
+- [Technical note](docs/outreach/TECHNICAL_NOTE.md) — methods, results, benchmark, and limitations
+- [One-page evidence brief](docs/outreach/EVIDENCE_BRIEF.md) — clinician-facing summary
+- [Conference abstract and poster outline](docs/outreach/CONFERENCE.md)
+- [Recorded demo video](video_demo.mp4) and [two-minute demo script](docs/outreach/DEMO_VIDEO_SCRIPT.md)
+- [Launch copy](docs/outreach/LAUNCH_COPY.md) — release notes and platform-native posts
+- [Reproducibility notebook](notebooks/hepatiq_reproducibility.ipynb) — regenerate validation and benchmark outputs
 
 ## Overview
 
@@ -31,9 +43,9 @@ Clinicians use Liver Function Tests (LFTs) and blood biochemistry to assess hepa
 
 ## Research Disclaimer
 
-HepatiQ is an academic research project and clinical decision-support prototype.
+HepatiQ is an academic research prototype for exploring clinical decision support in PBC.
 
-It is not an FDA-approved, CDSCO-approved, or clinically validated medical device and must not be used as a substitute for physician judgment, diagnosis, or treatment decisions.
+It is not a medical product, not FDA-approved or CDSCO-approved, and not clinically validated. It must not be used as a substitute for physician judgment, diagnosis, or treatment decisions.
 
 **HepatiQ** addresses this by combining regularized machine learning classifiers with SHAP-based Explainable AI (XAI) to predict a patient's probability of a severe event within a 5-year window and show clinicians exactly which biomarkers drove that specific prediction.
 
@@ -55,7 +67,7 @@ It is not an FDA-approved, CDSCO-approved, or clinically validated medical devic
 
 - **Trained on:** canonical `survival::pbc` Mayo Clinic Primary Biliary Cholangitis dataset — 418 patient records; 329 after applying the 5-year censoring filter
 - **Disease specificity:** PBC is a specific autoimmune liver condition, *not* liver cirrhosis or other hepatic disorders
-- **Clinical role:** decision-support aid, not an autonomous diagnostic device or replacement for histological biopsy
+- **Research role:** exploratory decision-support aid, not a diagnostic device or replacement for histological biopsy
 - **Target users:** general practitioners, clinical diagnostic labs, medical researchers
 - **Target outcome:** 5-year severe event (death or liver transplant), not short-term prognosis
 - **Known limits:** see [docs/LIMITATIONS.md](docs/LIMITATIONS.md) for what the evidence does and does not support
@@ -314,7 +326,9 @@ This is a **student team project** at Sharda University's Anand School of Engine
 
 ## License
 
-This project is under active team development and is intended for collaborative, academic use within the HepatiQ project framework.
+This project is licensed under the [GNU General Public License v3.0 (GPL-3.0)](LICENSE).
+
+Dataset provenance and third-party license notes remain in [`data/external/README.md`](data/external/README.md) and [`data/external/PROVENANCE.json`](data/external/PROVENANCE.json).
 
 ---
 

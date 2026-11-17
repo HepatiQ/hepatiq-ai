@@ -3,6 +3,10 @@
 A 5-minute walkthrough of HepatiQ for reviewers or presentations. All three patient
 scenarios below are verified against the live API — the numbers are what you should see.
 
+For a shorter recorded walkthrough, watch the [recorded demo video](../video_demo.mp4) or use the [two-minute demo video script](outreach/DEMO_VIDEO_SCRIPT.md).
+Keep claims within the [positioning guardrails](outreach/POSITIONING.md): research prototype only,
+no clinical superiority claims, and no real patient data.
+
 ## 1. Start (once)
 
 ```bash
