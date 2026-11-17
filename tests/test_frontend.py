@@ -5,9 +5,10 @@ from pathlib import Path
 
 import pytest
 import requests
+import streamlit as st
 from streamlit.testing.v1 import AppTest
 
-from tests.conftest import build_model_frame
+from tests.conftest import FEATURE_COLUMNS, build_model_frame
 
 # AppTest executes frontend/app.py, which probes the backend in the sidebar.
 # Point it at a reserved-domain host so the probe fails instantly instead of
@@ -143,6 +144,101 @@ def _stub_predict_post(monkeypatch) -> dict:
 
     monkeypatch.setattr(requests, "post", fake_post)
     return calls
+
+
+REQUIRED_FEATURES = {"age", "sex", "edema", "bili", "albumin"}
+
+
+def _stub_contributions(*, all_provided: bool = False) -> list[dict]:
+    return [
+        {
+            "feature": feature,
+            "value": 1.0,
+            "impact": 0.1 if index % 2 == 0 else -0.05,
+            "imputed": not all_provided and feature not in REQUIRED_FEATURES,
+        }
+        for index, feature in enumerate(FEATURE_COLUMNS)
+    ]
+
+
+def _stub_predict_post_with_contributions(monkeypatch, contributions: list[dict]) -> None:
+    class Response(_StubPredictResponse):
+        def __init__(self):
+            super().__init__()
+            self._body["contributions"] = contributions
+            self._body["imputed_features"] = [
+                c["feature"] for c in contributions if c["imputed"]
+            ]
+
+    monkeypatch.setattr(requests, "post", lambda *args, **kwargs: Response())
+
+
+def _capture_download(monkeypatch) -> dict:
+    captured: dict = {}
+    original = st.download_button
+
+    def fake_download_button(*args, **kwargs):
+        captured["data"] = kwargs.get("data")
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(st, "download_button", fake_download_button)
+    return captured
+
+
+def _submit_with_stub(monkeypatch):
+    at = AppTest.from_file(str(FRONTEND), default_timeout=60)
+    at.run()
+    at.button[0].click().run()
+    assert not at.exception, at.exception
+    return at
+
+
+def test_pdf_flags_imputed_inputs_and_embeds_charts(monkeypatch):
+    """PDF summary names imputed inputs and contains the summary charts."""
+    contributions = _stub_contributions()
+    _stub_predict_post_with_contributions(monkeypatch, contributions)
+    captured = _capture_download(monkeypatch)
+
+    at = _submit_with_stub(monkeypatch)
+
+    assert any("12 of 17 inputs" in item.value for item in at.info)
+    pdf = captured["data"]
+    assert pdf.startswith(b"%PDF")
+    assert b"Imputed inputs" in pdf and b"12 of 17" in pdf
+    assert b"Cholesterol: imputed by model" in pdf
+    assert pdf.count(b"/Subtype /Image") >= 3
+
+
+def test_pdf_without_imputed_inputs_reports_none(monkeypatch):
+    """A complete payload reports zero imputed inputs, without an info banner."""
+    _stub_predict_post_with_contributions(monkeypatch, _stub_contributions(all_provided=True))
+    captured = _capture_download(monkeypatch)
+
+    at = _submit_with_stub(monkeypatch)
+
+    assert not at.info
+    pdf = captured["data"]
+    assert b"Imputed inputs" in pdf and b"0 of 17" in pdf
+    assert b"None - all inputs were provided" in pdf
+
+
+def test_pdf_still_exports_when_charts_fail(monkeypatch):
+    """Chart rendering must never remove the imputation indicators from the PDF."""
+    import matplotlib.pyplot as plt
+
+    _stub_predict_post_with_contributions(monkeypatch, _stub_contributions())
+    captured = _capture_download(monkeypatch)
+
+    def broken_savefig(*args, **kwargs):
+        raise RuntimeError("chart backend unavailable")
+
+    monkeypatch.setattr(plt, "savefig", broken_savefig)
+    _submit_with_stub(monkeypatch)
+
+    pdf = captured["data"]
+    assert pdf.startswith(b"%PDF")
+    assert b"Imputed inputs" in pdf and b"12 of 17" in pdf
+    assert b"Charts unavailable" in pdf
 
 
 def test_rate_limit_error_rendered(monkeypatch):

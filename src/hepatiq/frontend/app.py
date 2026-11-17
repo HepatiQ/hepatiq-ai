@@ -1,3 +1,4 @@
+import io
 import json
 import os
 import time
@@ -121,6 +122,259 @@ DISPLAY_NAMES = {
     "trig": "Triglycerides", "platelet": "Platelet", "protime": "Protime",
     "stage": "Stage",
 }
+
+
+def _pdf_text(value: object) -> str:
+    """Keep dynamic text inside the Latin-1 range used by the core PDF fonts."""
+    return str(value).replace("\u2014", "-").encode("latin-1", "replace").decode("latin-1")
+
+
+def _imputed_features(data: dict) -> list[str]:
+    return [c["feature"] for c in (data.get("contributions") or []) if c.get("imputed")]
+
+
+def _chart_bytes() -> io.BytesIO:
+    import matplotlib.pyplot as plt
+
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format="png", dpi=150, bbox_inches="tight", facecolor="white")
+    plt.close()
+    buffer.seek(0)
+    return buffer
+
+
+def _summary_charts(data: dict, display_names: dict) -> dict[str, io.BytesIO]:
+    """Render the three charts embedded in the downloadable PDF summary."""
+    import matplotlib
+
+    matplotlib.use("Agg", force=True)
+    import matplotlib.pyplot as plt
+
+    contributions = data.get("contributions") or []
+    imputed = set(_imputed_features(data))
+    total = len(contributions) or len(display_names)
+    provided = total - len(imputed)
+    probability = float(data["probability"])
+    band = str(data.get("risk_band") or risk_category(probability)).capitalize()
+
+    fig, ax = plt.subplots(figsize=(7.2, 1.5))
+    ax.barh(0, 15, left=0, color="#2e7d64")
+    ax.barh(0, 25, left=15, color="#d9a441")
+    ax.barh(0, 60, left=40, color="#a33b3b")
+    marker = probability * 100
+    ax.plot([marker, marker], [-0.45, 0.45], color="#111827", linewidth=2)
+    ax.scatter([marker], [0], color="#111827", s=55, zorder=3)
+    ax.set_xlim(0, 100)
+    ax.set_ylim(-0.6, 0.6)
+    ax.set_yticks([])
+    ax.set_xticks([0, 15, 40, 100])
+    ax.set_xlabel("5-year severe event risk (%)")
+    ax.set_title(f"Risk: {probability:.1%} ({band})")
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+    fig.tight_layout()
+    risk_chart = _chart_bytes()
+
+    fig, ax = plt.subplots(figsize=(7.2, 1.6))
+    ax.barh(0, provided, color="#1f7a8c", label="Provided")
+    if imputed:
+        ax.barh(
+            0,
+            len(imputed),
+            left=provided,
+            color="#e0a458",
+            hatch="//",
+            edgecolor="#7a5200",
+            label="Imputed by model",
+        )
+    ax.set_xlim(0, max(total, 1))
+    ax.set_yticks([])
+    ax.set_xticks([0, total])
+    ax.set_xlabel("Model inputs")
+    ax.set_title(f"Input completeness: {provided} provided, {len(imputed)} imputed")
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.35), ncol=2, frameon=False)
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+    fig.tight_layout()
+    completeness_chart = _chart_bytes()
+
+    top = sorted(
+        [c for c in contributions if c.get("impact") is not None],
+        key=lambda c: abs(c["impact"]),
+        reverse=True,
+    )[:8]
+    contribution_chart = None
+    if top:
+        fig, ax = plt.subplots(figsize=(7.2, 4.2))
+        impacts = [c["impact"] for c in top]
+        for index, contribution in enumerate(top):
+            feature = contribution["feature"]
+            ax.barh(
+                index,
+                contribution["impact"],
+                color="#c0392b" if contribution["impact"] > 0 else "#159b83",
+                hatch="//" if feature in imputed else "",
+                edgecolor="#5b3a00" if feature in imputed else "none",
+            )
+        labels = [
+            display_names.get(c["feature"], c["feature"]) + ("*" if c["feature"] in imputed else "")
+            for c in top
+        ]
+        ax.set_yticks(list(range(len(top))))
+        ax.set_yticklabels(labels)
+        ax.invert_yaxis()
+        ax.axvline(0, color="#6b7280", linewidth=0.8)
+        ax.set_xlim(min(impacts + [0]) - 0.02, max(impacts + [0]) + 0.02)
+        ax.set_xlabel("Impact on risk score (log-odds; positive = raises risk)")
+        ax.set_title("Top SHAP contributions (* = imputed)")
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+        fig.tight_layout()
+        contribution_chart = _chart_bytes()
+
+    return {
+        "risk": risk_chart,
+        "completeness": completeness_chart,
+        "contributions": contribution_chart,
+    }
+
+
+def _build_risk_pdf(data: dict, payload: dict, display_names: dict) -> bytes:
+    """Build the patient-facing summary PDF, including imputation flags and charts."""
+    contributions = data.get("contributions") or []
+    imputed = set(_imputed_features(data))
+    feature_order = [c["feature"] for c in contributions] or list(display_names)
+    total = len(feature_order)
+    values = {c["feature"]: c.get("value") for c in contributions}
+    probability = float(data["probability"])
+    band = str(data.get("risk_band") or risk_category(probability)).capitalize()
+
+    try:
+        charts = _summary_charts(data, display_names)
+    except Exception:
+        charts = {}
+
+    pdf = FPDF()
+    pdf.set_compression(False)
+    pdf.add_page()
+    pdf.set_font("Helvetica", "B", 16)
+    pdf.cell(0, 10, "HepatiQ - Risk Assessment Report", ln=True, align="C")
+    pdf.set_font("Helvetica", "", 10)
+    pdf.cell(0, 6, f"Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}", ln=True, align="C")
+    pdf.ln(4)
+
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.cell(0, 8, "Results", ln=True)
+    pdf.set_font("Helvetica", "", 10)
+    pdf.cell(0, 6, _pdf_text(f"  5-year severe event risk: {probability:.1%}"), ln=True)
+    pdf.cell(0, 6, f"  Risk band: {band}", ln=True)
+    pdf.cell(0, 6, _pdf_text(f"  Model: {data.get('model_version') or '-'}"), ln=True)
+    pdf.ln(2)
+
+    for key in ("risk", "completeness"):
+        if charts.get(key) is not None:
+            pdf.image(charts[key], w=170)
+            pdf.ln(2)
+    if not charts:
+        pdf.set_font("Helvetica", "I", 9)
+        pdf.cell(0, 5, "Charts unavailable in this environment.", ln=True)
+        pdf.ln(2)
+
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.cell(0, 8, f"Patient Inputs ({total} model inputs)", ln=True)
+    pdf.set_font("Helvetica", "", 9)
+    rows = []
+    for feature in feature_order:
+        label = display_names.get(feature, feature)
+        if feature in imputed:
+            rows.append(f"{label}: imputed by model*")
+            continue
+        api_name = "alk_phos" if feature == "alk.phos" else feature
+        value = payload.get(api_name, values.get(feature))
+        rows.append(f"{label}: {_pdf_text(value)}")
+    for index in range(0, len(rows), 2):
+        pdf.cell(92, 5, "  " + _pdf_text(rows[index]))
+        right = rows[index + 1] if index + 1 < len(rows) else ""
+        pdf.cell(0, 5, "  " + _pdf_text(right), ln=True)
+
+    pdf.ln(2)
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.cell(0, 8, f"Imputed inputs ({len(imputed)} of {total})", ln=True)
+    pdf.set_font("Helvetica", "", 9)
+    if imputed:
+        names = [display_names.get(feature, feature) for feature in feature_order if feature in imputed]
+        pdf.multi_cell(0, 5, _pdf_text("  " + ", ".join(names) + "."))
+    else:
+        pdf.cell(0, 5, "  None - all inputs were provided.", ln=True)
+    pdf.cell(
+        0,
+        5,
+        "  * = missing input filled by IterativeImputer before scoring (modeled, not measured).",
+        ln=True,
+    )
+
+    warnings = data.get("warnings") or []
+    if warnings:
+        pdf.ln(2)
+        pdf.set_font("Helvetica", "B", 11)
+        pdf.cell(0, 7, "Warnings", ln=True)
+        pdf.set_font("Helvetica", "", 8)
+        for warning in warnings[:4]:
+            pdf.multi_cell(0, 4, _pdf_text("  - " + warning))
+
+    pdf.add_page()
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.cell(0, 9, "Risk Contribution Chart (SHAP)", ln=True)
+    if charts.get("contributions") is not None:
+        pdf.image(charts["contributions"], w=175)
+        pdf.ln(3)
+
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.cell(0, 8, "Top Risk Contributors (SHAP)", ln=True)
+    pdf.set_font("Helvetica", "", 9)
+    top_contribs = sorted(
+        [c for c in contributions if c.get("impact") is not None],
+        key=lambda c: abs(c["impact"]),
+        reverse=True,
+    )[:5]
+    for contribution in top_contribs:
+        name = display_names.get(contribution["feature"], contribution["feature"])
+        impact = contribution["impact"]
+        marker = "*" if contribution["feature"] in imputed else ""
+        pdf.cell(
+            0,
+            5,
+            _pdf_text(
+                f"  {name}{marker}: {impact:+.3f} "
+                f"({'raises' if impact > 0 else 'lowers'} risk)"
+            ),
+            ln=True,
+        )
+
+    pdf.ln(4)
+    pdf.set_font("Helvetica", "I", 8)
+    pdf.multi_cell(
+        0,
+        4,
+        (
+            "RESEARCH PROTOTYPE - Not a medical device or diagnostic tool. "
+            "Not a substitute for physician judgment. "
+            "See docs/LIMITATIONS.md for details."
+        ),
+    )
+
+    try:
+        pdf_bytes = pdf.output()
+    except Exception:
+        try:
+            pdf_bytes = pdf.output(dest="S")
+        except Exception:
+            pdf_bytes = pdf.output()
+    if isinstance(pdf_bytes, str):
+        pdf_bytes = pdf_bytes.encode("latin-1")
+    elif hasattr(pdf_bytes, "tobytes"):
+        pdf_bytes = pdf_bytes.tobytes()
+    return bytes(pdf_bytes)
 
 
 def optional_number(label, min_value, max_value, format, step):
@@ -344,6 +598,14 @@ if data is not None:
         st.warning("\n".join(warnings))
 
     contributions = data.get("contributions", [])
+    imputed_features = _imputed_features(data)
+    if imputed_features:
+        names = [DISPLAY_NAMES.get(feature, feature) for feature in imputed_features]
+        st.info(
+            f"{len(imputed_features)} of {len(contributions) or 17} inputs were not provided "
+            f"and were imputed by the model: {', '.join(names)}. "
+            "Their SHAP values describe modeled values, not measurements."
+        )
     with_impact = [c for c in contributions if c["impact"] is not None]
     if with_impact:
         with_impact.sort(key=lambda c: abs(c["impact"]), reverse=True)
@@ -364,78 +626,11 @@ if data is not None:
         st.plotly_chart(fig, width="stretch")
         st.caption("* imputed server-side (not provided in the request)")
         try:
-            _model_version = data.get("model_version") or "-"
-            _prob = data.get("probability", prob)
-            _band = risk_category(_prob)
-            _payload = (
-                st.session_state.get("last_payload", payload)
-                if "payload" in dir()
-                else st.session_state.get("last_payload", {})
-            )
-            pdf = FPDF()
-            pdf.add_page()
-            pdf.set_font("Helvetica", "B", 16)
-            pdf.cell(0, 10, "HepatiQ - Risk Assessment Report", ln=True, align="C")
-            pdf.set_font("Helvetica", "", 10)
-            pdf.cell(0, 6, f"Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}", ln=True, align="C")
-            pdf.ln(5)
-            pdf.set_font("Helvetica", "B", 12)
-            pdf.cell(0, 8, "Patient Inputs", ln=True)
-            pdf.set_font("Helvetica", "", 10)
-            for k, v in _payload.items():
-                if k in DISPLAY_NAMES:
-                    pdf.cell(0, 6, f"  {DISPLAY_NAMES[k]}: {v}", ln=True)
-            pdf.ln(3)
-            pdf.set_font("Helvetica", "B", 12)
-            pdf.cell(0, 8, "Results", ln=True)
-            pdf.set_font("Helvetica", "", 10)
-            pdf.cell(0, 6, f"  5-year severe event risk: {_prob:.1%}", ln=True)
-            pdf.cell(0, 6, f"  Risk band: {_band.capitalize()}", ln=True)
-            pdf.cell(0, 6, f"  Model: {_model_version}", ln=True)
-            pdf.ln(3)
-            pdf.set_font("Helvetica", "B", 12)
-            pdf.cell(0, 8, "Top Risk Contributors (SHAP)", ln=True)
-            pdf.set_font("Helvetica", "", 9)
-            _contribs = data.get("contributions", []) or contributions
-            top_contribs = sorted(
-                [c for c in _contribs if c.get("impact") is not None],
-                key=lambda x: abs(x["impact"]),
-                reverse=True,
-            )[:5]
-            for c in top_contribs:
-                name = DISPLAY_NAMES.get(c["feature"], c["feature"])
-                imp = c["impact"]
-                pdf.cell(
-                    0,
-                    5,
-                    f"  {name}: {imp:+.3f} ({'raises' if imp > 0 else 'lowers'} risk)",
-                    ln=True,
-                )
-            pdf.ln(5)
-            pdf.set_font("Helvetica", "I", 8)
-            pdf.multi_cell(
-                0,
-                4,
-                (
-                    "RESEARCH PROTOTYPE - Not a medical device or diagnostic tool. "
-                    "Not a substitute for physician judgment. "
-                    "See docs/LIMITATIONS.md for details."
-                ),
-            )
-            try:
-                pdf_bytes = pdf.output()
-            except Exception:
-                try:
-                    pdf_bytes = pdf.output(dest="S")
-                except Exception:
-                    pdf_bytes = pdf.output()
-            if isinstance(pdf_bytes, str):
-                pdf_bytes = pdf_bytes.encode("latin-1")
-            elif hasattr(pdf_bytes, 'tobytes'):
-                pdf_bytes = pdf_bytes.tobytes()
+            _payload = st.session_state.get("last_payload", {})
+            pdf_bytes = _build_risk_pdf(data, _payload, DISPLAY_NAMES)
             st.download_button(
                 label="Download PDF Report",
-                data=bytes(pdf_bytes),
+                data=pdf_bytes,
                 file_name=f"hepatiq_report_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.pdf",
                 mime="application/pdf",
             )

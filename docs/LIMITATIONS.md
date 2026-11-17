@@ -68,8 +68,9 @@ Numbers cited here come from `src/hepatiq/validation/report.md` and `models/cand
   an intervention effect.
 - **Imputed inputs produce imputed explanations.** When optional fields are left blank,
   `IterativeImputer` fills them before prediction; their SHAP values describe modeled
-  values, not measurements. The UI marks these with `*`, but their apparent certainty is
-  synthetic.
+  values, not measurements. The UI marks these with `*` and names them explicitly; the
+  downloadable PDF summary lists them under "Imputed inputs" and hatches their chart bars.
+  Their apparent certainty is still synthetic.
 - **Additive model.** Logistic Regression is linear in the transformed features — it
   cannot represent interactions (e.g. bilirubin × stage) unless the data happens to
   support them additively. Calibration is imperfect and now quantified: OOF Brier
