@@ -6,6 +6,9 @@ from pathlib import Path
 import pytest
 import requests
 import streamlit as st
+from fpdf import FPDF
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 from streamlit.testing.v1 import AppTest
 
 from tests.conftest import FEATURE_COLUMNS, build_model_frame
@@ -239,6 +242,90 @@ def test_pdf_still_exports_when_charts_fail(monkeypatch):
     assert pdf.startswith(b"%PDF")
     assert b"Imputed inputs" in pdf and b"12 of 17" in pdf
     assert b"Charts unavailable" in pdf
+
+
+def test_pdf_footnote_wraps_as_block_with_spacing(monkeypatch):
+    """The imputation footnote must be a wrapped block with room below the charts."""
+    calls = []
+    original_cell = FPDF.cell
+    original_multi_cell = FPDF.multi_cell
+    original_image = FPDF.image
+    original_ln = FPDF.ln
+
+    def spy_cell(self, *args, **kwargs):
+        calls.append(("cell", args, kwargs))
+        return original_cell(self, *args, **kwargs)
+
+    def spy_multi_cell(self, *args, **kwargs):
+        calls.append(("multi_cell", args, kwargs))
+        return original_multi_cell(self, *args, **kwargs)
+
+    def spy_image(self, *args, **kwargs):
+        calls.append(("image", args, kwargs))
+        return original_image(self, *args, **kwargs)
+
+    def spy_ln(self, h=None):
+        calls.append(("ln", (h,), {}))
+        return original_ln(self, h)
+
+    monkeypatch.setattr(FPDF, "cell", spy_cell)
+    monkeypatch.setattr(FPDF, "multi_cell", spy_multi_cell)
+    monkeypatch.setattr(FPDF, "image", spy_image)
+    monkeypatch.setattr(FPDF, "ln", spy_ln)
+
+    _stub_predict_post_with_contributions(monkeypatch, _stub_contributions())
+    _submit_with_stub(monkeypatch)
+
+    footnote_cells = [
+        call
+        for call in calls
+        if call[0] == "cell" and "* = missing input" in str(call[1][2] if len(call[1]) > 2 else "")
+    ]
+    assert not footnote_cells
+
+    footnote_blocks = [
+        call
+        for call in calls
+        if call[0] == "multi_cell"
+        and "* = missing input" in str(call[1][2] if len(call[1]) > 2 else "")
+    ]
+    assert footnote_blocks
+
+    image_calls = [index for index, call in enumerate(calls) if call[0] == "image"]
+    assert len(image_calls) >= 2
+    following_ln = next(call for call in calls[image_calls[1] + 1 :] if call[0] == "ln")
+    assert following_ln[1][0] >= 6
+
+
+def test_completeness_legend_stays_inside_reserved_space(monkeypatch):
+    """The legend must not be anchored below the chart or crowd the footnote."""
+    legends = []
+    tight_layouts = []
+    original_legend = Axes.legend
+    original_tight_layout = Figure.tight_layout
+
+    def spy_legend(self, *args, **kwargs):
+        legends.append((args, kwargs))
+        return original_legend(self, *args, **kwargs)
+
+    def spy_tight_layout(self, *args, **kwargs):
+        tight_layouts.append(kwargs)
+        return original_tight_layout(self, *args, **kwargs)
+
+    monkeypatch.setattr(Axes, "legend", spy_legend)
+    monkeypatch.setattr(Figure, "tight_layout", spy_tight_layout)
+
+    _stub_predict_post_with_contributions(monkeypatch, _stub_contributions())
+    _submit_with_stub(monkeypatch)
+
+    assert legends
+    args, kwargs = legends[0]
+    anchor = kwargs.get("bbox_to_anchor") or (0.5, 0.5)
+    assert anchor[1] >= 0
+    labels = list(args[1]) if len(args) > 1 else list(kwargs.get("labels", []))
+    assert "Imputed" in labels
+    assert "Imputed by model" not in labels
+    assert any(kwargs.get("rect", (0, 0, 1, 1))[1] >= 0.3 for kwargs in tight_layouts)
 
 
 def test_rate_limit_error_rendered(monkeypatch):
