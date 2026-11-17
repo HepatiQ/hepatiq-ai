@@ -39,19 +39,29 @@ def test_frontend_form_has_required_inputs():
     assert any("Sex" == label for label in labels)
 
 
-def test_sidebar_has_bulk_upload_page_link(monkeypatch):
+def test_sidebar_has_bulk_upload_button(monkeypatch):
     calls = []
-    real_page_link = st.page_link
+    real_button = st.button
 
-    def tracking_page_link(*args, **kwargs):
+    def tracking_button(*args, **kwargs):
         calls.append((args, kwargs))
-        return real_page_link(*args, **kwargs)
+        return real_button(*args, **kwargs)
 
-    monkeypatch.setattr(st, "page_link", tracking_page_link)
+    monkeypatch.setattr(st, "button", tracking_button)
     at = AppTest.from_file(str(FRONTEND), default_timeout=60)
     at.run()
     assert not at.exception, at.exception
-    assert any("pages/2_Bulk_Predict.py" in str(call[0]) for call in calls)
+    assert any(call[0] and call[0][0] == "Bulk CSV upload" for call in calls)
+
+
+def test_sidebar_button_opens_bulk_upload_view():
+    at = AppTest.from_file(str(FRONTEND), default_timeout=60)
+    at.run()
+    bulk_buttons = [button for button in at.sidebar.button if button.label == "Bulk CSV upload"]
+    assert bulk_buttons
+    bulk_buttons[0].click().run()
+    assert not at.exception, at.exception
+    assert any("Bulk CSV risk scoring" in title.value for title in at.title)
 
 
 def _backend_reachable() -> bool:

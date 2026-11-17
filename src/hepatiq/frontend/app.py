@@ -37,6 +37,17 @@ def _rate_limit_message(response: requests.Response) -> str:
     return "Too many requests; wait a moment and try again."
 
 
+def _open_bulk_view() -> None:
+    import sys
+
+    src = str(Path(__file__).resolve().parents[2])
+    if src not in sys.path:
+        sys.path.insert(0, src)
+    from hepatiq.frontend.bulk_upload import render_bulk_upload
+
+    render_bulk_upload(show_back_button=True, set_config=False)
+
+
 LOGO_PATH = Path(__file__).resolve().parent / "assets" / "logo.png"
 
 # An identical payload resubmitted inside this window is treated as a rapid
@@ -48,6 +59,10 @@ st.set_page_config(
     layout="wide",
     page_icon=str(LOGO_PATH) if LOGO_PATH.exists() else "🧬",
 )
+
+if st.session_state.get("hepatiq_view") == "bulk":
+    _open_bulk_view()
+    st.stop()
 
 # Backend status indicator
 with st.sidebar:
@@ -63,7 +78,9 @@ with st.sidebar:
     except requests.exceptions.RequestException:
         st.error("Backend: Unreachable")
     st.caption("API: " + BACKEND_URL)
-    st.page_link("pages/2_Bulk_Predict.py", label="Bulk CSV upload", icon=":material/upload:")
+    if st.button("Bulk CSV upload", use_container_width=True, icon=":material/upload:"):
+        st.session_state["hepatiq_view"] = "bulk"
+        st.rerun()
     st.link_button(
         "Render API docs",
         "https://hepatiq-ai.onrender.com/docs",
