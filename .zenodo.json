@@ -1,0 +1,25 @@
+{
+  "title": "HepatiQ: Explainable Clinical Risk Prediction for Primary Biliary Cholangitis",
+  "description": "HepatiQ is an academic research prototype for explainable 5-year severe-event risk estimation in primary biliary cholangitis. It combines a leakage-safe logistic-regression pipeline, SHAP attributions, a FastAPI service, a Streamlit interface, batch CSV scoring, and a published-score benchmark. Research use only; not a medical device.",
+  "upload_type": "software",
+  "publication_date": "2026-11-18",
+  "creators": [
+    {
+      "name": "Dubey, Pranjal",
+      "affiliation": "Sharda University, Anand School of Engineering & Technology"
+    }
+  ],
+  "license": "gpl-3.0-only",
+  "access_right": "open",
+  "version": "2.0.0",
+  "keywords": [
+    "primary biliary cholangitis",
+    "explainable AI",
+    "clinical decision support",
+    "SHAP",
+    "logistic regression",
+    "FastAPI",
+    "Streamlit"
+  ],
+  "notes": "Version 2 research attribution is credited to Pranjal Dubey. Version 1 was a student project at Sharda University with additional contributors; see AUTHORS.md in the repository."
+}

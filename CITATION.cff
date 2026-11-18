@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it."
+type: software
+title: "HepatiQ: Explainable Clinical Risk Prediction for Primary Biliary Cholangitis"
+abstract: "HepatiQ is an academic research prototype for explainable 5-year severe-event risk estimation in primary biliary cholangitis. It combines a leakage-safe logistic-regression pipeline, SHAP attributions, a FastAPI service, a Streamlit interface, batch CSV scoring, and a published-score benchmark. Research use only; not a medical device."
+authors:
+  - family-names: Dubey
+    given-names: Pranjal
+    affiliation: "Sharda University, Anand School of Engineering & Technology"
+version: 2.0.0
+date-released: 2026-11-18
+license: GPL-3.0-only
+repository-code: "https://github.com/HepatiQ/hepatiq-ai"
+url: "https://hepatiq-ai.streamlit.app"
+keywords:
+  - primary biliary cholangitis
+  - explainable AI
+  - clinical decision support
+  - SHAP
+  - logistic regression
+  - FastAPI
+  - Streamlit
