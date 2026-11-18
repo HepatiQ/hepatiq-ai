@@ -324,6 +324,10 @@ This is a **student team project** at Sharda University's Anand School of Engine
 * ~~Exportable risk scorecards~~ — single-patient PDF reports and batch CSV results are implemented
 * API authentication for public deployments (currently rate-limited only)
 
+## Citation
+
+Cite the archived `v2.0.0` release: [DOI 10.5281/zenodo.24344145](https://doi.org/10.5281/zenodo.24344145). GitHub can also generate a citation from [`CITATION.cff`](CITATION.cff).
+
 ## License
 
 This project is licensed under the [GNU General Public License v3.0 (GPL-3.0)](LICENSE).
