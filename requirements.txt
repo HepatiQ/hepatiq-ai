@@ -4,17 +4,17 @@
 
 # Data & ML
 pandas==3.1.1
-numpy==2.5.4
+numpy==2.5.5
 scikit-learn==1.9.1
 xgboost==3.4.1
 shap==0.54.1
 skops==0.16.0
 
 # Backend API 
-fastapi==0.162.5
+fastapi==0.165.0
 uvicorn[standard]==0.54.0
 joblib==1.6.0
-pydantic==2.14.3
+pydantic==2.14.4
 httpx==0.28.1
 
 # Frontend
@@ -33,7 +33,7 @@ matplotlib==3.11.2
 # Testing / CI
 pytest==9.2.0
 pytest-cov==7.1.0
-ruff==0.17.5
+ruff==0.17.6
 pip-audit==2.10.1
 
 # Reports
