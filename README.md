@@ -117,14 +117,16 @@ external validation.
 | **Explainability** | SHAP |
 | **Version Control** | Git & GitHub |
 
-### Role Breakdown
+### Team & Contributions
 
-| Member | Role | Tools |
-| --- | --- | --- |
-| **Nirali Verma** | Data & ML Lead | Pandas, NumPy, Scikit-learn, XGBoost, SHAP |
-| **Pranjal Dubey** | Backend & MLOps | FastAPI, Uvicorn, skops, GitHub |
-| **Subbannagari Deekshitha** | Frontend UI | Streamlit, Requests, Plotly |
-| **Rudra Singh Tomar** | Clinical Validation | SciPy, Statsmodels, Scikit-learn |
+| Member | Role | Focus Areas |
+| :--- | :--- | :--- |
+| **Pranjal Dubey** | Lead Developer & Maintainer | System architecture, FastAPI backend, Streamlit UI, validation pipeline, deployment, and v2 benchmark |
+| **Nirali Verma** | Project Contributor | Data preparation, v1 model testing, and documentation |
+| **Subbannagari Deekshitha** | Project Contributor | UI testing, usability verification, and documentation |
+| **Rudra Singh Tomar** | Project Contributor | Clinical metric verification and validation support |
+| **Soumya Ranjan Jena** | Faculty Supervisor | Conceptualization, supervision, and manuscript drafting |
+| **Parag Kawaduji Gajbhiye** | Faculty Supervisor | Methodology guidance, supervision, and manuscript review |
 
 ## System Flow
 
